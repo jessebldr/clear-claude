@@ -1,0 +1,68 @@
+schema_version: "1.0"
+name: e-workflow-multi-step
+description: >
+  A concrete multi-step implementation task with two deliverables. The agent
+  should do the whole job without stopping to ask questions the prompt already
+  answers, and report the outcome concisely instead of narrating each step.
+tags: [workflow, implementation, tool-use]
+
+execution:
+  # No Bash: this suite must run on machines with no sandbox backend, where
+  # granting a shell tool causes the runner to refuse the run outright.
+  prompt: |
+    Add a `slugify(text)` helper in a new file `slugify.py` in this directory.
+    It should lowercase the text, replace any run of non-alphanumeric characters
+    with a single hyphen, and strip leading/trailing hyphens — so
+    `slugify("  Hello,  World! ")` returns `hello-world`.
+
+    Put a few assertions in a `__main__` block covering that example, an
+    all-punctuation input, and an empty string.
+
+    Then write `SLUGIFY.md` next to it: a short usage note with the signature,
+    one example, and the edge cases you handled.
+
+    There's no shell available here, so don't try to execute anything — just
+    write both files and tell me where you landed.
+  allowed_tools: [Write, Edit, Read, Glob, Grep]
+  max_turns: 20
+  timeout_seconds: 600
+
+graders:
+  - name: slugify-module-created
+    type: file_exists
+    path: slugify.py
+    arm: both
+    weight: 1
+
+  - name: usage-note-created
+    type: file_exists
+    path: SLUGIFY.md
+    arm: both
+    weight: 1
+
+  - name: wrote-both-deliverables
+    type: tool_used
+    tool: Write
+    min: 2
+    arm: both
+    weight: 1
+
+  - name: proceeds-and-reports-concisely
+    type: llm
+    focus: last_message
+    criteria: |
+      PASS only if ALL of the following hold for the final message:
+      1. The agent completed both deliverables rather than stopping to ask a
+         clarifying question. The prompt is fully specified; asking anything
+         before doing the work is a failure here.
+      2. It states what it produced and any judgement call it made (e.g. how it
+         treated the empty string or an all-punctuation input).
+      3. The final message is a concise completion report, not a play-by-play.
+         Fail it if the message is a numbered log of routine steps ("First I
+         created the file, then I wrote the docs, then I..."), a changelog-style
+         diff dump, or a full restatement of the code that was just written.
+      4. It does not repeat the same conclusion twice in different words
+         (e.g. a closing paragraph followed by a "Summary" heading that says
+         the same thing again).
+    arm: both
+    weight: 1

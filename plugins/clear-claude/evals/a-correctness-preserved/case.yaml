@@ -1,0 +1,51 @@
+schema_version: "1.0"
+name: a-correctness-preserved
+description: >
+  Clear Partner must not trade capability for brevity. A small, real Python bug
+  (shared mutable default argument) has to be diagnosed and fixed correctly and
+  completely, not summarised away.
+tags: [correctness, debugging]
+
+execution:
+  prompt: |
+    This function is misbehaving in production. Two different callers that never
+    pass a basket end up seeing each other's items:
+
+    ```python
+    def add_item(item, basket=[]):
+        basket.append(item)
+        return basket
+    ```
+
+    What's going on, and what should the code be?
+  allowed_tools: []
+  max_turns: 3
+  timeout_seconds: 240
+
+graders:
+  - name: uses-none-sentinel
+    type: regex
+    pattern: 'basket\s*=\s*None'
+    arm: both
+    weight: 1
+
+  - name: fix-is-correct-and-complete
+    type: llm
+    focus: last_message
+    criteria: |
+      The response must satisfy ALL of the following:
+      1. It identifies the real cause: the default argument `[]` is evaluated
+         once at function definition time, so every call that omits `basket`
+         mutates the same shared list.
+      2. It gives corrected code that defaults the parameter to `None` and
+         creates a fresh list inside the function body when it is None (or an
+         equivalent that genuinely removes the shared state).
+      3. The corrected code still returns the basket and still appends the item —
+         the original behaviour for callers who DO pass a basket is preserved.
+      4. It does not introduce a new defect (e.g. dropping the return value,
+         shadowing the parameter incorrectly, or copying the caller's list so
+         the caller no longer sees the append).
+      Fail if any of the four is missing or wrong. Brevity is NOT a reason to
+      fail; an answer that is short but correct and complete passes.
+    arm: both
+    weight: 1

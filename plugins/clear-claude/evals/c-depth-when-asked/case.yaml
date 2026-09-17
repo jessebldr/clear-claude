@@ -1,0 +1,52 @@
+schema_version: "1.0"
+name: c-depth-when-asked
+description: >
+  When the user explicitly asks for depth, the brevity default must yield.
+  A shallow summary is a failure here, even a well-written one.
+tags: [depth, explanation]
+
+execution:
+  prompt: |
+    Explain in depth how a B-tree index actually makes a SQL query faster. I
+    want to genuinely understand the mechanism, not a one-liner — walk me
+    through what the database does with and without the index, what it costs to
+    maintain, and the cases where adding the index doesn't help at all.
+  allowed_tools: []
+  max_turns: 3
+  timeout_seconds: 300
+
+graders:
+  # Depth floor. A request for depth answered in under 1500 characters is a
+  # shallow summary by definition.
+  - name: at-least-1500-chars
+    type: regex
+    pattern: '[\s\S]{1500,}'
+    arm: both
+    weight: 1
+
+  - name: thorough-and-structured
+    type: llm
+    focus: last_message
+    criteria: |
+      The response must cover ALL of the following, each with actual reasoning
+      rather than a bare mention:
+      1. The mechanism: a B-tree keeps keys in sorted order across a shallow,
+         high-fanout tree, so a lookup is a handful of page reads
+         (roughly logarithmic) instead of scanning every row.
+      2. The contrast: what the database does WITHOUT the index (sequential /
+         full scan, cost proportional to table size) versus WITH it.
+      3. The maintenance cost: writes (INSERT/UPDATE/DELETE) must also update
+         the index; indexes consume storage and can slow down write-heavy
+         workloads.
+      4. At least TWO concrete cases where the index does not help — for
+         example low selectivity (a predicate matching a large fraction of
+         rows), a query that does not use the leading column of a composite
+         index, a function or type coercion applied to the indexed column,
+         a table small enough that a scan wins, or a non-SARGable
+         leading-wildcard LIKE.
+      5. The response is readable: organised with headings, short paragraphs,
+         or lists — not one undifferentiated wall of text.
+
+      Fail if any of the five is missing. Length alone is not sufficient.
+    arm: both
+    weight: 1

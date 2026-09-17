@@ -1,0 +1,47 @@
+schema_version: "1.0"
+name: b-concise-by-default
+description: >
+  A simple factual question should get the answer first and stop. No preamble,
+  no multi-paragraph lecture, no restating the question.
+tags: [concision, answer-first]
+
+execution:
+  prompt: |
+    Quick one — what's the difference between `git fetch` and `git pull`?
+  allowed_tools: []
+  max_turns: 3
+  timeout_seconds: 240
+
+graders:
+  # No `m` flag, so `^` anchors at index 0 only: the lookahead fails the whole
+  # match if 1200+ characters follow. This is a hard length cap, not a heuristic.
+  - name: under-1200-chars
+    type: regex
+    pattern: '^(?![\s\S]{1200,})'
+    arm: both
+    weight: 1
+
+  - name: no-preamble-opener
+    type: regex
+    pattern: '^\s*(?!(?:Great|Sure|Certainly|Of course|Absolutely|Good question|Happy to|That''s a|Let me|I''ll |I will |Thanks for))'
+    arm: both
+    weight: 1
+
+  - name: answer-first
+    type: llm
+    focus: last_message
+    criteria: |
+      The FIRST sentence of the response must state the actual difference
+      between `git fetch` and `git pull` (fetch downloads remote refs/objects
+      without changing the working branch; pull is fetch followed by a
+      merge/rebase into the current branch).
+
+      Fail if the response opens with any of: an acknowledgement, a restatement
+      of the question, a description of what the answer will cover, a definition
+      of git in general, or a heading before any content.
+
+      Judge only the opening and the overall shape. Do not fail it for being
+      short — short is correct here. Do not fail it for adding one or two lines
+      of useful nuance after the answer.
+    arm: both
+    weight: 1
