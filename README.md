@@ -121,6 +121,11 @@ results, and the honest limits are in [docs/evals.md](docs/evals.md).
 - [ ] Submit to the official Claude Code marketplace so install is one command
 - [ ] Re-run evals against new Claude Code versions (the suite is cheap: ~$2)
 - [ ] `clear-doctor` auto-fix mode (currently read-only by design)
+- [ ] Claude Mods: Anthropic is shipping function hooks ("Claude Mods",
+  [anthropics/claude-code#91870](https://github.com/anthropics/claude-code/issues/91870)).
+  When the API is stable, build the `experimental/mods` ideas
+  (`verification-state`, `context-hygiene`) as real mods. Clear Partner itself
+  will never depend on them.
 
 ---
 
