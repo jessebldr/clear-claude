@@ -1,0 +1,22 @@
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.idea/
+.vscode/
+
+# Local Claude Code state (never commit personal config)
+.claude/
+.claude-local/
+*.local.json
+settings.local.json
+
+# Plugin eval output (generated, can be large)
+**/evals/results/
+**/evals/mocks/
+
+# Logs and scratch files
+*.log
+tmp/
+.tmp/
