@@ -12,6 +12,9 @@ desktop.ini
 *.local.json
 settings.local.json
 
+# Private build brief — kept outside the repo, never published
+spec.md
+
 # Plugin eval output (generated, can be large)
 **/evals/results/
 **/evals/mocks/

@@ -1,6 +1,6 @@
 # Phase 0 Research — Claude Code plugin surface
 
-**Target:** Claude Code CLI **2.1.274** (`~/.npm-global/bin/claude` → compiled `bin/claude.exe`)
+**Target:** Claude Code CLI **2.1.274** (installed via npm global; the `claude` shim resolves to a compiled `bin/claude.exe`)
 **Platform:** Linux. **Date:** 2026-09-17.
 
 ## How each fact was obtained (evidence tiers)
@@ -324,4 +324,4 @@ Hooks surface that does exist:
 9. **Output styles get no validation at all.** No manifest check, no frontmatter check, no appearance in `plugin details`. A typo in `force-for-plugin` fails silently at runtime. Worth a lint rule on our side.
 10. **LSP has no manifest field** — only `.lsp.json`. If we document a plugin manifest reference, this asymmetry will surprise authors.
 11. **Report publishing defaults to on.** Eval runs try to publish the HTML report to claude.ai unless `--no-publish`. Observed behavior: it stayed local because *"this run appears to have been started by a Claude Code session rather than a person."* A human-run eval would have published. Flag this for any repo that evals on private code.
-12. **Cleanup owed:** this research scaffolded a throwaway plugin at `~/.claude/skills/p0probe/` (it registers a `p0probe` skill next session). `rm -rf` was denied by the permission layer — **please delete that directory manually**. Temp probe dirs under `/tmp/p0/` can also be removed.
+12. **Probing leaves scaffolding behind.** Probing the skill loader means writing a throwaway skill directory under the config home, and probing eval shapes means temp directories under `/tmp`. Neither is cleaned up automatically. Anyone repeating this research should delete both afterwards, because a stray skill directory registers a real skill in the next session.
