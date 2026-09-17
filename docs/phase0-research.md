@@ -292,7 +292,11 @@ Output styles are **not** covered by `claude plugin validate` (a bogus frontmatt
 
 ## 7. Hooks / "Mods" flags
 
-**"Mods" does not exist in 2.1.274.** `strings` over the whole binary returns **zero** occurrences of the token `Mods`. Combined with its absence from all help text, treat any Mods/function-hook design assumption as unsupported on this version. `[BINARY]` `[HELP]`
+**"Mods" does not exist in 2.1.274.** `strings` over the whole binary returns **zero** occurrences of the token `Mods`. It is also absent from all help text. `[BINARY]` `[HELP]`
+
+> **Amendment (2026-09-17, same version).** The original wording here went further and said to *"treat any Mods/function-hook design assumption as unsupported on this version"*. That was too strong, and a later probe corrected it: **the name is absent, but a function-hooks mechanism is present** — `src/plugins/functionHooks/`, an env gate `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS` whose rollout default is false, a `hooks.json` `modules` key (max one entry) naming a module that exports `register(on)`, and events `tool.call`, `prompt.submit`, `ui.render`, `session.start`. `[BINARY]`
+>
+> Verified live: a throwaway plugin declaring `"modules": ["./mod.ts"]` validates clean, and `claude plugin validate --json` **reads the module source**, reporting `./mod.ts hooks: tool.call` and `./mod.ts calls: nothing on $`. `[VALIDATOR]` The feature is nonetheless absent from every help page (`function hook` → 0 hits `[HELP]`), so it is an undocumented, off-by-default preview. Nothing stable should depend on it. Full record and re-check procedure: [../experimental/mods/README.md](../experimental/mods/README.md).
 
 Hooks surface that does exist:
 - `plugin.json` `hooks` field — object, same shape as settings `hooks`. `[VALIDATOR]`

@@ -39,6 +39,9 @@ See [the tradeoff](#what-force-for-plugin-costs-you) below.
 New plugins load on the next session. To pick it up immediately in the current
 session, run `/reload-plugins`.
 
+Scopes, CI flags, session-only loading, and the full command reference are in
+[docs/install.md](docs/install.md).
+
 ### Install from a local checkout
 
 Useful before publication, or for testing a change:
@@ -78,7 +81,8 @@ the available styles and marks the current one. `/config` shows the same thing i
 Output style picker.
 
 For a full check, the plugin ships two diagnostic skills — see
-[Diagnostics](#diagnostics) below.
+[Diagnostics](#diagnostics) below. If something is wrong, go straight to
+[docs/troubleshooting.md](docs/troubleshooting.md).
 
 To check the manifests in a checkout of this repo (this is what CI runs):
 
@@ -197,6 +201,11 @@ Work down this list; each step is more aggressive than the last.
 Nothing in Clear Claude writes to your settings, so uninstalling leaves no residue
 to clean up by hand.
 
+If the plugin loads but Clear Partner is not in effect, that is a different failure —
+see [docs/troubleshooting.md](docs/troubleshooting.md). The most common cause is a
+user-level output style that shares the name `Clear Partner` and silently shadows the
+plugin's copy.
+
 ---
 
 ## Cross-machine use
@@ -274,14 +283,26 @@ the shortest possible answer. Clear Partner explicitly forbids dropping a warnin
 constraint, assumption, exact number, scope condition, or tradeoff in order to make a
 response shorter. Brevity applies to what you read, never to the work.
 
+The full reasoning, rule by rule, is in [docs/philosophy.md](docs/philosophy.md).
+
 ## Documentation
 
+- [docs/philosophy.md](docs/philosophy.md) — why answer-first, what "concise" means
+  here, and the prompts-for-judgment / mechanisms-for-mechanics split.
+- [docs/install.md](docs/install.md) — the full lifecycle: install, update, verify,
+  disable, uninstall, switch away, recover, with scopes and CI flags.
+- [docs/troubleshooting.md](docs/troubleshooting.md) — symptom-first fixes, including
+  the silent failures that no validation catches.
 - [docs/architecture.md](docs/architecture.md) — design decisions, including the
   `force-for-plugin` choice and its tradeoff.
+- [docs/evals.md](docs/evals.md) — the behavioural eval suite, what it proves, and what
+  it does not.
 - [docs/clear-partner-port.md](docs/clear-partner-port.md) — exactly how the shipped
   output style differs from the behaviourally tested original.
 - [docs/phase0-research.md](docs/phase0-research.md) — verified platform behaviour for
   Claude Code 2.1.274, with an evidence tier on every claim.
+- [experimental/mods/README.md](experimental/mods/README.md) — research note on "Mods" /
+  function hooks. Nothing ships from there; the stable plugin depends on none of it.
 
 ## License
 

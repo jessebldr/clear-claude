@@ -43,8 +43,26 @@ Initial release. Not yet published.
   (`claude plugin validate plugins/clear-claude/skills --strict`).
 - README with install, update, verify, uninstall, disable, switch-away, and recovery
   instructions — one command set for Windows, macOS, and Linux.
+- `docs/philosophy.md` — why answer-first, what "concise" means here, and the
+  prompts-for-judgment / mechanisms-for-mechanics split, grounded line by line in the
+  style prompt itself.
+- `docs/install.md` — the full lifecycle with exact command syntax, scopes, CI flags,
+  session-only loading, recovery, and a platform-confidence table.
+- `docs/troubleshooting.md` — symptom-first fixes for the failures nothing validates,
+  chiefly a misspelled `force-for-plugin` and a user-level style named `Clear Partner`
+  that shadows the plugin's copy.
+- `experimental/mods/README.md` — research note on "Mods" / function hooks. No code, no
+  dependency from the stable plugin, and a re-check procedure for future versions.
 - `docs/phase0-research.md`, the verified platform reference for Claude Code 2.1.274,
   with an evidence tier on every claim.
+
+### Changed
+
+- `docs/phase0-research.md` §7 amended. The original claim that Mods/function hooks were
+  unsupported on 2.1.274 was too strong: the name "Mods" is absent, but a function-hooks
+  mechanism is present — env-gated, off by default, absent from all help text, and
+  recognised by `claude plugin validate`. Evidence and re-check steps are in
+  `experimental/mods/README.md`. Nothing in the stable plugin depends on it.
 - MIT license.
 
 ### Notes
