@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "clear-claude",
+  "displayName": "Clear Claude",
+  "description": "Make Claude Code easier to understand without making it less capable. Ships the Clear Partner output style: answer-first, plain English, concise by default, deep when asked.",
+  "version": "0.1.0",
+  "author": {
+    "name": "jessenguyen"
+  },
+  "license": "MIT",
+  "keywords": [
+    "output-style",
+    "communication",
+    "clarity",
+    "developer-experience"
+  ]
+}
