@@ -1,0 +1,26 @@
+{
+  "name": "clear-claude",
+  "description": "Clear Claude — a minimal, opinionated Claude Code setup for clear communication without reduced engineering capability.",
+  "owner": {
+    "name": "jessenguyen"
+  },
+  "metadata": {
+    "description": "Clear Claude — a minimal, opinionated Claude Code setup for clear communication without reduced engineering capability.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "clear-claude",
+      "source": "./plugins/clear-claude",
+      "description": "Ships the Clear Partner output style: answer-first, plain English, concise by default, deep when asked. Keeps Claude Code's coding instructions intact.",
+      "version": "0.1.0",
+      "license": "MIT",
+      "keywords": [
+        "output-style",
+        "communication",
+        "clarity",
+        "developer-experience"
+      ]
+    }
+  ]
+}
