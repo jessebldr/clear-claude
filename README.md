@@ -45,6 +45,11 @@ before the answer shows up — if it shows up. Long responses aren't the problem
 answer first, plain English, concise by default. The least text that fully
 communicates the answer — never the shortest possible answer.
 
+![Before/after: three everyday dev questions, default Claude vs clear-claude](assets/demo-all.png)
+
+*Same prompt, same model, same day. Real outputs, unedited — 612 → 408 words
+across three everyday dev questions. It stops when the question is answered.*
+
 ### #2: "Concise" quietly became "shallow"
 
 **The problem.** Most brevity prompts teach the model to drop things: the warning, the
