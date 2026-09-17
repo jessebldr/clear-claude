@@ -10,7 +10,7 @@ and gets its own entry here and its own version bump.
 
 ## [0.1.0] - 2026-09-17
 
-Initial release. Not yet published.
+Initial release.
 
 ### Added
 
