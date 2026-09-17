@@ -1,0 +1,47 @@
+name: CI
+
+# What this workflow does, precisely: it runs Claude Code's own manifest and
+# component validator in strict mode. That is the whole of it.
+#
+# What it does NOT do, and why:
+#   - It does not run the behavioural eval suite. `claude plugin eval` spawns real
+#     `claude` child processes against a real credential and bills real money
+#     (see docs/evals.md). Evals are run by hand before a release, not per push.
+#   - It does not check the output style. Claude Code does not validate output
+#     styles at all — a typo in `force-for-plugin` validates clean and fails
+#     silently at runtime (docs/architecture.md, "The validation gap"). A green
+#     run here is necessary evidence, not sufficient evidence.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: claude plugin validate --strict
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Claude Code
+        run: npm i -g @anthropic-ai/claude-code
+
+      - name: Report Claude Code version
+        run: claude --version
+
+      # --strict turns warnings into a non-zero exit, so unrecognized fields and
+      # missing metadata fail the build rather than being tolerated at runtime.
+      - name: Validate marketplace manifest
+        run: claude plugin validate .claude-plugin/marketplace.json --strict
+
+      - name: Validate plugin manifest
+        run: claude plugin validate plugins/clear-claude --strict
+
+      - name: Validate skills
+        run: claude plugin validate plugins/clear-claude/skills --strict

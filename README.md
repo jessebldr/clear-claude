@@ -297,6 +297,10 @@ The full reasoning, rule by rule, is in [docs/philosophy.md](docs/philosophy.md)
   `force-for-plugin` choice and its tradeoff.
 - [docs/evals.md](docs/evals.md) — the behavioural eval suite, what it proves, and what
   it does not.
+- [docs/marketplace-test.md](docs/marketplace-test.md) — the recorded install test:
+  every command, its output, and the proof that the style actually activates.
+- [docs/releasing.md](docs/releasing.md) — how to cut a release, and why a prompt edit
+  is a version bump.
 - [docs/clear-partner-port.md](docs/clear-partner-port.md) — exactly how the shipped
   output style differs from the behaviourally tested original.
 - [docs/phase0-research.md](docs/phase0-research.md) — verified platform behaviour for
