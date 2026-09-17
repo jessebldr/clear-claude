@@ -73,8 +73,12 @@ claude plugin details clear-claude
 `list` shows whether the plugin is installed and enabled. `details` prints the
 component inventory and a projected token cost.
 
-To confirm Clear Partner itself is active, open `/config` in a session and look at the
-Output style picker — it should show **Clear Partner**.
+To confirm Clear Partner itself is active, run `/output-style` in a session — it lists
+the available styles and marks the current one. `/config` shows the same thing in its
+Output style picker.
+
+For a full check, the plugin ships two diagnostic skills — see
+[Diagnostics](#diagnostics) below.
 
 To check the manifests in a checkout of this repo (this is what CI runs):
 
@@ -96,6 +100,58 @@ claude plugin marketplace remove clear-claude
 installed it there. Omitting `--scope` on `marketplace remove` removes it from every
 scope. Add `--keep-data` to `uninstall` if you want `~/.claude/plugins/data/{id}/`
 preserved.
+
+---
+
+## Diagnostics
+
+Two skills ship with the plugin. Both are **read-only**: they inspect, they report, and
+they never edit a file or change a setting — the fixes are printed for you to run.
+
+Invoke either by name in a session:
+
+```text
+/clear-claude:clear-doctor
+/clear-claude:clear-audit
+```
+
+Asking in plain language works too ("diagnose my Clear Claude install", "is Clear
+Partner really active?"), since that is what each skill's description matches against.
+
+### `clear-doctor` — is it installed correctly?
+
+Checks the install end to end and prints a PASS/WARN/FAIL table with remediation:
+
+- plugin installed, enabled, and in which scope
+- `plugin.json` present and valid, including a `claude plugin validate --strict` run
+- `output-styles/clear-partner.md` present, and its four frontmatter fields correct —
+  the thing nothing else in Claude Code validates
+- which settings layers (user, project, local) exist and are reachable, and which layer
+  wins for output styles
+- installed version vs marketplace version
+- conflicting output styles: another plugin forcing its own style, or a user/project
+  style file that shares the name `Clear Partner` and silently shadows the plugin's copy
+
+It reports the **existence and precedence** of your settings files. It never prints
+their contents — the report names the layer, the path, and whether that file sets
+`outputStyle`, and nothing else.
+
+### `clear-audit` — is it actually working?
+
+Doctor asks whether the install is correct. Audit asks two sharper questions and answers
+both with facts rather than impressions:
+
+1. **Is Clear Partner the active style**, not merely installed? Derived by walking
+   Claude Code's own resolution rules — plugin enabled, `force-for-plugin: true`
+   present, no same-named style shadowing it, no competing forced style from another
+   plugin.
+2. **Is the style file unmodified?** The prompt is the product, so the file's SHA-256 is
+   compared against the value recorded in
+   [docs/clear-partner-port.md](docs/clear-partner-port.md), and every deviation is
+   reported and classified (content edit, CRLF conversion, record drift).
+
+There is deliberately no judgement of whether recent answers *feel* like Clear Partner.
+A model grading its own tone is not evidence; that is what behavioural evals are for.
 
 ---
 
@@ -180,11 +236,15 @@ The plugin is deliberately tiny:
 ```text
 plugins/clear-claude/
 ├── .claude-plugin/plugin.json
-└── output-styles/clear-partner.md
+├── output-styles/clear-partner.md
+└── skills/
+    ├── clear-doctor/SKILL.md
+    └── clear-audit/SKILL.md
 ```
 
-One output style. No CLAUDE.md, no hooks, no MCP servers, no personality prompt
-injected through three layers at once.
+One output style, plus two read-only diagnostic skills that exist only to check that
+the output style is installed and working. No CLAUDE.md, no hooks, no MCP servers, no
+personality prompt injected through three layers at once.
 
 That is a design position, not an accident. Claude Code has distinct layers and each
 one has a job:

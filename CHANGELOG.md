@@ -23,10 +23,24 @@ Initial release. Not yet published.
 - `force-for-plugin: true`, so the style applies automatically while the plugin is
   enabled and stops applying when it is disabled. Tradeoff documented in
   [docs/architecture.md](docs/architecture.md).
+- **`clear-doctor` skill** — read-only install diagnostics. Checks the manifest, the
+  style file and its four frontmatter fields, which settings layers exist and which one
+  wins for output styles, installed vs marketplace version, and conflicting output
+  styles. Emits a PASS/WARN/FAIL table with remediation. Reports the existence and
+  precedence of settings files only; never their contents.
+- **`clear-audit` skill** — read-only activation and conformance checks. Derives whether
+  Clear Partner is the *active* style from Claude Code's own resolution rules, and
+  compares the style file's SHA-256 against the value recorded in
+  [docs/clear-partner-port.md](docs/clear-partner-port.md). Deviations are classified,
+  never repaired.
+- Recorded checksum for `clear-partner.md` in `docs/clear-partner-port.md`. Editing the
+  style now requires updating that record and the copy inside the `clear-audit` skill in
+  the same commit.
 - Plugin manifest (`plugins/clear-claude/.claude-plugin/plugin.json`) and marketplace
   manifest (`.claude-plugin/marketplace.json`). Both pass
   `claude plugin validate --strict` with no errors and no warnings against Claude Code
-  2.1.274.
+  2.1.274, as do both `SKILL.md` files
+  (`claude plugin validate plugins/clear-claude/skills --strict`).
 - README with install, update, verify, uninstall, disable, switch-away, and recovery
   instructions — one command set for Windows, macOS, and Linux.
 - `docs/phase0-research.md`, the verified platform reference for Claude Code 2.1.274,

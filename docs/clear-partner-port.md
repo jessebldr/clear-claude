@@ -56,6 +56,35 @@ Specifically preserved:
 - The full instruction body: goal, core communication, adapt-to-task, depth,
   formatting, deliverables, interaction, uncertainty, and the final quality check.
 
+## Recorded checksum of the shipped file
+
+This is the authoritative record of what a correct
+`plugins/clear-claude/output-styles/clear-partner.md` is. The `clear-audit` skill
+compares the installed file against these values, so they are part of the product, not a
+convenience note.
+
+```text
+SHA-256: 3584870b3fcb58774d669f935018ebb1a0d044c73d26494911115d0bc9504b1c
+Size:    4620 bytes
+Lines:   144, LF endings, final newline present
+```
+
+The same SHA-256 is written into
+[`plugins/clear-claude/skills/clear-audit/SKILL.md`](../plugins/clear-claude/skills/clear-audit/SKILL.md),
+because the installed plugin does not ship this `docs/` directory and the skill must
+still work offline. `clear-audit` treats a disagreement between the two copies as its own
+finding (**record drift**) rather than trusting either.
+
+**Editing the style means updating both copies in the same commit**, alongside the
+version bump and CHANGELOG entry that a prompt change already requires. Recompute with
+whichever tool the machine provides — `sha256sum`, `shasum -a 256`,
+`certutil -hashfile <file> SHA256`, or PowerShell `Get-FileHash -Algorithm SHA256`.
+
+The hash covers the whole file, frontmatter included, so it changes when
+`force-for-plugin` or the description changes and not only when the prompt body does.
+A checkout that converts line endings to CRLF will also fail the comparison; `clear-audit`
+detects that case and reports it as line-ending conversion rather than as an edit.
+
 ## Re-verifying this claim
 
 From the repository root:

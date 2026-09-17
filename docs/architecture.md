@@ -15,8 +15,11 @@ clear-claude/                          ← the repository is also the marketplac
 ├── plugins/
 │   └── clear-claude/                  ← the plugin
 │       ├── .claude-plugin/plugin.json ← plugin manifest
-│       └── output-styles/
-│           └── clear-partner.md       ← the entire product
+│       ├── output-styles/
+│       │   └── clear-partner.md       ← the entire product
+│       └── skills/
+│           ├── clear-doctor/SKILL.md  ← install diagnostics
+│           └── clear-audit/SKILL.md   ← activation + conformance checks
 ├── docs/
 ├── README.md
 ├── LICENSE
@@ -32,10 +35,10 @@ The `plugins/` directory layer exists so a second plugin can be added later with
 restructuring. It is the one piece of structure here that anticipates the future rather
 than serving the present, and it costs one directory.
 
-Directories the original plan called for but that do not exist yet — `skills/`,
-`evals/`, `tests/`, `experimental/` — are omitted on purpose. An empty directory with a
-placeholder README teaches a reader nothing and makes the repository look larger than
-it is. They will be created when they hold something.
+Directories the original plan called for but that do not exist yet — `evals/`, `tests/`,
+`experimental/` — are omitted on purpose. An empty directory with a placeholder README
+teaches a reader nothing and makes the repository look larger than it is. They will be
+created when they hold something. `skills/` now holds something.
 
 ## Decision: automatic activation via `force-for-plugin`
 
@@ -120,6 +123,72 @@ Two consequences for this repo:
 2. The four frontmatter keys in `clear-partner.md` are spelled exactly as research §6
    verified them, and should be treated as a fixed list: `name`, `description`,
    `keep-coding-instructions`, `force-for-plugin`. No others are known to exist.
+
+## Decision: two skills, and why they are deterministic
+
+The validation gap above is the reason `clear-doctor` and `clear-audit` exist. Claude
+Code will happily install, enable and validate a plugin whose output style is never
+loaded. Something has to close that gap, and the only honest way to close it is to check
+files and command output rather than to ask the model how it feels the responses are
+going.
+
+So both skills are written as check procedures with fixed decision rules. Every finding
+names a path, a command's output, or a hash. Neither skill contains a "judge whether the
+tone is clear" instruction — that belongs to behavioural evals, where a response is
+graded against a rubric, not to a diagnostic that a user runs when something is already
+broken.
+
+The split between them is the split between two different questions:
+
+| | `clear-doctor` | `clear-audit` |
+| --- | --- | --- |
+| Question | Is it installed correctly? | Is it actually working, and unmodified? |
+| Output | PASS/WARN/FAIL table with remediation | Two verdicts plus a deviation list |
+| Typical trigger | "it isn't working" | after an install, update, or an edit to the prompt |
+
+Both are strictly read-only. A diagnostic that repairs things is a diagnostic you cannot
+trust the second time you run it, and "fixing" a modified `clear-partner.md` by
+overwriting it would destroy the only evidence that someone changed the product.
+
+The privacy rule in `clear-doctor` is deliberately stricter than it needs to be: it may
+read a settings file to work out precedence, but the report may only contain the layer,
+the path, and whether that file sets `outputStyle`. A diagnostic tool that prints
+`settings.json` into a terminal — or into a transcript — is a small data leak with no
+diagnostic benefit, because the answer the user needs is *which layer wins*, not *what
+else is in the file*.
+
+### The failure mode worth naming
+
+The highest-value check in either skill is the one for a **user-level output style
+named `Clear Partner`**. Styles are collected into a single table keyed by their
+frontmatter `name`, and plugin styles are applied *before* user- and project-level ones,
+so a same-named file at user level replaces the plugin's entry along with its
+`force-for-plugin` flag. The plugin then lists as installed and enabled while doing
+nothing, and nothing anywhere reports an error.
+
+This is not hypothetical: it is exactly what happens to someone who ran Clear Partner as
+a hand-installed user style before switching to the plugin — which is the migration path
+this project's own author took.
+
+## Decision: the skills are declared in the manifest
+
+`plugin.json` lists both skill directories explicitly:
+
+```jsonc
+"skills": ["./skills/clear-doctor", "./skills/clear-audit"]
+```
+
+This is the opposite of the choice made for `outputStyles` above, so it deserves a
+reason. The two fields do not behave the same way. `outputStyles`, when set, *replaces*
+the automatic scan of `output-styles/` — a declaration that misses a file silently
+disables it. Declared `skills` paths are loaded *in addition to* the `skills/` scan, so
+declaring them adds information without taking any away.
+
+The benefit is that the manifest states the plugin's contents instead of leaving them
+implicit in a directory listing. The risk worth checking was double-registration, since
+both skills are also found by the automatic scan. Verified against an isolated install:
+`claude plugin details clear-claude` reports `Skills (2) clear-audit, clear-doctor` —
+each skill once, ~286 tokens always-on for the pair.
 
 ## Decision: `keep-coding-instructions: true`
 

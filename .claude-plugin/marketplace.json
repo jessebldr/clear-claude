@@ -12,7 +12,7 @@
     {
       "name": "clear-claude",
       "source": "./plugins/clear-claude",
-      "description": "Ships the Clear Partner output style: answer-first, plain English, concise by default, deep when asked. Keeps Claude Code's coding instructions intact.",
+      "description": "Ships the Clear Partner output style: answer-first, plain English, concise by default, deep when asked. Keeps Claude Code's coding instructions intact. Includes the clear-doctor and clear-audit diagnostic skills.",
       "version": "0.1.0",
       "license": "MIT",
       "keywords": [
