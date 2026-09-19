@@ -95,15 +95,33 @@ Leave no trace:
 Record the result as a new dated section above this checklist, the way the Windows run is
 recorded, including anything that did not match.
 
-## After this is merged: install it the way a user does
+## Installed the way a user does — Windows 11, 2026-09-19, v0.2.1 — pass
 
-Both runs above load the plugin from a working tree. The last step of dogfooding is the
-marketplace path, which also exercises the `SessionStart` hook that re-copies the renderer
-when the plugin version changes:
+The runs above load the plugin from a working tree. This one is the marketplace path, on the
+same machine, straight after `v0.2.1` was tagged:
 
 ```text
 claude plugin marketplace add jessebldr/clear-claude
 claude plugin install clear-ui@clear-claude
+claude plugin install clear-claude@clear-claude
 ```
 
-Then start a session and run `clear ui doctor`: `Runtime files` should report 0.1.1.
+- Both installed at user scope: `clear-ui` 0.1.1, `clear-claude` 0.1.0.
+- **The update path works.** The renderer on the machine had been copied by `setup.mjs` when
+  the plugin was 0.1.0. The first session after the install ran the plugin's `SessionStart`
+  hook, and the doctor then reported `Runtime files PASS 0.1.1`: the fixed renderer arrived
+  with no second setup.
+- `clear-ui-doctor`, run from the installed plugin: PASS on every line it can check, including
+  the new `Git speed` line (25 ms against the 150 ms budget).
+- `clear-doctor`, run in a real session: PASS, style forced by the plugin. Its one UNKNOWN is
+  check 8, installed against marketplace version, because `claude plugin list --available`
+  listed no entry for a plugin that is already installed.
+- **The line-ending fix holds on the real install path.** The style in the plugin cache on
+  Windows is 4620 bytes with the recorded SHA-256. Before `.gitattributes` a Windows checkout
+  was 4764 bytes with a different one.
+
+One thing a long-time user has to do by hand: a style of the same name installed earlier in
+`<config home>/output-styles/` shadows the plugin's copy, force flag included. It was moved
+aside here before the run. `clear-doctor` check 7 is what catches it.
+
+On a Mac, repeat these three commands after the checklist above and record the same lines.
