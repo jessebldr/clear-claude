@@ -8,6 +8,10 @@ name: CI
 #   - `clear-ui` runs that plugin's test suite, a demo render and a timing bench on
 #     Linux, macOS and Windows. clear-partner is a prompt and two skills, so it has no
 #     tests to run here.
+#   - `clear-transcript` is experimental and outside the marketplace, but it is code: its pure
+#     core is tested with plain Node on all three platforms, and `validate` checks its manifest
+#     and runs its hooks in Claude Code's own test host. Function hooks are gated; the gate is
+#     set for that one command and nowhere else.
 #
 # What it does NOT do, and why:
 #   - It does not run the behavioural eval suite. `claude plugin eval` spawns real
@@ -24,7 +28,7 @@ on:
   pull_request:
   workflow_dispatch:
 
-# Both jobs only read the repository.
+# Every job only reads the repository.
 permissions:
   contents: read
 
@@ -66,6 +70,28 @@ jobs:
         run: |
           claude plugin validate plugins/clear-ui --strict
           claude plugin validate plugins/clear-ui/skills --strict
+
+      # Needs no gate: the validator reads the hooks module's source and prints every event it
+      # hooks and every $ call it makes. Both lists are compared whole, so the promise in
+      # docs/clear-transcript.md is an allowlist: ui.render on three rows, one command, and no
+      # file, network, process, prompt or tool.call access. A new hook or call fails here until
+      # this list, and that page, say so.
+      - name: Validate clear-transcript, and what it may touch
+        run: |
+          claude plugin validate experimental/clear-transcript --strict | tee validate.txt
+          hooks="$(sed -n 's/^.*register\.js hooks: //p' validate.txt)"
+          calls="$(sed -n 's/^.*register\.js calls: //p' validate.txt)"
+          echo "hooks: $hooks"; echo "calls: $calls"
+          [ "$hooks" = 'session.start, command.run{command=clear-transcript}, ui.render{component=UserMessage, surface=terminal}, ui.render{component=AssistantMessage, surface=terminal}, ui.render{component=ToolGroup, surface=terminal}' ]
+          [ "$calls" = '$.command.register, $.ui.invalidate, $.ui.resolve' ]
+
+      # The plugin loaded by the engine's own host, every tree through the terminal surface's
+      # real validator. No credential and no model: the tests seat their own stand-in for core.
+      # The gate is an environment variable of this one step.
+      - name: Test clear-transcript hooks in the engine
+        run: claude plugin test experimental/clear-transcript
+        env:
+          CLAUDE_CODE_ENABLE_FUNCTION_HOOKS: '1'
 
   # Clear UI is code, so it gets real tests — on all three platforms it claims to support,
   # because its whole cross-platform story is "one Node file, no shell". Golden renders are
@@ -113,3 +139,31 @@ jobs:
       # the status line allows, which is what decides whether a dirty mark is drawn at all.
       - name: Git latency
         run: node bench/git-latency.mjs .
+
+  # Clear Transcript's decisions are pure functions over plain data, so they are tested with plain
+  # Node, on the platforms the other plugin is tested on. `npm test` names its files: the engine
+  # suite beside them is TypeScript for `claude plugin test`, which the `validate` job runs.
+  clear-transcript:
+    name: clear-transcript tests (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ['22']
+        include:
+          - os: ubuntu-latest
+            node: '18'
+    defaults:
+      run:
+        working-directory: experimental/clear-transcript
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # No install step: zero dependencies and no build, as in clear-ui.
+      - name: Test
+        run: npm test

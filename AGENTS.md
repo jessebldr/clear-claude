@@ -16,7 +16,7 @@ one never touches another ([ADR 0004](docs/adr/0004-one-plugin-per-layer.md)).
 | Clear Claude | `clear-claude` (marketplace) | repo root | The umbrella. Never the name of a plugin. |
 | Clear Partner | `clear-partner@clear-claude` | `plugins/clear-partner` | The product's core: one output style (`output-styles/clear-partner.md`), two read-only diagnostic skills, the eval cases. No code, no hooks, no tests. Writes nothing outside itself. |
 | Clear UI | `clear-ui@clear-claude` | `plugins/clear-ui` | A status bar. Node >= 18, ES modules, zero dependencies, no build step. The only part with code and a test suite. |
-| Clear Transcript | `clear-transcript` (reserved) | `experimental/` | Future layer on function hooks. Spikes only; never listed in the marketplace. |
+| Clear Transcript | `clear-transcript` (not installable) | `experimental/clear-transcript` | How the transcript is drawn: a function-hooks ("Mods") plugin. Experimental: `--plugin-dir` only, never listed in the marketplace while the API is gated. Code and two test suites. |
 
 Use exactly these names. The plugin `clear-partner` was called `clear-claude` before
 marketplace 0.4.0; `renames` in `marketplace.json` migrates old installs and is append-only
@@ -56,6 +56,14 @@ node bin/statusline.mjs < test/fixtures/idle.json   # render without installing;
 
 PowerShell has no `<` redirection: run the render through bash, or
 `Get-Content test/fixtures/idle.json | node bin/statusline.mjs`.
+
+Clear Transcript, from `experimental/clear-transcript` (nothing to install first):
+
+```sh
+npm test                                                  # the pure core, plain Node
+claude plugin validate . --strict                         # needs no gate; prints every hook and $ call
+CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude plugin test .  # the hooks, in the engine's own host
+```
 
 `bash scripts/measure-plugin-loading.sh` is a measurement, not a test: how the installed
 Claude Code treats a renamed plugin and a style file that takes the plugin's key. It needs no
@@ -123,6 +131,27 @@ Design record: [docs/ui-architecture.md](docs/ui-architecture.md). Per-file tabl
   carries an explicit foreground, and the palette is held to 4.5:1 by a test.
 - The plugin data id `clear-ui-clear-claude` (`src/paths.mjs`) is derived from
   `clear-ui@clear-claude`. Renaming the plugin or the marketplace orphans every install.
+
+## Clear Transcript: rules that must survive any edit
+
+Design record and every reason: [docs/clear-transcript.md](docs/clear-transcript.md). Platform
+facts: [docs/research/mods-research-2.1.278.md](docs/research/mods-research-2.1.278.md).
+
+- **The gate is set for one command only.** `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude …`; never
+  exported, never written to a settings file, never suggested to a user as a setting.
+- **Never in the marketplace while the API is gated**; `scripts/check-repo.mjs` fails if it is.
+- **It hooks `ui.render` and nothing the engine acts on.** No `tool.call` (it breaks sub-agents,
+  claude-code#92533), no `turn.step`, no `classic.MessageDisplay`, no `$.fs`, `$.http`, `$.process`.
+- **The model's words are inviolable**: nothing removed, reordered, reworded, folded, capped or
+  added. Attributes only, never rows: an answer stays exactly as tall as stock draws it.
+- **Any doubt is `next(e)`**, and so is everything in the expanded view (ctrl+o, `--verbose`).
+  Off is stock, not similar to stock.
+- **Pure core, thin shell**, as in Clear UI: `hooks/lib/*.mjs` use no engine, Node or clock API and
+  return plain data; `hooks/register.js` only turns a plan into elements. No code is shared with
+  the other plugins.
+- Text from a tool or a model is untrusted: it is cleaned in `tools.mjs` before it is drawn.
+- A change of what is drawn needs a recording, not only green tests: the test kit cannot see
+  paint. Tapes are in `demo/`.
 
 ## Versions and releases
 

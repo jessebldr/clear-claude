@@ -9,6 +9,10 @@ source/clear-partner.md text eol=lf
 # Golden renders are compared byte for byte.
 plugins/clear-ui/test/golden/*.txt text eol=lf
 
+# Replies as a model wrote them: test input for Clear Transcript's block cutter, whose tests count
+# characters and whose heading rule, like the engine's text, knows no carriage return.
+experimental/clear-transcript/test/fixtures/replies/*.md text eol=lf
+
 *.png binary
 *.gif binary
 

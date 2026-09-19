@@ -1,7 +1,9 @@
 # Roadmap v2 — Clear UI and Clear Transcript
 
-Design: [ui-architecture.md](ui-architecture.md). Evidence:
-[mods-research-2.1.277.md](research/mods-research-2.1.277.md), [ui-research.md](research/ui-research.md).
+Design: [ui-architecture.md](ui-architecture.md), [clear-transcript.md](clear-transcript.md). Evidence:
+[mods-research-2.1.277.md](research/mods-research-2.1.277.md),
+[mods-research-2.1.278.md](research/mods-research-2.1.278.md), [ui-research.md](research/ui-research.md),
+[transcript-ux.md](research/transcript-ux.md).
 
 ## Status at closure — 2026-09-20, marketplace 0.4.1
 
@@ -16,7 +18,7 @@ once, with where it went, so that nothing further down reads as pending work:
 | "Two weeks of daily use" as the exit of Phase E | Dropped as a gate. It is elapsed time, not work; settings damage, if it ever happens, is a bug report. |
 | An agent `status` of `failed`, never observed | Documented limit: the row reads it and costs nothing if it never arrives. |
 | Official marketplace listing | [#19](https://github.com/jessebldr/clear-claude/issues/19) — depends on Anthropic's process |
-| Phase G, Clear Transcript | The next phase, and the only open one. Blocked on function hooks being documented and on by default. |
+| Phase G, Clear Transcript | **Built, 2026-09-20**, as the experimental plugin `clear-transcript` 0.1.0 — see [Phase G](#phase-g--clear-transcript---built-waits-on-anthropic). What is left is not work: it waits for Anthropic to document function hooks and switch them on. |
 
 ## Scope
 
@@ -44,7 +46,7 @@ Each plugin carries its own version; the marketplace version tracks the newest c
 | 0.3.0 | `clear-ui` 0.2.0: the opt-in usage provider — the weekly limit scoped to one model, from Claude Code's own headless `/usage`, behind a cache; off by default, and the default bar unchanged. (The slot was once `verification-state`, Phase F, which shipped inside 0.2.0.) |
 | 0.4.0 | One name per layer: the plugin `clear-claude` becomes `clear-partner` 0.2.0, migrated for existing installs by `renames`; one install story across README, skills and docs; `AGENTS.md` and a repository check in CI ([ADR 0005](adr/0005-naming-and-install-paths.md)). `clear-ui` stays at 0.2.0. No change to the Clear Partner prompt. |
 | 0.4.1 | Closure. `clear-partner` 0.2.1: the diagnostic skills stop failing a harmless style file and read the policy level, after measuring what actually displaces a plugin's style. `clear-ui` 0.2.1: the `configure.mjs show` alignment fix and a bench that does not judge shared runners. Migration measured on three platforms and at every scope; #2 closed. |
-| exp | First function-hooks mod (Clear Transcript), outside the marketplace, `--plugin-dir` only (Phase G1); it carries no marketplace version — the slot once pencilled in as "0.4.0-exp" went to the release above. G2 is a research spike. |
+| exp | `clear-transcript` 0.1.0, the first function-hooks mod (Phase G): outside the marketplace, `--plugin-dir` only. It carries its own version and no marketplace version — the slot once pencilled in as "0.4.0-exp" went to the release above — so it moves no number here until it is promoted. |
 | 1.0 | Only after function hooks are documented, on by default, and the layer boundaries have survived real use. |
 
 Change from the earlier sketch: verification-state moves **ahead of** the first mod,
@@ -203,63 +205,45 @@ source of Codex CLI, Oh My Pi, OpenCode and T3 Code; `anything-to-html` could no
   are not counted at all. Two files per session, one writer each, instead of one shared file
   that concurrent hooks would have to read, modify and write back.
 
-### Phase G — Clear Transcript, the first experimental mod
+### Phase G — Clear Transcript  ✔ built, waits on Anthropic
 
 Clear Transcript is the part of the experience the status bar cannot reach: what the
-conversation itself looks like in the stock Claude Code terminal. It has two halves, and
-only the first has been designed.
+conversation itself looks like in the stock Claude Code terminal. Design, limits and how to load
+it: [clear-transcript.md](clear-transcript.md). The four things this phase has to keep apart:
 
-- **Prerequisite (both):** the UX distillation above.
-- **Entry conditions (both):** function hooks appear in official docs, or the gate defaults
-  on. Until then no mod is built. G2's research spike is the one exception, because a
-  spike is disposable, loads only with `--plugin-dir`, and ships nothing.
+| | State on 2026-09-20, Claude Code 2.1.278 |
+| --- | --- |
+| **Proven platform behaviour** | `ui.render` raises `AssistantMessage` with one raw Markdown string per text block, and only once the block is complete; the engine's own `Markdown` and `Code` renderers are leaves a plugin can draw with; a refused tree falls back to the stock row; `ToolGroup` carries every call with its input, error flag and output; the expanded view is reachable if the mod stands down in it. Measured in recorded sessions and with `claude plugin test` — [research/mods-research-2.1.278.md](research/mods-research-2.1.278.md). |
+| **Experimental API dependency** | All of the above. Function hooks are in no official document and no changelog, off by default behind `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS`, and changed heavily between 2.1.273 and 2.1.277 (the `Markdown` leaf did not exist before). Anthropic's only statement of intent is "on the scale of weeks", from 2026-09-09. |
+| **Implemented** | `experimental/clear-transcript` 0.1.0: a settled tool group names its files and commands and gives each failed call its own line; section titles in an answer are underlined; ctrl+o and `/clear-transcript off` return every row to Claude Code's drawing; two `/config` switches. A unit suite for the pure core on three platforms, an engine suite under `claude plugin test`, and real sessions recorded in both terminal layouts ([clear-transcript-dogfood.md](clear-transcript-dogfood.md)). |
+| **Blocked only by platform maturity** | A marketplace entry and an install command. Nothing else: when function hooks are documented and on by default, promotion is a folder move, a manifest entry and a re-run of the checks in [clear-transcript.md](clear-transcript.md#what-is-production-ready-and-what-would-promotion-take). |
 
-#### G1 — tool and sub-agent presentation (the phase as planned so far)
-
-- **Create:** `experimental/mods/activity-renderer/` — collapses finished, non-expanded
-  `ToolGroup` rows to one line; returns `next(e)` whenever `isExpanded`. Tests via
-  `claude plugin test`. Collapse rules:
-  [ux-distillation.md](research/ux-distillation.md), "Implications for Phase G".
-- **Evidence so far:** Spike C — replacing a finished, non-expanded `ToolGroup` drew, and
-  ctrl+o still showed the engine's full row.
-- **Risks:** API churn between releases; hiding something that mattered — error rows are
-  never collapsed.
-
-#### G2 — assistant response presentation (missing until now; research only)
-
-G1 tidies everything *around* the answer and leaves the answer itself — the thing the user
-actually reads — exactly as stock Claude Code draws it. Clear Partner shapes what the
-answer says; nothing yet shapes how it is laid out on screen.
-
-- **Goal:** information hierarchy and progressive disclosure for the assistant's own
-  response, inside the stock terminal: the conclusion visually first, supporting detail
-  quieter or folded, long code and long lists previewed with a stated way to see the rest.
-- **Not the goal:** HTML, a web view, a desktop app, a side window, a custom harness, or
-  rewriting what the model said. Same scope rule as the rest of this roadmap. The text of
-  the answer is never changed or dropped — presentation only, and the full response must
-  stay reachable, as ctrl+o does for tool rows in G1.
-- **This phase is a research spike and nothing more.** The one question: does `ui.render`
-  expose `AssistantMessage` — and the Markdown inside it — deeply enough to restructure?
-  Known: the terminal raises `ui.render` for `AssistantMessage` (Spike C), and the
-  component is in the `RenderComponent` type list. **Unknown, and what the spike must
-  answer:**
-  1. What the props carry: one raw Markdown string, a parsed block tree (headings,
-     paragraphs, lists, code), or something opaque.
-  2. Whether a returned tree can be built from parts of the message — per block — or only
-     replace the message whole.
-  3. How streaming behaves: one render per delta, per block, or once at the end; and
-     whether a rewrite mid-stream flickers or is skipped.
-  4. Whether Claude Code's own Markdown and syntax-highlight rendering can be reused inside
-     a returned tree, or a mod would have to re-implement it.
-  5. Whether the unmodified response stays reachable (ctrl+o, transcript view, copy).
-- **Deliver:** a spike under `experimental/spikes/function-hooks/`, recording prop *keys*
-  and shapes only, never message content; findings written into
-  [mods-research-2.1.277.md](research/mods-research-2.1.277.md) or its successor; then a go / no-go.
-- **No-go is an acceptable result.** If the props are an opaque string and the only lever
-  is re-implementing Markdown rendering, G2 stops there and is recorded under
-  "Not planned" with the evidence.
-- **Not started. No design, no code, no renderer.** Nothing in G2 is built until the spike
-  answers the questions above and the entry conditions hold.
+- **Prerequisite:** the UX distillation above, extended for the assistant answer in
+  [research/transcript-ux.md](research/transcript-ux.md).
+- **Entry conditions, as first written:** function hooks appear in official docs, or the gate
+  defaults on; until then no mod is built. **Neither is met, and the mod was built anyway**, on the
+  owner's decision to finish the layer now and let it wait finished rather than unstarted. The
+  condition still binds where it matters: nothing here is listed in the marketplace, installed by
+  either stable plugin, or able to run without a person setting the gate for one command.
+  `scripts/check-repo.mjs` fails if `clear-transcript` is ever listed while it lives under
+  `experimental/`.
+- **G1, tools and sub-agents — built differently from the plan.** The plan was to collapse
+  finished groups to one line such as `Read 4 files · 2s`. Stock already collapses them, and the
+  research showed that the bare count is the most-punished pattern in the field (one vendor
+  reverted it) and that on 2.1.278 it hides failed commands. So the mod does the opposite of
+  collapsing: it puts the names back and lets failures out. Durations were dropped: they need a
+  `tool.call` hook, and any `tool.call` hook on Bash breaks sub-agents with worktree isolation
+  (claude-code#92533). Edits, sub-agent rows and live groups are left to stock, which draws them well.
+- **G2, the assistant answer — GO, and deliberately small.** All five questions of the spike were
+  answered: raw Markdown per block; parts can be composed; blocks arrive complete; the native
+  renderer is reusable as a leaf; the original stays reachable, with the one condition above. What
+  was built on it is one attribute on section titles. Folds, a final-answer badge, accent colours,
+  framed code and tighter heading spacing were each tried or weighed and refused on evidence; the
+  reasons are in [clear-transcript.md](clear-transcript.md#decisions-and-the-variants-behind-them).
+- **Not verified:** macOS and Linux sessions (tests run there in CI; no recording does); a live
+  resize; `--resume`; a light theme; a screen reader; a second render mod in the chain.
+- **Next, and only when a release changes the API:** re-run the re-verification steps at the end of
+  [research/mods-research-2.1.278.md](research/mods-research-2.1.278.md).
 
 ## Not planned
 

@@ -248,11 +248,18 @@ unfinished feature in either; what they need from here is upkeep, and it is chea
   screen, and [#19](https://github.com/jessebldr/clear-claude/issues/19), submitting to the
   official Claude Code marketplace so that install loses its first line.
 
-**Next: Clear Transcript**, the third layer. Anthropic is shipping function hooks ("Claude
-Mods", [anthropics/claude-code#91870](https://github.com/anthropics/claude-code/issues/91870)).
-When the API is documented and on by default, the transcript renderer gets built as a real
-mod; until then it stays a research spike under `experimental/`, outside the marketplace.
-Clear Partner will never depend on mods.
+**Clear Transcript, the third layer, is built and waiting.** It changes how the conversation
+itself is drawn: a finished group of tool calls names its files and commands and shows which of
+them failed, where stock Claude Code draws `Read 3 files, ran 2 shell commands`; section titles in
+a long answer are underlined, where stock draws every heading level the same. Nothing the model
+wrote is removed or added, nothing is folded, and ctrl+o or `/clear-transcript off` gives Claude
+Code's own drawing back. It stands on
+function hooks ("Claude Mods",
+[anthropics/claude-code#91870](https://github.com/anthropics/claude-code/issues/91870)), which
+Anthropic has not documented or switched on yet, so **it is not in the marketplace and cannot be
+installed**; it runs from a clone with `--plugin-dir`. How, why so little, and what promotion
+takes: [docs/clear-transcript.md](docs/clear-transcript.md). Clear Partner and Clear UI will
+never depend on mods.
 
 **Not planned**, so that nobody waits for it: a `clear-doctor` that fixes things (both
 diagnostic skills are read-only by design, and stay so); a bundle plugin

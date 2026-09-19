@@ -36,6 +36,22 @@ One look across the set: primary assets are 1300 px wide, the narrow one 720; th
 caption banner, margins and terminal ground; before and after panes are the same size, font
 and framing, recorded by the same generated tape.
 
+Clear Transcript — stills, not animations, because what they show does not move:
+
+| Image | Tape | What it shows |
+| --- | --- | --- |
+| `assets/clear-transcript-tools.png` | `clear-transcript-work.tape` | **One** working session shown twice: as stock Claude Code draws it (after `/clear-transcript off`) and as Clear Transcript does. The count `Read 3 files, ran 2 shell commands` against the names, and the failed command on its own line. |
+| `assets/clear-transcript-answer.png` | `clear-transcript-answer.tape` | **One** answer shown twice: in the ctrl+o view, which is Claude Code's own drawing, and in the normal view. Same rows, the section title underlined. |
+
+Before and after are the same session, so nothing differs between the panes but the drawing —
+not the model's reply, not the timing. `clear-transcript-stills.mjs` cuts both out of the
+recorded frames: a crop, a caption band, nothing else, with the session header and the status
+bar left out. Clear Transcript is experimental and loads only with the function-hooks gate, which
+the tapes set for their one `claude` command; `CT_REPO` names the checkout that holds
+`experimental/clear-transcript`, and `fixtures/sum-bug` is the small project the working session
+runs in — one test fails until `src/sum.mjs` is fixed. Findings from these sessions:
+[docs/clear-transcript-dogfood.md](../docs/clear-transcript-dogfood.md).
+
 ## What is done to time, and what is never done to a frame
 
 A raw recording is mostly waiting: 74 seconds for the status bar session, 37 for a

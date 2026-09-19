@@ -85,6 +85,13 @@ narrow  2 agents  │  1 bg                  (failed! is never dropped)
 
 ## Implications for Phase G (transcript renderer)
 
+> **Note, 2026-09-20.** Item 4's example, `Read 4 files · 2s`, contradicts pattern 12 above
+> ("`Read a, b, c`, names de-duplicated") and the pattern was right: a bare count is the most
+> rejected form in this field, and stock Claude Code already draws one. Clear Transcript names the
+> targets instead, and shows no duration, because measuring one needs a `tool.call` hook that
+> breaks sub-agents. Evidence and the rest of the Phase G research:
+> [transcript-ux.md](transcript-ux.md). The list below is kept as written.
+
 1. Collapse only rows that are **finished, successful and not expanded**. Return `next(e)`
    for anything running, pending, errored, denied or expanded (patterns 14, 15, 16).
 2. **Error rows are never collapsed and never merged**; a failure also ends the group it
