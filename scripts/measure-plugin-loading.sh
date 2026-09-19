@@ -8,13 +8,18 @@
 #   2. shadowing  whether an output-style file outside the plugin can take the place of the
 #                 plugin's forced style, and under which `name:` it has to be written to do so.
 #
-#   bash scripts/measure-plugin-loading.sh [rename|shadowing|all]      default: all
+#   bash scripts/measure-plugin-loading.sh [rename|managed|shadowing|all]      default: all
 #
 #   OLD_REF   a ref of this repository that still lists the former name   default: v0.3.0
 #   NEW_REF   a ref that lists the current name and the renames map       default: main
 #   REPO      owner/repo on GitHub                                        default: jessebldr/clear-claude
 #   OLD_ID / NEW_ID   the plugin ids under test    default: clear-claude@clear-claude / clear-partner@clear-claude
 #   CLAUDE    the claude executable to measure                             default: claude
+#   MEASURE_POLICY=1   also measure the administrator-managed level. This WRITES to the
+#             machine-wide managed directory (/etc/claude-code, /Library/Application
+#             Support/ClaudeCode, C:\Program Files\ClaudeCode) and removes what it wrote. It
+#             needs root or sudo, refuses if that directory already exists, and is meant for
+#             a disposable machine such as a CI runner — never a machine someone uses.
 #
 # A session here is `claude -p hi`. With no credential it stops at "Not logged in", which is
 # after the plugins have loaded, and what it loaded is read from its --debug-file log. Nothing
@@ -128,6 +133,17 @@ measure_rename() {
   listed; enabled "$CFG/settings.json" "user settings"
 }
 
+# The machine-wide directory an administrator manages; fixed per platform in Claude Code.
+policy_dir() {
+  case "$(uname -s)" in
+    Darwin) printf '%s' "/Library/Application Support/ClaudeCode" ;;
+    MINGW*|MSYS*|CYGWIN*) printf '%s' "/c/Program Files/ClaudeCode" ;;
+    *) printf '%s' "/etc/claude-code" ;;
+  esac
+}
+as_root() { if [ "$(id -u)" = 0 ] || command -v cygpath >/dev/null 2>&1; then "$@"; else sudo "$@"; fi; }
+root_write() { as_root mkdir -p "$(dirname "$1")" && as_root tee "$1" >/dev/null; } # path; content on stdin
+
 style_file() { # path name
   mkdir -p "$(dirname "$1")"
   printf -- '---\nname: %s\ndescription: shadowing measurement\n---\n\nA style used only to measure shadowing.\n' "$2" > "$1"
@@ -149,7 +165,47 @@ measure_shadowing() {
     rm -f "$file"
   done
   session "$proj" "files removed again"
-  say "  policy level: not measured (needs an administrator to write the managed directory)"
+
+  if [ "${MEASURE_POLICY:-0}" != 1 ]; then
+    say "  policy level: not measured here (set MEASURE_POLICY=1 on a disposable machine)"
+    return
+  fi
+  local policy; policy="$(policy_dir)"
+  if [ -e "$policy" ]; then say "  policy level: $policy already exists; left alone, not measured"; return; fi
+  local pfile="$policy/.claude/output-styles/measure.md"
+  printf -- '---\nname: %s\ndescription: shadowing measurement\n---\n\nMeasurement only.\n' "$style" | root_write "$pfile"
+  session "$proj" "policy file, name: $style"
+  printf -- '---\nname: %s\ndescription: shadowing measurement\n---\n\nMeasurement only.\n' "$qualified" | root_write "$pfile"
+  session "$proj" "policy file, name: $qualified"
+  as_root rm -rf "$policy"
+  session "$proj" "policy directory removed again"
+}
+
+# A plugin enabled from managed settings, which Claude Code cannot rewrite.
+measure_managed_rename() {
+  rule "rename · enabled from managed settings · marketplace update only"
+  if [ "${MEASURE_POLICY:-0}" != 1 ]; then say "  not measured here (set MEASURE_POLICY=1 on a disposable machine)"; return; fi
+  local policy; policy="$(policy_dir)"
+  if [ -e "$policy" ]; then say "  $policy already exists; left alone, not measured"; return; fi
+  new_config rename-managed; local proj="$WORK/p-managed"; mkdir -p "$proj"
+  "$CLAUDE" plugin marketplace add "$REPO#$OLD_REF" >/dev/null 2>&1
+  "$CLAUDE" plugin install "$OLD_ID" >/dev/null 2>&1
+  # Move the enabling key out of user settings and into the managed file.
+  node -e '
+    const fs = require("fs"); const [file, id] = process.argv.slice(1)
+    const json = JSON.parse(fs.readFileSync(file, "utf8")); delete json.enabledPlugins[id]
+    fs.writeFileSync(file, JSON.stringify(json, null, 2))' "$CFG/settings.json" "$OLD_ID"
+  printf '{ "enabledPlugins": { "%s": true } }\n' "$OLD_ID" | root_write "$policy/managed-settings.json"
+  session "$proj" "before the rename, enabled only from managed settings"
+  move_marketplace "$CFG/plugins/known_marketplaces.json" "$CFG/settings.json"
+  for n in 1 2; do session "$proj" "session $n"; done
+  listed
+  session "$proj" "session 3, after claude plugin list"
+  say "  managed settings afterwards: $(as_root cat "$policy/managed-settings.json" | tr -d '\n ')"
+  enabled "$CFG/settings.json" "user settings afterwards"
+  "$CLAUDE" plugin install "$NEW_ID" 2>&1 | tail -1 | sed 's/^/  /'
+  session "$proj" "session 4, after installing the new name"
+  as_root rm -rf "$policy"
 }
 
 say "claude: $("$CLAUDE" --version 2>&1 | head -1) · $(uname -s) $(uname -m) · node $(node --version)"
@@ -157,6 +213,7 @@ say "repo $REPO · old ref $OLD_REF ($OLD_ID) · new ref $NEW_REF ($NEW_ID)"
 case "$WHAT" in
   rename) measure_rename ;;
   shadowing) measure_shadowing ;;
-  all) measure_rename; measure_shadowing ;;
-  *) say "usage: $0 [rename|shadowing|all]"; exit 2 ;;
+  managed) measure_managed_rename ;;
+  all) measure_rename; measure_managed_rename; measure_shadowing ;;
+  *) say "usage: $0 [rename|managed|shadowing|all]"; exit 2 ;;
 esac

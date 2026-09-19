@@ -50,3 +50,6 @@ jobs:
         env:
           OLD_REF: ${{ inputs.old_ref || 'v0.3.0' }}
           NEW_REF: ${{ inputs.new_ref || 'main' }}
+          # A runner is thrown away after the job, so the machine-wide managed directory can be
+          # written and removed here. Never set this on a machine someone uses.
+          MEASURE_POLICY: '1'
