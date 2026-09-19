@@ -2,6 +2,10 @@
 
 # Clear Claude
 
+[![Latest release](https://img.shields.io/github/v/release/jessebldr/clear-claude)](https://github.com/jessebldr/clear-claude/releases/latest)
+[![License: MIT](https://img.shields.io/github/license/jessebldr/clear-claude)](LICENSE)
+[![Build in public](https://img.shields.io/badge/X-%40JesseBldr-black?logo=x&logoColor=white)](https://x.com/JesseBldr)
+
 **Make Claude Code easier to understand without making it less capable.**
 
 My Claude Code talked like it was paid per word. So I fixed the communication layer —
