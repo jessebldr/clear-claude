@@ -7,7 +7,16 @@ import { spawnSync } from 'node:child_process'
 import { appendFileSync, mkdirSync, mkdtempSync, readdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { findGit, parseStatus, readGit, readHead } from '../src/git.mjs'
+import { findGit, GIT_TIMEOUT_MS, gitTimeoutOf, parseStatus, readGit, readHead } from '../src/git.mjs'
+
+test('gitTimeoutOf: the default, a machine that asks for more, and nonsense', () => {
+  assert.equal(gitTimeoutOf({}), GIT_TIMEOUT_MS)
+  assert.equal(gitTimeoutOf({ CLEAR_UI_GIT_TIMEOUT_MS: '400' }), 400)
+  assert.equal(gitTimeoutOf({ CLEAR_UI_GIT_TIMEOUT_MS: '5' }), 50, 'never so short that git cannot answer at all')
+  assert.equal(gitTimeoutOf({ CLEAR_UI_GIT_TIMEOUT_MS: '999999' }), 2000, 'never so long that the bar stalls')
+  for (const junk of ['', 'fast', 'NaN', '-', null]) assert.equal(gitTimeoutOf({ CLEAR_UI_GIT_TIMEOUT_MS: junk }), GIT_TIMEOUT_MS)
+  assert.equal(gitTimeoutOf(undefined), GIT_TIMEOUT_MS)
+})
 
 const OID = '1234567890abcdef1234567890abcdef12345678'
 const header = (head, extra = '') => `# branch.oid ${OID}\n# branch.head ${head}\n${extra}`
@@ -67,6 +76,24 @@ function tooSlow(repo) {
   return { git: process.execPath, timeoutMs: 100 }
 }
 
+// The other stand-in: a git that exits 0 having delivered only the first line of its listing,
+// while something it started may still hold its stdout pipe. However that comes about -- a
+// timeout that fires between git's exit and the pipe closing used to produce exactly this, as
+// a success with whatever had been read so far -- a listing without a branch header is not an
+// answer.
+function exitsEarlyPipeOpen(repo) {
+  const script = [
+    "const { spawn } = require('node:child_process')",
+    "const { tmpdir } = require('node:os')",
+    "spawn(process.execPath, ['-e', 'setTimeout(() => {}, 4000)'], { cwd: tmpdir(), stdio: ['ignore', 'inherit', 'ignore'] }).unref()",
+    "process.stdout.write('# branch.oid 1234567890abcdef1234567890abcdef12345678\\n', () => process.exit(0))",
+  ].join('\n')
+  writeFileSync(join(repo, 'status'), script + '\n')
+  mkdirSync(join(repo, '.git', 'info'), { recursive: true })
+  appendFileSync(join(repo, '.git', 'info', 'exclude'), 'status\n')
+  return { git: process.execPath, timeoutMs: 1500 }
+}
+
 test('readGit: branch and dirty state of a real repository', { skip: !hasGit }, async () => {
   const repo = makeRepo()
   assert.deepEqual(await readGit(repo, PATIENT), { branch: 'trunk', dirty: false, ahead: 0, behind: 0 })
@@ -109,6 +136,25 @@ test('readGit: a repository too slow to answer keeps its last value, or falls ba
   writeFileSync(join(repo, 'b.txt'), 'b\n')
   assert.equal((await readGit(repo, { ...PATIENT, cacheDir, now: 1000 })).dirty, true)
   assert.equal((await readGit(repo, { ...slow, cacheDir, now: 9000 })).dirty, true, 'the last real answer')
+  cleanup(repo)
+  cleanup(cacheDir)
+})
+
+test('readGit: a listing cut short by the timeout is never taken for an answer', { skip: !hasGit }, async () => {
+  const repo = makeRepo()
+  const cacheDir = mkdtempSync(join(tmpdir(), 'clear-ui-cache-'))
+  writeFileSync(join(repo, 'b.txt'), 'b\n')
+  const real = await readGit(repo, { ...PATIENT, cacheDir, now: 1000 })
+  assert.equal(real.dirty, true)
+
+  // git "succeeded" with one line of listing. That is treated as slow: the last real answer
+  // stands, and the truncated listing is not cached either.
+  const cut = exitsEarlyPipeOpen(repo)
+  assert.deepEqual(await readGit(repo, { ...cut, cacheDir, now: 9000 }), real)
+  assert.deepEqual(await readGit(repo, { cacheDir, now: 9500 }), real, 'and what was cached is that answer, not null')
+  // With no earlier answer it is the branch from HEAD, dirty unknown -- not null, which is what
+  // parsing the one line that did arrive would have produced.
+  assert.deepEqual(await readGit(repo, cut), { branch: 'trunk', dirty: null, ahead: 0, behind: 0 })
   cleanup(repo)
   cleanup(cacheDir)
 })

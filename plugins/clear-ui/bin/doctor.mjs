@@ -7,6 +7,7 @@
 import { spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { loadConfig } from '../src/config.mjs'
+import { findGit, gitTimeoutOf } from '../src/git.mjs'
 import { classify } from '../src/install.mjs'
 import { paths, pluginVersion, readTextOr, RUNTIME_FILES, runtimeIsCurrent } from '../src/paths.mjs'
 import { join } from 'node:path'
@@ -88,6 +89,26 @@ if (missing.length === 0) {
   const lines = (probe.stdout ?? '').trimEnd().split('\n').filter(Boolean)
   if (probe.status === 0 && lines.length > 0) check('Dry render', 'PASS', `${ms} ms · ${lines.join(' ⏎ ')}`)
   else check('Dry render', 'FAIL', `exit ${probe.status}, ${lines.length} lines in ${ms} ms`)
+}
+
+// A git slower than its budget costs the dirty mark and says nothing, so say it here. Timed
+// the way the status line runs it, in the directory the doctor was started from.
+{
+  const git = findGit()
+  const budget = gitTimeoutOf(process.env)
+  const time = () => {
+    const started = process.hrtime.bigint()
+    const run = spawnSync(git, ['status', '--porcelain=v2', '--branch'], { cwd: process.cwd(), windowsHide: true, encoding: 'utf8', timeout: 10000 })
+    return { ms: Number(process.hrtime.bigint() - started) / 1e6, ok: run.status === 0 }
+  }
+  if (!git) check('Git speed', 'UNKNOWN', 'git is not on PATH; the bar is drawn without a branch')
+  else if (!time().ok) check('Git speed', 'UNKNOWN', 'not started inside a repository; run the doctor from one to time git there')
+  else {
+    const median = [time(), time(), time()].map(t => t.ms).sort((a, b) => a - b)[1]
+    const detail = `git status takes ${median.toFixed(0)} ms here, budget ${budget} ms`
+    if (median <= budget * 0.7) check('Git speed', 'PASS', detail)
+    else check('Git speed', 'WARN', `${detail} — the dirty mark will often be missing; set CLEAR_UI_GIT_TIMEOUT_MS higher for this machine`)
+  }
 }
 
 const verdict = rows.some(r => r.result === 'FAIL') ? 'FAIL' : rows.some(r => r.result === 'WARN') ? 'WARN' : 'PASS'

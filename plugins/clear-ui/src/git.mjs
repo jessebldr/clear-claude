@@ -12,6 +12,18 @@ import { writeFileAtomic } from './atomic.mjs'
 
 export const GIT_TIMEOUT_MS = 150
 export const GIT_TTL_MS = 5000
+
+// 150 ms keeps a cache miss inside the 250 ms ceiling, and measured git is 25-100 ms on a
+// developer machine. Where a git spawn alone costs more than that -- a shared CI runner, a
+// virus scanner on every process -- the bar degrades to the branch without a dirty mark, and
+// says nothing. CLEAR_UI_GIT_TIMEOUT_MS is the way out for that machine: a slower tick once per
+// cache period, chosen by the person who pays for it. The doctor reports when it is needed.
+const GIT_TIMEOUT_RANGE_MS = [50, 2000]
+export function gitTimeoutOf(env = process.env) {
+  const asked = Number.parseInt(env?.CLEAR_UI_GIT_TIMEOUT_MS ?? '', 10)
+  if (!Number.isFinite(asked)) return GIT_TIMEOUT_MS
+  return Math.min(GIT_TIMEOUT_RANGE_MS[1], Math.max(GIT_TIMEOUT_RANGE_MS[0], asked))
+}
 const MAX_OUTPUT_BYTES = 4 * 1024 * 1024
 const SHORT_OID_LENGTH = 7
 const CACHE_FILES_KEPT = 32
@@ -108,14 +120,25 @@ function prune(cacheDir, now) {
   }
 }
 
+// The timer is ours rather than execFile's `timeout`. execFile's own handler cuts stdout off
+// and then kills; if git had already exited 0 and only its pipe was still open, execFile
+// reports success with whatever had been read so far, and a truncated listing would be parsed,
+// believed and cached. Here whichever comes first decides, once: a finished process is an
+// answer, the timer is "slow", and nothing that arrives after the timer is looked at.
 const runGit = (git, cwd, env, timeoutMs) =>
   new Promise(resolve => {
-    execFile(
+    let settled = false
+    const settle = result => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      resolve(result)
+    }
+    const child = execFile(
       git,
       ['status', '--porcelain=v2', '--branch'],
       {
         cwd,
-        timeout: timeoutMs,
         maxBuffer: MAX_OUTPUT_BYTES,
         windowsHide: true,
         encoding: 'utf8',
@@ -123,12 +146,19 @@ const runGit = (git, cwd, env, timeoutMs) =>
         env: { ...env, GIT_OPTIONAL_LOCKS: '0', GIT_TERMINAL_PROMPT: '0', GCM_INTERACTIVE: 'Never' },
       },
       (error, stdout) => {
-        if (!error) return resolve({ outcome: 'ok', stdout })
-        // Killed by the timeout (or an over-long listing): the repository is there but slow.
-        if (error.killed || error.code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER') return resolve({ outcome: 'slow' })
-        resolve({ outcome: 'none' })
+        if (!error) return settle({ outcome: 'ok', stdout })
+        // An over-long listing: the repository is there, and too big to describe in time.
+        if (error.code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER') return settle({ outcome: 'slow' })
+        settle({ outcome: 'none' })
       },
     )
+    const timer = setTimeout(() => {
+      // Too slow: the repository is there but cannot answer inside the budget.
+      settle({ outcome: 'slow' })
+      child.stdout?.destroy()
+      child.stderr?.destroy()
+      child.kill()
+    }, timeoutMs)
   })
 
 /**
@@ -187,9 +217,11 @@ export async function readGit(cwd, options = {}) {
     // one per tick -- which also means the last answer would otherwise never expire. So the branch
     // is always read fresh from HEAD, and the last answer is kept only while it is still about
     // that branch; after a checkout the dirty mark is unknown, not remembered.
-    let value = null
-    if (result.outcome === 'ok') value = parseStatus(result.stdout)
-    else if (result.outcome === 'slow') {
+    // A listing with no branch header is not an answer either, however git exited: it was cut
+    // short somewhere. It is treated as slow, so it can neither blank the segment nor be cached
+    // as if git had said "nothing here".
+    let value = result.outcome === 'ok' ? parseStatus(result.stdout) : null
+    if (result.outcome === 'slow' || (result.outcome === 'ok' && value === null)) {
       const head = readHead(cwd)
       value = head && cached?.value?.branch === head.branch ? cached.value : (head ?? cached?.value ?? null)
     }
