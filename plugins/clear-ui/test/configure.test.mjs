@@ -111,6 +111,8 @@ test("uninstall removes Clear UI's files even when the status line is no longer 
 test('usage is off until asked for, on is one key, and off removes it again', () => {
   const home = makeHome()
   assert.match(run(home, 'configure', ['show']).out, /usage\s+off/)
+  // The longest segment name still stands clear of its value; at a fixed 12 it read `weeklyScopedon`.
+  assert.match(run(home, 'configure', ['show']).out, /^ {2}weeklyScoped {2,}on$/m)
   assert.equal(run(home, 'configure', ['preset', 'full']).code, 0)
   assert.equal(run(home, 'configure', ['usage', 'on']).code, 0)
   assert.deepEqual(readConfig(home), { preset: 'full', usage: true, version: 1 })

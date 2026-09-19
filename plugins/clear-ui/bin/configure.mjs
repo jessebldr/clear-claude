@@ -21,6 +21,8 @@ import { paths, readTextOr, writeAtomic } from '../src/paths.mjs'
 
 const say = line => process.stdout.write(`${line}\n`)
 const SEGMENTS = Object.keys(PRESETS.essential)
+// Two cells clear of the longest name: a fixed 12 printed `weeklyScopedon`.
+const SEGMENT_COLUMN = Math.max(...SEGMENTS.map(key => key.length)) + 2
 
 function describe(place) {
   const config = loadConfig(place.config)
@@ -31,7 +33,7 @@ function describe(place) {
   say(`  caps      ${config.caps}  (CLEAR_UI_CAPS in the environment outranks this)`)
   say(`  charset   ${config.charset ?? 'unicode'}  (CLEAR_UI_CHARSET in the environment outranks this)`)
   say(`  usage     ${config.usage ? 'on   (runs `claude -p /usage` in the background, at most every 10 minutes)' : 'off  (the status line reaches no network)'}`)
-  for (const key of SEGMENTS) say(`  ${key.padEnd(12)}${config.show[key] === true ? 'on' : config.show[key] === false ? 'off' : config.show[key]}`)
+  for (const key of SEGMENTS) say(`  ${key.padEnd(SEGMENT_COLUMN)}${config.show[key] === true ? 'on' : config.show[key] === false ? 'off' : config.show[key]}`)
   if (config.problem) say(`  problem   ${config.problem}`)
   return config.problem ? 1 : 0
 }

@@ -8,9 +8,18 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Because the product is a prompt, any edit to `clear-partner.md` is a behaviour change
 and gets its own entry here and its own version bump.
 
+## Unreleased
+
+On `main`, not in a tagged version yet; ships with the next `clear-ui` release.
+
+### Fixed
+
+- `configure.mjs show` printed `weeklyScopedon`: the new segment's name is exactly as wide as the
+  column was. Display only — the setting itself was always read and written correctly.
+
 ## [0.3.0] - 2026-09-19
 
-Marketplace 0.3.0: `clear-ui` 0.2.0. `clear-claude` stays at 0.1.1, with no change to Clear
+Published as tag `v0.3.0`. Marketplace 0.3.0: `clear-ui` 0.2.0. `clear-claude` stays at 0.1.1, with no change to Clear
 Partner. **Nothing changes unless you opt in:** by default the status line draws what it drew
 before, byte for byte, and reaches no network.
 

@@ -172,11 +172,23 @@ if (process.env.FAKE_HANG) setInterval(() => {}, 1000)
 else process.exitCode = Number(process.env.FAKE_EXIT ?? 0)
 `
 
+// Patient, as test/git.test.mjs is, and for the reason measured there: a process that has just
+// ended keeps its working directory busy for a moment on Windows -- the detached worker a tick
+// starts is such a one -- and rmSync's own `maxRetries` does not retry that refusal at all.
+function removeDir(dir) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return rmSync(dir, { recursive: true, force: true })
+    } catch (error) {
+      if (attempt >= 100 || !['EBUSY', 'EPERM', 'EACCES', 'ENOTEMPTY'].includes(error.code)) throw error
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50)
+    }
+  }
+}
+
 function sandbox(t) {
   const dir = mkdtempSync(join(tmpdir(), 'clear-ui-usage-'))
-  // Patient, as test/git.test.mjs is: a process that has just ended can keep its working
-  // directory busy for a moment on Windows, and the detached worker a tick starts is such a one.
-  t.after(() => rmSync(dir, { recursive: true, force: true, maxRetries: 30, retryDelay: 100 }))
+  t.after(() => removeDir(dir))
   const fake = join(dir, 'fake-claude.mjs')
   writeFileSync(fake, FAKE)
   const cacheDir = join(dir, 'data', 'cache')
@@ -479,7 +491,7 @@ test('CLEAR_UI_NO_USAGE_REFRESH: the entry reads the cache and claims nothing, h
 
 test('the doctor reports the provider and its dry render starts no refresh', t => {
   const home = mkdtempSync(join(tmpdir(), 'clear-ui-usage-doctor-'))
-  t.after(() => rmSync(home, { recursive: true, force: true, maxRetries: 5 }))
+  t.after(() => removeDir(home))
   const bin = name => fileURLToPath(new URL(`../bin/${name}.mjs`, import.meta.url))
   // PATH is empty: even a refresh that did start would find no `claude`.
   const run = (name, args = []) => spawnSync(process.execPath, [bin(name), ...args], { env: { PATH: '', SystemRoot: process.env.SystemRoot, CLAUDE_CONFIG_DIR: home }, encoding: 'utf8', windowsHide: true })
