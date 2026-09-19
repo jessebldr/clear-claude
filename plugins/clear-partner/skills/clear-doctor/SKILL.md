@@ -113,9 +113,9 @@ Report the winner explicitly, using the rule Claude Code actually applies:
 2. Otherwise the `outputStyle` setting decides, with the layers in precedence order user < project < local < policy: the highest layer that sets the key wins.
 3. Otherwise the built-in default applies.
 
-So when checks 1–4 pass, the expected winner is Clear Partner regardless of what the settings layers say — and an `outputStyle` setting that names something else is *not* a fault, it is simply overridden while the plugin is enabled. Say so rather than reporting it as a conflict.
+So when checks 1–4 pass **and check 7 finds nothing**, the winner is Clear Partner regardless of what the settings layers say — and an `outputStyle` setting that names something else is *not* a fault, it is simply overridden while the plugin is enabled. Say so rather than reporting it as a conflict.
 
-State the winner as one line, e.g. `Winner: Clear Partner (forced by plugin clear-partner; outputStyle in user settings is overridden)`.
+Do check 7 before you state the winner: both of its findings change the answer. If 7b fails, the plugin's entry has been replaced, nothing is forced, and rule 2 decides — say so, e.g. `Winner: <the outputStyle setting's style, or the default> (Clear Partner is not forced: its entry is replaced by <path>)`. If 7a warns, the winner is whichever forced style Claude Code finds first, which cannot be told from here — say `Winner: indeterminate between <style> and <style>`. Otherwise state it as one line, e.g. `Winner: Clear Partner (forced by plugin clear-partner; outputStyle in user settings is overridden)`.
 
 ## Check 7 — conflicting output styles
 
@@ -137,7 +137,7 @@ Glob these three levels and read only the `name:` line of each file:
 
 - A file whose `name:` is the qualified name → **FAIL**. Remediation: rename or delete that file (tell the user the exact path; do not touch it yourself), then restart the session. At policy level only an administrator can.
 - A file whose `name:` is the bare style name, `Clear Partner` → **not a conflict**, and the check still passes: it has a different key, and the plugin's style stays forced. Name its path in the Detail column, because people who used Clear Partner as a hand-installed style before the plugin existed often have one and wonder about it: it is a separate style, the one an `outputStyle: Clear Partner` setting selects while the plugin is disabled.
-- A level that does not exist is normal. A policy directory that exists but cannot be read → **UNKNOWN** for that level only; say so.
+- A level that does not exist is normal. A policy directory that exists but cannot be read → **WARN**, not UNKNOWN: it is the one place a replacement could be hiding, so the report must not read as a clean PASS. Name the directory; an administrator can look.
 - Any other style file is not a conflict. Do not list it.
 
 ## Check 8 — installed version vs marketplace version

@@ -32,7 +32,8 @@ Clear Partner prompt** — same bytes, same SHA-256 — and no change to what th
 - **The skills now read the policy level too.** Their own description of style resolution
   named an administrator-level style directory that neither of them looked at. Its location
   was read from Claude Code and then measured on disposable Linux, macOS and Windows machines;
-  a policy directory that cannot be read is reported as UNKNOWN, not guessed.
+  a policy directory that cannot be read is a WARN in `clear-doctor` and INDETERMINATE in
+  `clear-audit` — never a clean pass, and never a guess.
 - `configure.mjs show` printed `weeklyScopedon` and `verificationon`: both names are exactly as
   wide as the column was, and `verification` had been since 0.1.0 — found when the second one
   turned up in a recording. Display only; the settings were always read and written correctly

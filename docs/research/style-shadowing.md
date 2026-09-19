@@ -92,8 +92,8 @@ Windows runners — disposable machines where the job is an administrator
 So the policy level follows the same rule, and a file written to those paths is read, which
 confirms the paths. This closes the gap a review of marketplace 0.4.0 found: the skills' own
 description of style resolution named a policy level that neither skill looked at. They now
-read it, and report a policy directory they cannot read as UNKNOWN / INDETERMINATE rather
-than guess.
+read it, and a policy directory they cannot read is a WARN (`clear-doctor`) or
+INDETERMINATE (`clear-audit`) rather than a guess or a clean pass.
 
 ## What this corrects in the record
 

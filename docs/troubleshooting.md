@@ -135,7 +135,8 @@ Look for a file whose frontmatter `name` is exactly `clear-partner:Clear Partner
 `clear-doctor` check 7b and `clear-audit` step A3 both do exactly this and report the
 offending path. All three levels were measured, the policy one on disposable CI machines
 ([research/style-shadowing.md](research/style-shadowing.md#policy-level)); when the skills
-cannot read a policy directory they say UNKNOWN rather than guess.
+cannot read a policy directory they say so — WARN in `clear-doctor`, INDETERMINATE in
+`clear-audit` — rather than guess.
 
 ### Fix
 

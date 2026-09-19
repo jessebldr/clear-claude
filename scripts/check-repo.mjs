@@ -151,9 +151,19 @@ function checkPrompt() {
   // key is built from the plugin's name, so a rename silently points them at the wrong string.
   const styleName = /^name:\s*(.+)$/m.exec(frontmatter[1])?.[1].trim()
   const qualified = `${readJson('plugins/clear-partner/.claude-plugin/plugin.json').name}:${styleName}`
+  // Each skill has to name the current key, every key a published rename left behind (an old
+  // install is still diagnosed), and all three places Claude Code reads style files from.
+  const formerKeys = Object.keys(RECORDED_RENAMES).map((former) => `${former}:${styleName}`)
+  const levels = ['<config home>/output-styles/', '.claude/output-styles/', 'C:\\Program Files\\ClaudeCode\\.claude\\output-styles', '/Library/Application Support/ClaudeCode/.claude/output-styles', '/etc/claude-code/.claude/output-styles']
   for (const skill of ['clear-doctor', 'clear-audit']) {
     const path = `plugins/clear-partner/skills/${skill}/SKILL.md`
-    if (!read(path).includes(`\`${qualified}\``)) fail('prompt', `${path} does not name the style's qualified key \`${qualified}\``)
+    const text = read(path)
+    for (const key of [qualified, ...formerKeys]) {
+      if (!text.includes(`\`${key}\``)) fail('prompt', `${path} does not name the style's qualified key \`${key}\``)
+    }
+    for (const level of levels) {
+      if (!text.includes(level)) fail('prompt', `${path} no longer reads style files from ${level}`)
+    }
   }
 
   // Only inside the frontmatter, and exactly once: the body must match line for line.
