@@ -39,6 +39,8 @@ Scopes, updates, session-only loading, and the full command reference live in
 
 ### Optional: Clear UI
 
+![Before/after: a Claude Code session without and with the clear-ui status bar](assets/clear-ui-before-after.png)
+
 ```text
 claude plugin install clear-ui@clear-claude
 ```
