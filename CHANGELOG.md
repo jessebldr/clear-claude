@@ -8,9 +8,10 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Because the product is a prompt, any edit to `clear-partner.md` is a behaviour change
 and gets its own entry here and its own version bump.
 
-## [Unreleased]
+## [0.2.0] - 2026-09-19
 
-No change to Clear Partner.
+Not yet published. Marketplace 0.2.0: `clear-ui` debuts at 0.1.0. `clear-claude` stays at
+0.1.0, with no change to Clear Partner.
 
 ### Added
 
@@ -34,6 +35,13 @@ No change to Clear Partner.
 - Research and design records: `docs/mods-research-2.1.277.md`, `docs/ui-research.md`,
   `docs/ux-distillation.md`, `docs/roadmap-v2.md`, ADR 0004, and disposable function-hook
   spikes under `experimental/spikes/`.
+
+### Changed
+
+- Marketplace version 0.1.0 → 0.2.0. Each plugin carries its own version; the marketplace
+  version tracks the newest change (`docs/roadmap-v2.md`, "Versions").
+- README, `docs/architecture.md`, `docs/install.md` and `docs/releasing.md` now describe a
+  marketplace of two independent plugins rather than a single one.
 
 ## [0.1.0] - 2026-09-17
 

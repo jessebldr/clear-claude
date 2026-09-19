@@ -1,8 +1,8 @@
 {
   "name": "clear-ui",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
-  "description": "Clear UI core renderer for the Claude Code status line. Not yet a plugin; see README.md.",
+  "description": "Clear UI, an optional status bar plugin for Claude Code. The version that ships is the one in .claude-plugin/plugin.json; this file exists for `npm test` and the Node engine floor.",
   "license": "MIT",
   "type": "module",
   "engines": {

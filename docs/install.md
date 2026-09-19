@@ -5,6 +5,10 @@ uninstall, switch away, and recover. The README covers the common path in four
 commands; this document covers everything else, including scopes and the flags that
 matter in CI.
 
+This document covers the `clear-claude` plugin (Clear Partner). The marketplace's other
+plugin, the optional `clear-ui` status bar, installs separately and has its own
+lifecycle: see [clear-ui-install.md](clear-ui-install.md). Neither needs the other.
+
 Every command here is quoted from `claude plugin --help` on Claude Code **2.1.274** and
 is recorded with its evidence tier in
 [phase0-research.md §3](phase0-research.md#3-exact-command-syntax-help).
@@ -14,13 +18,14 @@ is recorded with its evidence tier in
 - **Claude Code 2.1.274 or later.** Check with `claude --version`. Earlier versions are
   not tested; `force-for-plugin`, which Clear Claude depends on, is verified only on
   2.1.274.
-- **No other prerequisites.** Clear Claude is one Markdown file and two JSON manifests.
-  There is no shell script, no Node dependency, no symlink, and no absolute path in the
-  package.
+- **No other prerequisites.** The `clear-claude` plugin is one Markdown file, two skills
+  and a JSON manifest. There is no shell script, no Node dependency, no symlink, and no
+  absolute path in the package. (Node 18+ is a requirement of `clear-ui` only.)
 - **Two names, and they are identical here.** Commands take `<plugin>` or
   `<plugin>@<marketplace>`. This repository's marketplace is named `clear-claude` and
-  its plugin is also named `clear-claude`, so the fully qualified id is
-  `clear-claude@clear-claude`. Unambiguous short forms work too.
+  this plugin is also named `clear-claude`, so the fully qualified id is
+  `clear-claude@clear-claude`. Unambiguous short forms work too. The status bar is
+  `clear-ui@clear-claude`.
 
 ### Terminal vs in-session
 

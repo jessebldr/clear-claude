@@ -22,9 +22,9 @@ Each plugin carries its own version; the marketplace version tracks the newest c
 | Marketplace | Contents |
 | --- | --- |
 | 0.1.x | Harden `clear-claude`. No behaviour change to Clear Partner. |
-| 0.2.0 | `clear-ui` 0.1.0 appears as a second, optional marketplace plugin (Phases A–C). |
-| 0.2.x | Windows + macOS dogfooding; activity line (Phase D); cross-platform CI (Phase E). |
-| 0.3.0 | `verification-state` on **documented** classic hooks, opt-in inside `clear-ui` (Phase F). |
+| 0.2.0 | `clear-ui` 0.1.0 appears as a second, optional marketplace plugin (Phases A–C). Because Phases D and F were built on the same branch, it also carries the activity line and `verification-state` on **documented** classic hooks — both opt-in, off by default. |
+| 0.2.x | Windows + macOS dogfooding; first green cross-platform CI run (Phase E); the opt-in features exercised against real hook payloads. |
+| 0.3.0 | Unassigned. Was `verification-state` (Phase F), which shipped inside 0.2.0. |
 | 0.4.0-exp | First function-hooks mod, outside the marketplace, `--plugin-dir` only (Phase G). |
 | 1.0 | Only after function hooks are documented, on by default, and the layer boundaries have survived real use. |
 
@@ -135,7 +135,8 @@ source of Codex CLI, Oh My Pi, OpenCode and T3 Code; `anything-to-html` could no
 - **State:** the matrix and the bench step exist. The bench lives outside `test/` because
   `node --test` runs every file under a test directory and a timing is not a test; it fails a
   build only past the 250 ms ceiling. **Not done, and cannot be done from one machine:** a
-  green run on macOS and Linux (nothing has been pushed), and the two weeks of daily use.
+  green run on macOS and Linux (CI triggers on pull requests and on `main`, so it first runs
+  when the pull request opens), and the two weeks of daily use.
 - **Done when:** byte-identical goldens and budgets met on all three; two weeks of daily
   use on Windows and macOS with no settings damage.
 

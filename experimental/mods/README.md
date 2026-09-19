@@ -89,7 +89,9 @@ Being explicit about the limits of the above, because `[BINARY]` invites overrea
 ## What this means for Clear Claude
 
 **Stable Clear Claude does not depend on any of this, and will not until the surface is
-documented.** The shipped plugin is one output style and two read-only skills.
+documented.** The marketplace ships two plugins: `clear-claude`, one output style and
+two read-only skills, and the optional `clear-ui`, a status bar that uses only
+documented classic hooks. Neither touches function hooks.
 
 Three standing rules:
 
@@ -113,6 +115,13 @@ evaluating a stabilised API knows what to evaluate it against.
 ### 1. `verification-state` (hypothetical)
 
 *The one that best fits this project's thesis.*
+
+> **Update, 2026-09-19:** no longer hypothetical, and no longer a mod. Documented
+> `PostToolUse` / `PostToolUseFailure` hooks carry everything this sketch needed, so it
+> shipped as an opt-in feature of `clear-ui` 0.1.0 — per project, only for the commands
+> the project lists, and file coverage is never inferred. See
+> [roadmap-v2.md](../../docs/roadmap-v2.md), Phase F. The sketch below is kept as the
+> record of the original reasoning.
 
 **Problem.** Clear Partner instructs the model to state how a change was verified. That
 statement is a model claim. A model claim about whether tests passed is exactly the kind

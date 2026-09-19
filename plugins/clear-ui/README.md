@@ -9,7 +9,7 @@ A calm status bar for Claude Code, drawn from the JSON Claude Code already pipes
 command plus one `git status`. One row when it fits, two when it does not:
 
 ```text
-Fable 5.1  high  clear-claude  main*          ctx 31% ▄▄▄▄▄▄▄▄▄▄  │  5h 9% · 2h10m  │  7d 51% · Wed
+Fable 5.1  high  │  clear-claude on main  ●             ctx 43%   5h 39% · 42m   7d 58% · 13h42m
 ```
 
 Node >= 18, zero dependencies, no build step.

@@ -1,7 +1,11 @@
 name: CI
 
-# What this workflow does, precisely: it runs Claude Code's own manifest and
-# component validator in strict mode. That is the whole of it.
+# What this workflow does, precisely. The marketplace holds two independent plugins:
+#   - `validate` runs Claude Code's own manifest and component validator in strict
+#     mode over the marketplace and both plugins, clear-claude and clear-ui.
+#   - `clear-ui` runs that plugin's test suite, a demo render and a timing bench on
+#     Linux, macOS and Windows. clear-claude is a prompt and two skills, so it has no
+#     tests to run here.
 #
 # What it does NOT do, and why:
 #   - It does not run the behavioural eval suite. `claude plugin eval` spawns real
@@ -40,10 +44,10 @@ jobs:
       - name: Validate marketplace manifest
         run: claude plugin validate .claude-plugin/marketplace.json --strict
 
-      - name: Validate plugin manifest
+      - name: Validate clear-claude manifest
         run: claude plugin validate plugins/clear-claude --strict
 
-      - name: Validate skills
+      - name: Validate clear-claude skills
         run: claude plugin validate plugins/clear-claude/skills --strict
 
       - name: Validate clear-ui manifest and components

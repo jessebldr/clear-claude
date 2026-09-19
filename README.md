@@ -5,14 +5,23 @@
 **Make Claude Code easier to understand without making it less capable.**
 
 My Claude Code talked like it was paid per word. So I fixed the communication layer —
-one output style, two diagnostic skills, zero config surgery — and proved with real
-evals that the fix doesn't make Claude dumber.
+Clear Partner, an output style with two diagnostic skills and zero config surgery — and
+proved with real evals that the fix doesn't make Claude dumber.
+
+This repository is a marketplace with two independent plugins:
+
+| Plugin | What it is | Touches your settings? |
+| --- | --- | --- |
+| `clear-claude` | **Clear Partner** — the output style, plus `clear-doctor` and `clear-audit`. The product. | No. Nothing is written outside the plugin. |
+| `clear-ui` | **Clear UI** — an optional status bar: model, project and git on the left; context, 5-hour and weekly usage on the right. | Yes: the `statusLine` key (and `subagentStatusLine` if you switch the activity row on), through a setup script you run on purpose. Uninstall restores what was there. |
+
+Installing one never installs, requires, or changes the other.
 
 ---
 
 ## Install (30-second setup)
 
-Two commands, identical on Windows, macOS, and Linux:
+Clear Partner is two commands, identical on Windows, macOS, and Linux:
 
 ```text
 claude plugin marketplace add jessebldr/clear-claude
@@ -27,6 +36,18 @@ New plugins load on the next session; run `/reload-plugins` to pick it up immedi
 
 Scopes, updates, session-only loading, and the full command reference live in
 [docs/install.md](docs/install.md).
+
+### Optional: Clear UI
+
+```text
+claude plugin install clear-ui@clear-claude
+```
+
+Then, in a session, say `set up clear ui`. A plugin cannot register a status line, so a
+setup script names it in your `settings.json`: it prints its plan before it writes, backs
+the file up, edits only that key, and asks before replacing a status line you already
+have. It needs Node 18 or newer. Everything it writes, and how to remove it, is in
+[docs/clear-ui-install.md](docs/clear-ui-install.md).
 
 ---
 
@@ -81,21 +102,37 @@ installs, enables, and does nothing.
 
 ## What's inside
 
+**`clear-claude`** — the communication layer:
+
 | Component | Type | What it does |
 | --- | --- | --- |
 | Clear Partner | Output style | Answer-first, concise-by-default communication. Auto-activates on install. |
 | `clear-doctor` | Skill (model-invoked) | Diagnoses the install end to end, prints PASS/WARN/FAIL with remediation. |
 | `clear-audit` | Skill (model-invoked) | Verifies the style is active and the file is unmodified. No tone grading. |
 
-Deliberately tiny: one text file, two JSON manifests, two skills. No hooks, no MCP
-servers, no CLAUDE.md, no personality injected through three layers at once.
+This plugin is deliberately tiny: one text file, one manifest, two skills. No hooks, no
+MCP servers, no CLAUDE.md, no personality injected through three layers at once.
+
+**`clear-ui`** — the optional status bar:
+
+| Component | Type | What it does |
+| --- | --- | --- |
+| Status bar | Node script, zero dependencies | Draws only from the JSON Claude Code already pipes to a status line, plus one cached `git status`. No network, no credentials, no transcript parsing. |
+| `clear-ui-setup` | Skill over a deterministic script | Plans, backs up, edits one settings key, restores on uninstall. |
+| `clear-ui-configure` | Skill over a deterministic script | Presets, single segments, looks. |
+| `clear-ui-doctor` | Skill over a deterministic script | Read-only: why is it not showing? |
+| Hooks | Documented classic hooks | `SessionStart` re-copies the renderer after a plugin update. The `PostToolUse`, `PostToolUseFailure` and `Stop` hooks behind verification state and the activity row exit at once and record nothing until you opt in. |
+
+Clear UI is code, so unlike Clear Partner it has hooks and a test suite; it injects no
+prompt and makes no model call. Details: [plugins/clear-ui/README.md](plugins/clear-ui/README.md).
 
 > Use prompts for judgment. Use deterministic mechanisms for mechanics.
 
 Communication style is a judgment concern, so it lives in exactly one prompt layer —
-the output style — and nowhere else. The full reasoning is in
-[docs/philosophy.md](docs/philosophy.md), and the key decisions are recorded as
-[ADRs](docs/adr/).
+the output style — and nowhere else. A status bar is mechanics, so it is a script. Each
+layer is its own plugin ([ADR 0004](docs/adr/0004-one-plugin-per-layer.md)). The full
+reasoning is in [docs/philosophy.md](docs/philosophy.md), and the key decisions are
+recorded as [ADRs](docs/adr/).
 
 ---
 
@@ -126,15 +163,22 @@ results, and the honest limits are in [docs/evals.md](docs/evals.md).
 - [ ] Submit to the official Claude Code marketplace so install is one command
 - [ ] Re-run evals against new Claude Code versions (the suite is cheap: ~$2)
 - [ ] `clear-doctor` auto-fix mode (currently read-only by design)
+- [x] Clear UI: an optional status bar as a second plugin (`clear-ui` 0.1.0)
+- [ ] Clear UI: a green CI run on macOS and Linux, and its opt-in features
+  (verification state, activity row) exercised against real hook payloads
 - [ ] Claude Mods: Anthropic is shipping function hooks ("Claude Mods",
   [anthropics/claude-code#91870](https://github.com/anthropics/claude-code/issues/91870)).
-  When the API is stable, build the `experimental/mods` ideas
-  (`verification-state`, `context-hygiene`) as real mods. Clear Partner itself
-  will never depend on them.
+  When the API is documented and on by default, build the transcript renderer as a
+  real mod. `verification-state` no longer waits for it — it shipped inside Clear UI on
+  documented classic hooks. Clear Partner itself will never depend on mods.
+
+The phase-by-phase plan is [docs/roadmap-v2.md](docs/roadmap-v2.md).
 
 ---
 
 ## Docs
+
+Clear Partner (`clear-claude`):
 
 - [docs/install.md](docs/install.md) — full lifecycle: install, update, verify,
   disable, uninstall, recovery
@@ -155,6 +199,20 @@ results, and the honest limits are in [docs/evals.md](docs/evals.md).
   style differs from the original (one line)
 - [docs/phase0-research.md](docs/phase0-research.md) — verified platform behaviour
   for Claude Code 2.1.274
+
+Clear UI (`clear-ui`):
+
+- [docs/clear-ui-install.md](docs/clear-ui-install.md) — install, what gets written
+  and where, configure, uninstall
+- [plugins/clear-ui/README.md](plugins/clear-ui/README.md) — scripts, looks, file
+  layout, tests
+- [docs/ui-architecture.md](docs/ui-architecture.md) — every design decision, with the
+  measurement behind it
+- [docs/roadmap-v2.md](docs/roadmap-v2.md) — phases, what was built differently from
+  plan, what is still unverified
+- [docs/ui-research.md](docs/ui-research.md),
+  [docs/ux-distillation.md](docs/ux-distillation.md),
+  [docs/mods-research-2.1.277.md](docs/mods-research-2.1.277.md) — the evidence
 
 ## License
 

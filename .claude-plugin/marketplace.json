@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Clear Claude — a minimal, opinionated Claude Code setup for clear communication without reduced engineering capability.",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "plugins": [
     {

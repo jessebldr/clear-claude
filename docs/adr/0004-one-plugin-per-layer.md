@@ -1,6 +1,6 @@
 # ADR 0004: One plugin per layer; experimental mods stay outside the marketplace
 
-**Status:** Proposed · **Date:** 2026-09-19
+**Status:** Accepted · **Date:** 2026-09-19
 
 ## Context
 
