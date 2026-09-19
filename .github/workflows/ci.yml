@@ -84,7 +84,9 @@ jobs:
       - name: Test
         run: node --test
 
+      # bash on every runner: PowerShell, the Windows default, has no `<` redirection.
       - name: Demo render
+        shell: bash
         run: node bin/statusline.mjs < test/fixtures/idle.json
         env:
           COLUMNS: '120'
