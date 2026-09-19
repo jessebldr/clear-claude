@@ -127,8 +127,7 @@ communicates the answer — never the shortest possible answer.
 
 *Real sessions, recorded, not mocked: same question, same model, minutes apart. The only
 difference is the plugin, loaded with `--plugin-dir`. It stops when the question is answered.
-The waiting is cut out; nothing inside a frame is touched — which is why the caption in the
-recording still carries the plugin's name from before it was renamed. A third pair,
+The waiting is cut out; nothing inside a frame is touched. A third pair,
 [disk space](assets/demo-disk-space.gif), is recorded the same way.*
 
 One recording is an anecdote, so the number comes from repeated runs instead: four runs

@@ -1,7 +1,7 @@
 # Can a style file outside the plugin displace Clear Partner?
 
 **Date:** 2026-09-20 · **Claude Code:** 2.1.273, 2.1.277, 2.1.278 · **Platform:** native
-Windows 11 (the three versions) · Linux and macOS: see [the last section](#other-platforms)
+Windows 11 (all three versions); Linux x86_64 and macOS arm64 (2.1.278)
 
 This project said, from its first release until marketplace 0.4.1, that a user-level output
 style named `Clear Partner` silently replaces the plugin's copy, force flag included. It was
@@ -20,8 +20,9 @@ the narrower thing that *is* true.
 | `name: Clear Partner` — the bare style name | **None.** The plugin's style stays forced. The file is a second, separate style. |
 | `name: clear-partner:Clear Partner` — the plugin's qualified name | **Replaces it.** No style is forced; Claude Code falls back to the `outputStyle` setting. No error or warning anywhere. |
 
-The same at user level (`<config home>/output-styles/`) and at project level
-(`.claude/output-styles/`). The second row is what the diagnostic skills now look for. Nobody
+The same at user level (`<config home>/output-styles/`), at project level
+(`.claude/output-styles/`) and at policy level (the administrator's directory,
+[below](#policy-level)). The second row is what the diagnostic skills now look for. Nobody
 writes that name by accident, so as a cause of "installed but not behaving" it is rare; it is
 kept because it is the one case where everything else looks healthy.
 
@@ -42,9 +43,9 @@ claude: 2.1.278 (Claude Code) · MINGW64_NT-10.0-26200 x86_64
   files removed again:                          Using forced plugin output style: clear-partner:Clear Partner
 ```
 
-The user-level rows were repeated with the 2.1.273 and 2.1.277 executables that were still on
-the machine (`CLAUDE=<path> bash scripts/measure-plugin-loading.sh shadowing`): the same three
-results on each. 2.1.274, the version the original claim was written against, was not
+The whole block was repeated with the 2.1.273 and 2.1.277 executables that were still on
+the machine (`CLAUDE=<path> bash scripts/measure-plugin-loading.sh shadowing`): the same six
+lines on each. 2.1.274, the version the original claim was written against, was not
 available; it sits between two versions that agree.
 
 ## The mechanism
@@ -78,14 +79,21 @@ The same loader reads a third directory, with `source: "policySettings"`, applie
 | macOS | `/Library/Application Support/ClaudeCode/.claude/output-styles/` |
 | Linux | `/etc/claude-code/.claude/output-styles/` |
 
-**Read from the 2.1.278 code; not measured.** Writing there needs an administrator, and this
-was not done. Because policy styles go through the same keyed assignment as user and project
-styles, the same rule is expected to hold — a file there displaces the plugin only under the
-qualified name — and the skills check that directory on that basis. They report a policy
-directory they cannot read as UNKNOWN / INDETERMINATE rather than guess.
+The paths were read from the 2.1.278 code and then **measured**, on GitHub's Linux, macOS and
+Windows runners — disposable machines where the job is an administrator
+(`MEASURE_POLICY=1`, [run 35459152005](https://github.com/jessebldr/clear-claude/actions/runs/35459152005)). The same on all three:
 
-This closes the gap a review of marketplace 0.4.0 found: the skills' own description of style
-resolution named a policy level that neither skill looked at.
+```text
+  policy file, name: Clear Partner:               Using forced plugin output style: clear-partner:Clear Partner
+  policy file, name: clear-partner:Clear Partner: no forced style
+  policy directory removed again:                 Using forced plugin output style: clear-partner:Clear Partner
+```
+
+So the policy level follows the same rule, and a file written to those paths is read, which
+confirms the paths. This closes the gap a review of marketplace 0.4.0 found: the skills' own
+description of style resolution named a policy level that neither skill looked at. They now
+read it, and report a policy directory they cannot read as UNKNOWN / INDETERMINATE rather
+than guess.
 
 ## What this corrects in the record
 
@@ -96,7 +104,6 @@ style was the active one in those sessions.
 
 ## Other platforms
 
-The shadowing rows above were also taken on GitHub's Linux and macOS runners by the
-`Measure plugin loading` workflow; see the run linked from
-[migration.md](../migration.md#what-was-measured), which records the same script's rename
-measurements.
+The user- and project-level rows were taken by the same workflow run on Linux x86_64 and macOS
+arm64, Claude Code 2.1.278: the same six lines as on Windows. A workflow log expires, which is
+why the lines are copied into this page.

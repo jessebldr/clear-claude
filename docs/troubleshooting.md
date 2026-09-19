@@ -133,8 +133,9 @@ Look for a file whose frontmatter `name` is exactly `clear-partner:Clear Partner
   `/etc/claude-code/.claude/output-styles/` (Linux)
 
 `clear-doctor` check 7b and `clear-audit` step A3 both do exactly this and report the
-offending path. The policy location is read from Claude Code's code and has not been
-measured; the skills say UNKNOWN rather than guess when they cannot read it.
+offending path. All three levels were measured, the policy one on disposable CI machines
+([research/style-shadowing.md](research/style-shadowing.md#policy-level)); when the skills
+cannot read a policy directory they say UNKNOWN rather than guess.
 
 ### Fix
 

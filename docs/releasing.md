@@ -91,8 +91,12 @@ rename reaches every user. Do not do it for a label — that is what `displayNam
 If it has to happen: move the directory, change the name in `plugin.json` and the
 marketplace entry, and **append** the old name to `renames` in `marketplace.json`. Never
 edit or delete an existing `renames` entry: Claude Code follows the chain for users who
-skipped a release. Then run the upgrade test in [migration.md](migration.md#what-was-measured)
-again. The marketplace's own `name` has no such mechanism and must not change
+skipped a release. Then take the upgrade measurement again —
+`OLD_REF=<last tag with the old name> bash scripts/measure-plugin-loading.sh rename`, or the
+`Measure plugin loading` workflow for all three platforms — and record it the way
+[migration.md](migration.md#what-was-measured) does. A rename also changes the key the
+diagnostic skills search for (`<plugin>:<style name>`); `check-repo.mjs` fails until they
+name the new one. The marketplace's own `name` has no such mechanism and must not change
 ([ADR 0005](adr/0005-naming-and-install-paths.md)).
 
 ## Publishing

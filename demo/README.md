@@ -98,8 +98,10 @@ after:   claude --setting-sources project --plugin-dir plugins/clear-partner
 These were recorded when the plugin, and its directory under `plugins/`, was still named
 `clear-claude`; it is now `clear-partner` ([ADR 0005](../docs/adr/0005-naming-and-install-paths.md)).
 Same files, same prompt bytes — only the name moved, so the commands here use the new path.
-The caption inside the side-by-side GIFs, "+ clear-claude plugin", is part of the recording
-and stays as recorded; `edit.mjs` writes the new name from the next take on.
+The banner over each pane is drawn by `edit.mjs`, not recorded, so on 2026-09-20 the three
+side-by-side GIFs and their covers were cut again from the same stored frames with the
+banner "+ Clear Partner plugin" in place of "+ clear-claude plugin": the same frame counts
+and lengths as before, and nothing inside a frame differs.
 
 The published status bar recordings were made a few hours before 0.1.1 was what the
 marketplace served, so for that one take a hidden alias loaded the working-tree copy of

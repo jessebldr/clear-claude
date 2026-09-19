@@ -316,7 +316,7 @@ different to say.
 | Commands and manifests behave as documented | **Verified on Linux**, Claude Code 2.1.274 ([marketplace-test.md](research/marketplace-test.md)) |
 | Package contains no platform-specific content, absolute paths, symlinks, or scripts | **Verified by inspection** |
 | Same commands work on Windows | **Verified on native Windows 11**, Claude Code 2.1.278: install from GitHub, forced style, `clear-doctor` PASS, recorded SHA-256 in the plugin cache ([clear-ui-dogfood.md](clear-ui-dogfood.md#installed-the-way-a-user-does--windows-11-2026-09-19-v021--pass)); fresh install and the rename upgrade under the current names ([migration.md](migration.md#what-was-measured)) |
-| Same commands work on macOS | **Not verified** — expected identical because Claude Code abstracts the difference |
+| Same commands work on macOS | **Verified on macOS 26, Apple Silicon**, Claude Code 2.1.278: the marketplace install on a real Mac, under the plugin's former name ([clear-ui-dogfood.md](clear-ui-dogfood.md#macos-26-on-apple-silicon--2026-09-20--pass-with-the-visual-checks-still-open)); install, rename upgrade and forced style under the current names on a macOS runner ([migration.md](migration.md#what-was-measured)) |
 
 Two places where the platform does show through, both outside the plugin itself:
 
@@ -325,7 +325,7 @@ Two places where the platform does show through, both outside the plugin itself:
 - **Hashing a file by hand**, if you are checking the style file manually rather than
   letting `clear-audit` do it: `sha256sum` (Linux), `shasum -a 256` (macOS),
   `certutil -hashfile <file> SHA256` or PowerShell `Get-FileHash -Algorithm SHA256`
-  (Windows). Untested on macOS by us; these are the standard tools on each.
+  (Windows). These are the standard tools on each; `shasum` on macOS is the one not tried by us.
 
 One portability caveat worth knowing: if Git converts the style file to CRLF line
 endings on checkout (`core.autocrlf=true`), its SHA-256 will not match the recorded
