@@ -77,5 +77,8 @@ export function stateFromStatusline(input) {
     sessionId: stringOrNull(input.session_id),
     verification: null,
     activity: null,
+    // Model-scoped weekly usage, which the payload does not carry. The entry fills it from the
+    // opt-in provider's cache, and the renderer draws it as one more quota chip.
+    usage: null,
   }
 }

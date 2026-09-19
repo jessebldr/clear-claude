@@ -25,6 +25,7 @@ reports which keys are set and deliberately never their contents.
 | statusLine | not set, or set to another product | `clear-ui-setup`. If another product is named, the user has to choose between them. |
 | Runtime files | missing, or a version behind the plugin | Restart the session: the `SessionStart` hook re-copies it. If it persists, run setup `apply` again. |
 | Silent gates | `disableAllHooks` or `allowManagedHooksOnly` is set | Status lines do not run under those settings and Claude Code says nothing about it. Clear UI cannot work around it. |
+| Usage provider | on, but no `claude` executable, no good answer yet, or the last good answer is too old to draw | `off (the default)` is a PASS and needs nothing. On Windows only the native `claude.exe` can be started; an npm install's `claude.cmd` cannot. Otherwise `node "${CLAUDE_PLUGIN_ROOT}/bin/usage-refresh.mjs" "<cache directory>" --report` (the cache directory is `plugins/data/clear-ui-clear-claude/cache` under the Claude config home, next to the `runtime` directory the table names) runs one refresh and prints why it was not believed (`no-limits` means Claude Code could not reach its usage endpoint). The doctor itself never starts a refresh. |
 | Dry render | the renderer exited non-zero or drew nothing | A bug worth reporting: include the exit code and the timing from the row. |
 
 Two things the script cannot check, so do not claim them:

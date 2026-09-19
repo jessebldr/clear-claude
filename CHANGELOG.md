@@ -8,6 +8,58 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Because the product is a prompt, any edit to `clear-partner.md` is a behaviour change
 and gets its own entry here and its own version bump.
 
+## [0.3.0] - 2026-09-19
+
+Marketplace 0.3.0: `clear-ui` 0.2.0. `clear-claude` stays at 0.1.1, with no change to Clear
+Partner. **Nothing changes unless you opt in:** by default the status line draws what it drew
+before, byte for byte, and reaches no network.
+
+### Added
+
+- **Usage provider (opt-in): the weekly limit scoped to one model, on the bar.** Claude Code's
+  usage screen shows a third window — a weekly limit for one model — that the status-line data
+  does not carry. `node bin/configure.mjs usage on` (or ask for it: "show my model's weekly
+  limit in the status line") adds it as one more chip after the weekly one, under the name
+  Claude Code gives it: `7d 68% · 4h07m  │  Fable 65%`. Same warning (80 %) and critical (95 %)
+  levels as the other quotas. No model is named in the code; whatever label arrives is drawn.
+  - **Where the number comes from.** A background worker runs Claude Code's own
+    `claude -p /usage`, at most every ten minutes across all your sessions, and reads the
+    structured report in its output. Claude Code reaches the network for that with its own
+    sign-in, as it does for its `/usage` screen. Clear UI reads no credential and calls no API.
+    The run makes no model call and costs nothing.
+  - **That surface is not documented by Anthropic.** It was measured on Claude Code 2.1.278
+    ([docs/research/headless-usage.md](docs/research/headless-usage.md)). A run is believed only
+    when it proves it was the built-in command — no turn, no cost, no token, no model — and only
+    its structured report is read, never the text. Anything else is a silent failure: the chip
+    disappears rather than showing a wrong number. A failure never overwrites the last good
+    answer, which is drawn for 30 minutes and then not at all.
+  - **What it costs.** The status line only reads a small file: a few milliseconds, within
+    measurement noise. The one tick in ten minutes that starts the worker costs about 8 ms. The
+    worker is a full Claude Code start (~1.9 s, hidden, in the background), which rewrites
+    `~/.claude.json` and makes Claude Code's usual start-up requests.
+  - **It never goes through a shell.** `claude` is started with an argument vector: through Git
+    Bash, `/usage` becomes a path, and a path is a prompt a model answers for money — that
+    happened once while this was being measured ($0.136), and a test now holds the door shut.
+    As a second line, the run uses the cheapest model, no tools and the smallest budget.
+    `--max-budget-usd` does not prevent a first accidental model call, only a second; measured,
+    that first call costs $0.004 under these flags.
+  - **Responsive.** The chip is the first thing dropped when the row is short, and while it is
+    healthy it is never what turns a bar that fitted on one row into two.
+    `configure.mjs set weeklyScoped off` hides it and leaves the provider running.
+  - **Windows:** needs the native `claude.exe`. An npm install's `claude.cmd` cannot be started
+    without a shell, so there the provider stays silent.
+- **Doctor: a `Usage provider` row** — off or on, whether a `claude` executable was found, how
+  old the last good answer is, when the last attempt was. The doctor reads what is on disk and
+  never starts a refresh, its dry render included. `node bin/usage-refresh.mjs <cache
+  directory> --report` runs one refresh by hand and says why it was or was not believed.
+
+### Changed
+
+- The plugin and marketplace descriptions, and both READMEs, no longer say "no network" without
+  qualification: the default is still network-free, and the opt-in provider is described as
+  what it is — Claude Code's own command, run in the background.
+- `configure.mjs show` lists `usage` and the new `weeklyScoped` segment.
+
 ## [0.2.2] - 2026-09-19
 
 Published as tag `v0.2.2`. Marketplace 0.2.2: `clear-claude` 0.1.1 — **a prompt change, so a behaviour

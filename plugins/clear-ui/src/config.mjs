@@ -17,6 +17,8 @@ const ESSENTIAL = {
   context: true,
   fiveHour: true,
   sevenDay: true,
+  // Draws only where the usage provider was switched on (`usage`, below) and has an answer.
+  weeklyScoped: true,
   // 'auto': only where there is no quota to show instead (API key, Bedrock, Vertex).
   cost: 'auto',
   lines: false,
@@ -47,7 +49,7 @@ const isObject = value => typeof value === 'object' && value !== null && !Array.
 
 /** Pure. Any value -> { preset, charset, show, problem }. Unknown keys and bad values are ignored. */
 export function resolveConfig(raw) {
-  const fallback = { preset: DEFAULT_PRESET, charset: null, look: DEFAULT_LOOK, caps: DEFAULT_CAPS, show: { ...PRESETS[DEFAULT_PRESET] }, problem: null }
+  const fallback = { preset: DEFAULT_PRESET, charset: null, look: DEFAULT_LOOK, caps: DEFAULT_CAPS, usage: false, show: { ...PRESETS[DEFAULT_PRESET] }, problem: null }
   if (raw === undefined || raw === null) return fallback
   if (!isObject(raw)) return { ...fallback, problem: 'config.json is not a JSON object' }
   if (raw.version !== undefined && raw.version !== CONFIG_VERSION) {
@@ -74,6 +76,9 @@ export function resolveConfig(raw) {
     charset: CHARSETS.includes(raw.charset) ? raw.charset : null,
     look: LOOKS.includes(raw.look) ? raw.look : DEFAULT_LOOK,
     caps: CAPS.includes(raw.caps) ? raw.caps : DEFAULT_CAPS,
+    // The usage provider runs `claude` in the background, which reaches the network. No preset
+    // turns it on and nothing but the literal `true` does: see src/usage.mjs.
+    usage: raw.usage === true,
     show,
     problem: unknownPreset ? `unknown preset ${JSON.stringify(raw.preset)}; drawing ${DEFAULT_PRESET}` : null,
   }

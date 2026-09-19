@@ -44,7 +44,9 @@ clear-claude/
 │       │   ├── git.mjs               ← Node: one call, timeout, TTL cache
 │       │   ├── config.mjs            ← presets, validation (pure) and the one file read
 │       │   ├── verify.mjs            ← pure: which commands count, what the records mean
-│       │   └── session-state.mjs     ← Node: per-session records, one writer per file
+│       │   ├── session-state.mjs     ← Node: per-session records, one writer per file
+│       │   ├── usage.mjs             ← pure: opt-in usage provider — arguments, validation, record
+│       │   └── usage-cache.mjs       ← Node: its cache file, single-flight claim, the `claude` run
 │       ├── bin/
 │       │   ├── statusline.mjs        ← entry: read → gather → render → print → exit(0)
 │       │   └── setup.mjs             ← plan / apply / uninstall, deterministic
@@ -97,14 +99,23 @@ timer also keeps the 5-hour countdown honest between messages.
 | Context % + bar | `context_window.used_percentage`; if null, computed from `current_usage` / `context_window_size`; else hidden | `ctx —` only at session start |
 | 5h usage + reset | `rate_limits.five_hour` | segment hidden |
 | Weekly usage + reset | `rate_limits.seven_day` | segment hidden |
+| Weekly usage scoped to a model (opt-in) | the usage provider's cache, under the label Claude Code gave the row | segment hidden: provider off, no answer, answer over 30 min old, or window reset |
 | Session cost | `cost.total_cost_usd` — **shown only when no usage window is available and the cost is above zero** (API-key, Bedrock, Vertex) | hidden |
 
 **The per-model weekly limit is not available.** The usage page shows a third window, a separate
 weekly limit for the current top model ("Fable this week"). The status-line payload was captured
 live on 2.1.277 in both a Fable 5.1 and an Opus 5 session: `rate_limits` carries `five_hour` and
-`seven_day` and nothing else, identical in both. Showing that window would take a network call
-with the user's credentials, which this design rules out, so it is not shown; if Claude Code
-starts sending it, it is one more `usage()` segment.
+`seven_day` and nothing else, identical in both. Clear UI making a network call with the user's
+credentials is ruled out, so by default it is not shown; if Claude Code starts sending it, it is
+one more `usage()` segment.
+
+Since 2.1.278 there is one other source: Claude Code's own headless `claude -p /usage` prints the
+scoped window as structured data, with no model turn. It is undocumented, takes 1.9 s and reaches
+the network, so it is an **opt-in provider** behind a cache, never part of the default and never
+on the render path: a detached worker refreshes a file at most every ten minutes and the status
+line only reads it. Measurements and failure behaviour:
+[research/headless-usage.md](research/headless-usage.md). The status-line contract itself still
+does not expose scoped usage.
 
 Deliberately excluded from v0.1: tools, agents, background commands, todos,
 verification, session clock, cache stats, PR/CI, tokens per bucket, burn rate, themes,
@@ -446,7 +457,11 @@ and tool output. Rules:
 - **Branch names, directory names, agent names and any future transcript-derived text are
   untrusted.** One sanitising pass at the render boundary strips CSI/OSC/C0/C1/DEL and
   bidi overrides and caps length. Not per call site.
-- No network. No credential files. No environment values printed.
+- No network. No credential files. No environment values printed. The one exception is opt-in
+  and indirect: the usage provider starts `claude -p /usage`, and Claude Code reaches the network
+  with its own credentials. It is started with an argument vector and never through a shell, under
+  `--safe-mode`, with no tools, the cheapest model and the smallest budget, and its output is
+  believed only when it proves no model turn was made.
 - State and cache live only in the plugin data dir; bounded size, TTL, atomic writes;
   `session_id` filtered to `[A-Za-z0-9_-]` before it becomes a file name.
 - Verification records store a command **classification and hash**, never the command
@@ -497,7 +512,8 @@ was read if git had already exited 0 — and a listing with no branch header is 
 however git exited: the last real answer stands, or the branch from HEAD, and nothing is cached
 as if git had said "nothing here".
 
-No network and no transcript read on the render path. Git: one call, 150 ms timeout,
+No network and no transcript read on the render path; the opt-in usage provider adds one file
+read to it, and about 8 ms to the one tick in ten minutes that starts its worker. Git: one call, 150 ms timeout,
 5 s TTL, last-known value on timeout. Explicit `process.exit(0)` so no process can
 linger. Measurement: `test/bench.mjs` spawns the real entry with a fixture on stdin,
 fresh process per sample, median and p95 of 15, run in CI on `windows-latest`,

@@ -8,7 +8,7 @@ import { render } from '../src/render.mjs'
 
 test('no config at all is the essential preset, with nothing to report', () => {
   for (const raw of [undefined, null]) {
-    assert.deepEqual(resolveConfig(raw), { preset: 'essential', charset: null, look: 'pills', caps: 'square', show: PRESETS.essential, problem: null })
+    assert.deepEqual(resolveConfig(raw), { preset: 'essential', charset: null, look: 'pills', caps: 'square', usage: false, show: PRESETS.essential, problem: null })
   }
 })
 
@@ -34,7 +34,7 @@ test('unknown keys and values of the wrong type are ignored, never fatal', () =>
     charset: 'klingon',
     show: { model: 'yes', effort: 0, cost: 'sometimes', widgets: ['x'], __proto__: { git: false } },
   })
-  assert.deepEqual(resolved, { preset: 'essential', charset: null, look: 'pills', caps: 'square', show: PRESETS.essential, problem: null })
+  assert.deepEqual(resolved, { preset: 'essential', charset: null, look: 'pills', caps: 'square', usage: false, show: PRESETS.essential, problem: null })
 })
 
 test('what cannot be honoured is reported, and the default is drawn', () => {
@@ -64,7 +64,7 @@ test('loadConfig: missing, malformed and byte-order-marked files', () => {
   assert.deepEqual(loadConfig(file).show, PRESETS.essential)
 
   writeFileSync(file, `${String.fromCodePoint(0xfeff)}{ "preset": "minimal" }`)
-  assert.deepEqual(loadConfig(file), { preset: 'minimal', charset: null, look: 'pills', caps: 'square', show: PRESETS.minimal, problem: null })
+  assert.deepEqual(loadConfig(file), { preset: 'minimal', charset: null, look: 'pills', caps: 'square', usage: false, show: PRESETS.minimal, problem: null })
   rmSync(dir, { recursive: true, force: true })
 })
 

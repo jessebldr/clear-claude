@@ -7,7 +7,8 @@
 //   node bin/configure.mjs look <pills|text>
 //   node bin/configure.mjs caps <square|round|auto>        the ends of a chip
 //   node bin/configure.mjs charset <unicode|ascii>
-//   node bin/configure.mjs reset                           back to the default: no file at all
+//   node bin/configure.mjs usage <on|off>                  the opt-in usage provider; off by default
+//   node bin/configure.mjs reset                          back to the default: no file at all
 //
 // Writes one file, config.json in the plugin data directory, and nothing else. Like setup, it
 // refuses to rewrite a file it cannot parse: whatever is in it is the user's, and a tool that
@@ -29,6 +30,7 @@ function describe(place) {
   say(`  look      ${config.look}  (CLEAR_UI_LOOK in the environment outranks this)`)
   say(`  caps      ${config.caps}  (CLEAR_UI_CAPS in the environment outranks this)`)
   say(`  charset   ${config.charset ?? 'unicode'}  (CLEAR_UI_CHARSET in the environment outranks this)`)
+  say(`  usage     ${config.usage ? 'on   (runs `claude -p /usage` in the background, at most every 10 minutes)' : 'off  (the status line reaches no network)'}`)
   for (const key of SEGMENTS) say(`  ${key.padEnd(12)}${config.show[key] === true ? 'on' : config.show[key] === false ? 'off' : config.show[key]}`)
   if (config.problem) say(`  problem   ${config.problem}`)
   return config.problem ? 1 : 0
@@ -84,6 +86,13 @@ function main(argv) {
     const current = readForEdit(place)
     return current === null ? 1 : write(place, { ...current, charset: first })
   }
+  if (command === 'usage' && ['on', 'off'].includes(first)) {
+    const current = readForEdit(place)
+    if (current === null) return 1
+    // Off is the absence of the key, so a file that never opted in and one that opted out read alike.
+    const { usage: _dropped, ...rest } = current
+    return write(place, first === 'on' ? { ...rest, usage: true } : rest)
+  }
   if (command === 'set' && SEGMENTS.includes(first)) {
     const allowed = first === 'cost' ? { on: 'always', off: 'never', auto: 'auto', always: 'always', never: 'never' } : { on: true, off: false }
     if (Object.hasOwn(allowed, second ?? '')) {
@@ -100,6 +109,7 @@ function main(argv) {
   say(`       configure.mjs look <${LOOKS.join('|')}>`)
   say(`       configure.mjs caps <${CAPS.join('|')}>`)
   say('       configure.mjs charset <unicode|ascii>')
+  say('       configure.mjs usage <on|off>')
   say('       configure.mjs reset')
   return 1
 }

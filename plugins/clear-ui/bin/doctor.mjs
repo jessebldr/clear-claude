@@ -10,6 +10,8 @@ import { loadConfig } from '../src/config.mjs'
 import { findGit, gitTimeoutOf } from '../src/git.mjs'
 import { classify } from '../src/install.mjs'
 import { paths, pluginVersion, readTextOr, RUNTIME_FILES, runtimeIsCurrent } from '../src/paths.mjs'
+import { describeUsage } from '../src/usage.mjs'
+import { findClaude, lastAttemptAt, readUsageCache } from '../src/usage-cache.mjs'
 import { join } from 'node:path'
 
 const rows = []
@@ -58,6 +60,19 @@ const config = loadConfig(place.config)
 if (config.problem) check('Config', 'WARN', `${config.problem} — drawing the default`)
 else check('Config', 'PASS', existsSync(place.config) ? `preset ${config.preset}` : 'no file; drawing the default')
 
+// The usage provider fails silently by design, so this is where its state is said aloud. It looks
+// at what is on disk -- the config, the cache file, the newest lock -- and starts nothing.
+{
+  const { result, detail } = describeUsage({
+    enabled: config.usage,
+    record: readUsageCache(place.cacheDir),
+    lastAttemptAt: lastAttemptAt(place.cacheDir),
+    hasClaude: findClaude() !== null,
+    now: Date.now(),
+  })
+  check('Usage provider', result, detail)
+}
+
 check(
   'Uninstall safety',
   'PASS',
@@ -80,7 +95,8 @@ if (missing.length === 0) {
     input: payload,
     // TERM=dumb, not NO_COLOR: NO_COLOR keeps bold and dim, and their escapes would be printed raw
     // into the table below.
-    env: { ...process.env, COLUMNS: '120', TERM: 'dumb' },
+    // And no usage refresh: a diagnosis must not be what starts `claude`.
+    env: { ...process.env, COLUMNS: '120', TERM: 'dumb', CLEAR_UI_NO_USAGE_REFRESH: '1' },
     encoding: 'utf8',
     windowsHide: true,
     timeout: 10000,

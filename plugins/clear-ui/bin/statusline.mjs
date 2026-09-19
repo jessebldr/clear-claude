@@ -98,6 +98,17 @@ async function main() {
     const stateDir = join(dataDir, 'state')
     state.verification = verificationOf(readRecord(stateDir, state.sessionId, 'verify'), readRecord(stateDir, state.sessionId, 'edit'), now)
   }
+  // Opt-in, and the modules are not even loaded otherwise: by default this entry reaches no
+  // network and starts no process but git. Here it only reads a file. When the file is old it may
+  // start the detached worker -- once per ten minutes across every session -- and never waits.
+  // CLEAR_UI_NO_USAGE_REFRESH is for a caller that must only look: the doctor's dry render.
+  if (state && dataDir && config.usage) {
+    const [{ usageOf, refreshDue }, { readUsageCache, claimRefresh, startRefresh }] = await Promise.all([import('../src/usage.mjs'), import('../src/usage-cache.mjs')])
+    const cacheDir = join(dataDir, 'cache')
+    const record = readUsageCache(cacheDir)
+    state.usage = usageOf(record, now)
+    if (!process.env.CLEAR_UI_NO_USAGE_REFRESH && refreshDue(record, now) && claimRefresh(cacheDir, now)) startRefresh(fileURLToPath(new URL('./usage-refresh.mjs', import.meta.url)), cacheDir)
+  }
   const lines = render(state, {
     columns: columnsOf(process.env),
     now,
