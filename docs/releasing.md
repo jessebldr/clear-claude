@@ -4,7 +4,7 @@ Clear Claude uses semantic versioning. Because the product *is* a prompt, an edi
 `clear-partner.md` is a behaviour change: it gets a version bump and its own CHANGELOG
 entry, never a ride-along in an unrelated commit.
 
-The marketplace holds two plugins, `clear-claude` and `clear-ui`, and **three version
+The marketplace holds two plugins, `clear-partner` and `clear-ui`, and **three version
 numbers**: one per plugin, and the marketplace's own (`metadata.version`), which tracks
 the newest change to either. Bump only the plugin that changed, and the marketplace
 with it. The plan for the marketplace number is in
@@ -18,8 +18,8 @@ with it. The plan for the marketplace number is in
    against the no-plugin baseline before you decide the change is shippable.
 
 2. **Bump the version in both manifests of the plugin that changed.** They must agree;
-   nothing enforces this for you, and `claude plugin tag` is the only thing that will
-   complain.
+   Claude Code enforces none of it, so `scripts/check-repo.mjs` does (step 4), and
+   `claude plugin tag --dry-run` cross-checks after the commit.
    - `plugins/<plugin>/.claude-plugin/plugin.json` → `version`
    - `.claude-plugin/marketplace.json` → that plugin's entry under `plugins[]` → `version`
    - `.claude-plugin/marketplace.json` → `metadata.version`, the marketplace itself
@@ -34,16 +34,20 @@ with it. The plan for the marketplace number is in
 4. **Validate and test.** The same commands CI runs:
 
    ```sh
+   node scripts/check-repo.mjs
    claude plugin validate .claude-plugin/marketplace.json --strict
-   claude plugin validate plugins/clear-claude --strict
-   claude plugin validate plugins/clear-claude/skills --strict
+   claude plugin validate plugins/clear-partner --strict
+   claude plugin validate plugins/clear-partner/skills --strict
    claude plugin validate plugins/clear-ui --strict
    claude plugin validate plugins/clear-ui/skills --strict
    cd plugins/clear-ui && node --test && node bench/bench.mjs
    ```
 
+   `check-repo.mjs` fails when a version, the recorded prompt hash, a plugin name or a
+   Markdown link has drifted; it needs the CHANGELOG section from step 3 to exist.
+
    Remember that a green run says nothing about the output style — Claude Code does
-   not validate output styles at all. `/clear-claude:clear-audit` against a test
+   not validate output styles at all. `/clear-partner:clear-audit` against a test
    install is the check that actually covers Clear Partner.
 
 5. **Commit, then tag.** The `v` tag carries the marketplace version:
@@ -61,7 +65,7 @@ Claude Code ships its own tagger:
 claude plugin tag [path] [--dry-run] [-m <msg>] [--push] [--remote <name>]
 ```
 
-It creates a tag named `{name}--v{version}` — so `clear-claude--v0.1.0`, **not**
+It creates a tag named `{name}--v{version}` — so `clear-partner--v0.2.0`, **not**
 `v0.1.0` — and validates that `plugin.json` and the enclosing marketplace entry agree
 on the version before it does. That cross-check is the useful part, and `--dry-run`
 gets it for free without creating anything.
@@ -69,7 +73,7 @@ gets it for free without creating anything.
 Use it as a pre-flight check rather than as the tagger, once per plugin:
 
 ```sh
-claude plugin tag plugins/clear-claude --dry-run
+claude plugin tag plugins/clear-partner --dry-run
 claude plugin tag plugins/clear-ui --dry-run
 ```
 
@@ -79,6 +83,17 @@ release are uncommitted (observed on 2.1.278).
 Version enforcement is our own job either way. Claude Code performs no semver
 validation — the literal string `"notsemver"` passes `--strict` and would be baked
 straight into a tag name (see [phase0-research.md](research/phase0-research.md), open question 5).
+
+## Renaming or removing a plugin
+
+A plugin's `name` is its install id, its skill namespace and its style namespace, so a
+rename reaches every user. Do not do it for a label — that is what `displayName` is for.
+If it has to happen: move the directory, change the name in `plugin.json` and the
+marketplace entry, and **append** the old name to `renames` in `marketplace.json`. Never
+edit or delete an existing `renames` entry: Claude Code follows the chain for users who
+skipped a release. Then run the upgrade test in [migration.md](migration.md#what-was-measured)
+again. The marketplace's own `name` has no such mechanism and must not change
+([ADR 0005](adr/0005-naming-and-install-paths.md)).
 
 ## Publishing
 

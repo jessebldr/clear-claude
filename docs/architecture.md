@@ -3,17 +3,19 @@
 Clear Claude is a marketplace of two independent plugins, one per layer
 ([ADR 0004](adr/0004-one-plugin-per-layer.md)):
 
-- **`clear-claude`** — Clear Partner, one output style delivered through the native
+- **`clear-partner`** — Clear Partner, one output style delivered through the native
   Claude Code plugin system, plus two diagnostic skills. It writes nothing outside
   itself and depends on nothing.
-- **`clear-ui`** — an optional status bar. It is code: a Node renderer, a setup script
+- **`clear-ui`** — Clear UI, a status bar. It is code: a Node renderer, a setup script
   that edits one key of the user's `settings.json`, and documented classic hooks. Its
   architecture is recorded separately, in [ui-architecture.md](ui-architecture.md).
 
 Installing one never installs or changes the other, and they share no code and no
-prompt. This document records the decisions behind the `clear-claude` plugin and the
+prompt. This document records the decisions behind the `clear-partner` plugin and the
 repository they share, and what each one costs. Where a decision below says "the
-plugin", it means `clear-claude`.
+plugin", it means `clear-partner`. The product and the marketplace are "Clear Claude"
+(`clear-claude`); the plugin carried that name too until marketplace 0.4.0
+([ADR 0005](adr/0005-naming-and-install-paths.md)).
 
 Every platform claim here traces back to [phase0-research.md](research/phase0-research.md),
 which was verified against Claude Code **2.1.274** and tags each fact with how it was
@@ -25,7 +27,7 @@ obtained. Where this document depends on a researched fact, it names the section
 clear-claude/                          ← the repository is also the marketplace
 ├── .claude-plugin/marketplace.json    ← marketplace manifest
 ├── plugins/
-│   ├── clear-claude/                  ← the communication layer
+│   ├── clear-partner/                 ← the communication layer
 │   │   ├── .claude-plugin/plugin.json ← plugin manifest
 │   │   ├── output-styles/
 │   │   │   └── clear-partner.md       ← the entire product
@@ -42,7 +44,10 @@ clear-claude/                          ← the repository is also the marketplac
 ├── experimental/                      ← mods research and function-hook spikes;
 │                                        never listed in the marketplace
 ├── source/clear-partner.md            ← the original style, before the port
+├── scripts/check-repo.mjs             ← versions, prompt record, names, links (CI)
 ├── docs/
+├── AGENTS.md                          ← rules for coding agents; CLAUDE.md imports it
+├── llms.txt                           ← link index for LLM readers
 ├── README.md
 ├── LICENSE
 ├── CHANGELOG.md
@@ -50,7 +55,7 @@ clear-claude/                          ← the repository is also the marketplac
 ```
 
 One repository serves as both marketplace and plugin host. Each marketplace entry
-points at its plugin with a relative path (`"source": "./plugins/clear-claude"`), which
+points at its plugin with a relative path (`"source": "./plugins/clear-partner"`), which
 is a verified `source` form — a bare URL string is rejected (research §2).
 
 The `plugins/` directory layer existed from the first commit so a second plugin could be
@@ -93,7 +98,7 @@ the picker in `/config` effectively overridden.
 
 The mitigations are that the cost is visible, reversible, and cheap:
 
-- Reversible in one command: `claude plugin disable clear-claude` restores normal
+- Reversible in one command: `claude plugin disable clear-partner` restores normal
   output-style selection immediately.
 - Fully removed by uninstalling — no leftover setting, because nothing was written
   outside the plugin.
@@ -209,7 +214,7 @@ declaring them adds information without taking any away.
 The benefit is that the manifest states the plugin's contents instead of leaving them
 implicit in a directory listing. The risk worth checking was double-registration, since
 both skills are also found by the automatic scan. Verified against an isolated install:
-`claude plugin details clear-claude` reports `Skills (2) clear-audit, clear-doctor` —
+`claude plugin details clear-partner` reports `Skills (2) clear-audit, clear-doctor` —
 each skill once, ~286 tokens always-on for the pair.
 
 ## Decision: `keep-coding-instructions: true`
@@ -231,7 +236,7 @@ guess. Claude Code itself absorbs every platform difference, so Windows, macOS, 
 Linux share not just the same package but the same commands.
 
 A shell installer would be justified only if the native mechanism could not do
-something required. For `clear-claude` it can do everything required.
+something required. For `clear-partner` it can do everything required.
 
 `clear-ui` is the case where it cannot, and the rule was applied rather than bent. A
 plugin cannot register a status line — Claude Code honours only `agent` and
@@ -249,7 +254,7 @@ can never edit settings. See [ADR 0004](adr/0004-one-plugin-per-layer.md) and
 Semantic versioning. Each plugin carries its own version, set identically in its
 `plugin.json` and in its marketplace entry; both plugins started at `0.1.0`. The
 marketplace's own `metadata.version` tracks the newest change to either plugin, so
-`clear-ui` 0.1.0 debuts in marketplace 0.2.0 while `clear-claude` stays at 0.1.0. The
+`clear-ui` 0.1.0 debuted in marketplace 0.2.0 while Clear Partner stayed at 0.1.0. The
 plan is in [roadmap-v2.md](roadmap-v2.md#versions); the mechanics are in
 [releasing.md](releasing.md).
 

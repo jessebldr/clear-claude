@@ -1,6 +1,6 @@
 ---
 name: clear-audit
-description: Verify that the Clear Partner output style is genuinely active in this session and that the shipped style file is unmodified. Derives activation from the plugin's own resolution rules, and checks the style file's frontmatter and SHA-256 against the recorded expected values, reporting every deviation as a fact. Use after installing, updating or editing Clear Claude, before trusting an eval result, or when the user says "clear audit", "audit clear claude", "verify clear partner", or "is Clear Partner really active".
+description: Verify that the Clear Partner output style is genuinely active in this session and that the shipped style file is unmodified. Derives activation from the plugin's own resolution rules, and checks the style file's frontmatter and SHA-256 against the recorded expected values, reporting every deviation as a fact. Use after installing, updating or editing Clear Partner, before trusting an eval result, or when the user says "clear audit", "audit clear claude", "verify clear partner", or "is Clear Partner really active".
 ---
 
 # Clear Audit
@@ -24,7 +24,7 @@ Claude Code resolves the active output style like this, and A1–A5 walk the sam
 
 > Collect every style. Apply plugin styles first, then user-level, then project-level, then policy-level, keyed by the frontmatter `name` — so a later source with the same name **replaces** an earlier one. Then: if any style from an **enabled plugin** has `force-for-plugin: true`, use it (first one wins, with a warning if there are several). Otherwise use the `outputStyle` setting. Otherwise use the default.
 
-**A1 — plugin enabled.** `claude plugin list --json`; find the entry whose `id` starts with `clear-claude@` and confirm `"enabled": true`. Keep its `installPath` and `version`. Not installed or not enabled → **NOT ACTIVE**, stop here and say which.
+**A1 — plugin enabled.** `claude plugin list --json`; find the entry whose `id` starts with `clear-partner@` (an install from before 0.2.0 is listed as `clear-claude@…`; audit that entry and name the former id as a deviation) and confirm `"enabled": true`. Keep its `installPath` and `version`. Not installed or not enabled → **NOT ACTIVE**, stop here and say which.
 
 **A2 — the style file carries the flag.** Read the frontmatter of `<installPath>/output-styles/clear-partner.md` and confirm all four fields:
 
@@ -71,7 +71,7 @@ These expected values are recorded in `docs/clear-partner-port.md` in the Clear 
 
 Report the deviation and its classification. Do not restore, re-copy or "fix" the file — an unexplained edit is information the user needs, and overwriting it destroys that information.
 
-**B4 — manifest agreement.** Read `<installPath>/.claude-plugin/plugin.json`: `name` must be `clear-claude`, and the manifest must not declare an `outputStyles` field unless that field lists `output-styles/clear-partner.md`. Declaring the field switches off the automatic scan of `output-styles/`, so a declaration that omits the file leaves the style unloaded.
+**B4 — manifest agreement.** Read `<installPath>/.claude-plugin/plugin.json`: `name` must be `clear-partner` (`clear-claude` only in an install from before 0.2.0), and the manifest must not declare an `outputStyles` field unless that field lists `output-styles/clear-partner.md`. Declaring the field switches off the automatic scan of `output-styles/`, so a declaration that omits the file leaves the style unloaded.
 
 ## Report format
 

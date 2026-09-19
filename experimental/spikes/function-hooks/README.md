@@ -1,7 +1,7 @@
 # Function-hooks spikes
 
 **Status: disposable. Nothing here ships, nothing here is in the marketplace, and the
-stable `clear-claude` plugin does not know this directory exists.**
+stable plugins (`clear-partner`, `clear-ui`) do not know this directory exists.**
 
 Four tiny plugins, each answering one question about Claude Code's early-access
 function-hooks ("Mods") runtime. Run against Claude Code **2.1.277**, native Windows 11,

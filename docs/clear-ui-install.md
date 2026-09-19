@@ -1,7 +1,8 @@
 # Installing Clear UI
 
-Clear UI is the optional status bar. `clear-claude` does not depend on it, and installing one
-never installs the other. It needs **Node 18 or newer** on the PATH of the shell Claude Code
+Clear UI is the status bar of Clear Claude: the plugin `clear-ui` in the marketplace
+`clear-claude`. It is independent of Clear Partner — neither needs the other, and installing
+one never installs the other. The [README](../README.md#install) has the quick path for both. It needs **Node 18 or newer** on the PATH of the shell Claude Code
 runs status lines with — Git Bash on Windows when it is installed, PowerShell otherwise.
 
 ## Install

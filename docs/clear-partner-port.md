@@ -4,7 +4,7 @@ How the output style shipped in the plugin relates to the behaviourally tested
 original.
 
 - **Original:** `source/clear-partner.md` (the canonical, already-tested style)
-- **Shipped:** `plugins/clear-claude/output-styles/clear-partner.md`
+- **Shipped:** `plugins/clear-partner/output-styles/clear-partner.md`
 
 ## Verdict: modified — one added frontmatter line
 
@@ -14,7 +14,7 @@ added to the YAML frontmatter.
 
 ```diff
 --- source/clear-partner.md
-+++ plugins/clear-claude/output-styles/clear-partner.md
++++ plugins/clear-partner/output-styles/clear-partner.md
 @@ -4,0 +5 @@
 +force-for-plugin: true
 ```
@@ -61,7 +61,7 @@ Specifically preserved:
 The relation above holds for every revision: the shipped file is `source/clear-partner.md`
 plus the one frontmatter line. What changes is the text both carry.
 
-| `clear-claude` | Date | Change | Evidence |
+| Clear Partner | Date | Change | Evidence |
 | --- | --- | --- | --- |
 | 0.1.0 | 2026-09-17 | The original, as tested. 4620 bytes, SHA-256 `3584870b…04b1c`. | [evals.md](evals.md), first run |
 | 0.1.1 | 2026-09-19 | New section **Explicit constraints**: a reply shape the user fixes ("one sentence", "just the command", "nothing else") outranks the style's defaults, except one short safety-critical warning. **Formatting**: a table only for a real comparison; a short set of commands is a list. | [evals.md](evals.md), cases g–l: each change was made only after a case failed on 0.1.0 |
@@ -69,7 +69,7 @@ plus the one frontmatter line. What changes is the text both carry.
 ## Recorded checksum of the shipped file
 
 This is the authoritative record of what a correct
-`plugins/clear-claude/output-styles/clear-partner.md` is. The `clear-audit` skill
+`plugins/clear-partner/output-styles/clear-partner.md` is. The `clear-audit` skill
 compares the installed file against these values, so they are part of the product, not a
 convenience note.
 
@@ -80,7 +80,7 @@ Lines:   157, LF endings, final newline present
 ```
 
 The same SHA-256 is written into
-[`plugins/clear-claude/skills/clear-audit/SKILL.md`](../plugins/clear-claude/skills/clear-audit/SKILL.md),
+[`plugins/clear-partner/skills/clear-audit/SKILL.md`](../plugins/clear-partner/skills/clear-audit/SKILL.md),
 because the installed plugin does not ship this `docs/` directory and the skill must
 still work offline. `clear-audit` treats a disagreement between the two copies as its own
 finding (**record drift**) rather than trusting either.
@@ -100,7 +100,7 @@ detects that case and reports it as line-ending conversion rather than as an edi
 From the repository root:
 
 ```bash
-diff source/clear-partner.md plugins/clear-claude/output-styles/clear-partner.md
+diff source/clear-partner.md plugins/clear-partner/output-styles/clear-partner.md
 ```
 
 Expected output — one added line, nothing more:
@@ -114,7 +114,7 @@ Any other output means the port has drifted and this document is stale.
 
 ## Audit runs
 
-`/clear-claude:clear-audit` run for real, against the plugin loaded with `--plugin-dir`.
+`/clear-partner:clear-audit` run for real, against the plugin loaded with `--plugin-dir`.
 
 | Date | Claude Code | Platform | Active | Conforming |
 | --- | --- | --- | --- | --- |

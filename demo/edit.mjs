@@ -39,7 +39,7 @@ const pair = (slug, target) => ({
   words: slug,
   panes: [
     { frames: `${slug}-before`, title: 'BEFORE  Claude Code, no plugin', colour: RED },
-    { frames: `${slug}-after`, title: 'AFTER  + clear-claude plugin', colour: GREEN },
+    { frames: `${slug}-after`, title: 'AFTER  + Clear Partner plugin', colour: GREEN },
   ],
 })
 

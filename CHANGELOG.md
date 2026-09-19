@@ -8,18 +8,55 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Because the product is a prompt, any edit to `clear-partner.md` is a behaviour change
 and gets its own entry here and its own version bump.
 
-## Unreleased
+## [0.4.0] - 2026-09-20
 
-On `main`, not in a tagged version yet; ships with the next `clear-ui` release.
+Marketplace 0.4.0: `clear-partner` 0.2.0 (the plugin formerly named `clear-claude`) and
+`clear-ui` 0.2.1. **No change to the Clear Partner prompt** — same bytes, same SHA-256 — and
+no change to what the status bar draws.
+
+### Changed
+
+- **The plugin `clear-claude` is now `clear-partner`.** "Clear Claude" had come to mean the
+  product, the marketplace and one of its plugins at once, and the install id was
+  `clear-claude@clear-claude`. Now Clear Claude is the product and the marketplace, and each
+  plugin is named after its layer: `clear-partner@clear-claude`, `clear-ui@clear-claude`
+  ([ADR 0005](docs/adr/0005-naming-and-install-paths.md)).
+  - **If you have it installed, you do not need to type anything.** Run
+    `claude plugin marketplace update clear-claude` and restart. Claude Code (2.1.193 or
+    later) shows `Renamed to "clear-partner" in the "clear-claude" marketplace` once and
+    rewrites the key in your settings. Measured on 2.1.278, with the manual two-command path
+    for the cases that do not migrate: [docs/migration.md](docs/migration.md).
+  - **What you will notice:** the skills' full names are `/clear-partner:clear-doctor` and
+    `/clear-partner:clear-audit` (asking for "clear doctor" works as before), and the style's
+    qualified name is `clear-partner:Clear Partner`. Commands that name the plugin take the
+    new name; commands that name the marketplace are unchanged.
+  - `clear-ui@clear-claude` is not renamed; its settings key and data directory are untouched.
+- **One install story.** The README opens with the full Clear Claude in three lines plus
+  `set up clear ui`, with Partner-only and UI-only as "run fewer lines", then what changes on
+  your machine, and how to check, update and remove it. The lifecycle detail stays in
+  `docs/install.md` and `docs/clear-ui-install.md`. The pre-publication `OWNER/clear-claude`
+  placeholder is gone from the docs and from `clear-doctor`'s remediation, and the platform
+  table no longer calls Windows unverified when the repository records a Windows install.
+- `clear-doctor` and `clear-audit` look for `clear-partner@…`, and recognise an install
+  still listed under the former id instead of reporting "not installed".
+- The third, future layer is called **Clear Transcript** (it was "Clear Mods"). Still
+  unlisted and under `experimental/`.
 
 ### Fixed
 
 - `configure.mjs show` printed `weeklyScopedon` and `verificationon`: both names are exactly as
   wide as the column was, and `verification` had been since 0.1.0 — found when the second one
   turned up in a recording. Display only; the settings were always read and written correctly.
+  (`clear-ui` 0.2.1.)
 
 ### Added
 
+- `docs/migration.md`, and a "Renaming or removing a plugin" section in `docs/releasing.md`.
+- `AGENTS.md` is the repository's instructions for coding agents; `CLAUDE.md` imports it, and
+  `llms.txt` is a link index. No fact is stated in more than one of them.
+- `scripts/check-repo.mjs`, run in CI: plugin versions agree across manifests, the recorded
+  SHA-256 of the prompt is current, the former plugin id appears only where history is
+  recorded, and every relative Markdown link and anchor resolves.
 - A recording of the usage provider, `assets/clear-ui-scoped-usage.gif`, with its tape and a
   note on what in it is real ([demo/README.md](demo/README.md)). Docs and media only.
 

@@ -3,7 +3,7 @@
 
 # The product. clear-audit compares its SHA-256 with a recorded value; a CRLF checkout hashes
 # differently and would be reported as a modified prompt (found by running the audit on Windows).
-plugins/clear-claude/output-styles/*.md text eol=lf
+plugins/clear-partner/output-styles/*.md text eol=lf
 source/clear-partner.md text eol=lf
 
 # Golden renders are compared byte for byte.

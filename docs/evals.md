@@ -54,7 +54,7 @@ version did not reproduce the failure, and its grader penalised a correct one-se
 ## Re-run on Claude Code 2.1.278 — 2026-09-19
 
 **Runner:** `claude plugin eval`, the command under "Reproduce", unchanged · **Plugin:**
-`clear-claude` 0.1.0, the same prompt as the first run (no edit since) · **Cost:** $1.54 ·
+Clear Partner 0.1.0, the same prompt as the first run (no edit since) · **Cost:** $1.54 ·
 **Time:** 342 s · **Judge:** default, three votes per judged grader · **Platform:** Windows 11
 
 | Case | With plugin | Baseline | Δ |
@@ -80,7 +80,7 @@ the run-level grant does not include (`--allow-tools Write`), and the CLI says s
 launching; both arms passed with `Write` alone. In the baseline arm of case E one judge vote
 of three was a FAIL on "proceeds and reports concisely"; the grader passes on majority.
 
-`/clear-claude:clear-audit` was also run for real against the shipped plugin on 2.1.278; its
+`/clear-partner:clear-audit` was also run for real against the shipped plugin on 2.1.278; its
 result is recorded in [clear-partner-port.md](clear-partner-port.md#audit-runs).
 
 ## First run on Claude Code 2.1.274 — 2026-09-17
@@ -130,7 +130,7 @@ the delta is reported.
 ## Reproduce
 
 ```bash
-cd plugins/clear-claude
+cd plugins/clear-partner
 claude plugin eval --eval-dir ./evals --runs 1 --no-publish --trust-plugin \
   --allow-tools Write,Edit,Read,Glob,Grep --max-cost-usd 10
 ```

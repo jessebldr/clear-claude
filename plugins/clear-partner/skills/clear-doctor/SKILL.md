@@ -1,11 +1,13 @@
 ---
 name: clear-doctor
-description: Diagnose a Clear Claude installation. Checks that the plugin manifest, the Clear Partner output style file and its frontmatter are present and correct, which settings layers exist and which one wins for output styles, installed version vs marketplace version, and conflicting output styles from other plugins or from user/project style files. Use when Clear Claude is installed but Claude is not talking like Clear Partner, after an update, or when the user says "clear doctor", "diagnose clear claude", "check my clear claude install", or "why isn't Clear Partner active".
+description: Diagnose a Clear Partner installation (the communication plugin of Clear Claude, named clear-claude before 0.2.0). Checks that the plugin manifest, the Clear Partner output style file and its frontmatter are present and correct, which settings layers exist and which one wins for output styles, installed version vs marketplace version, and conflicting output styles from other plugins or from user/project style files. Use when Clear Partner is installed but Claude is not talking like Clear Partner, after an update, or when the user says "clear doctor", "diagnose clear claude", "check my clear claude install", or "why isn't Clear Partner active".
 ---
 
 # Clear Doctor
 
-Answer one question: **is Clear Claude installed correctly on this machine, and if not, what exactly is wrong?**
+Answer one question: **is Clear Partner installed correctly on this machine, and if not, what exactly is wrong?**
+
+Clear Partner is the communication plugin of Clear Claude. Its id is `clear-partner@clear-claude`: the plugin is `clear-partner`, the marketplace is `clear-claude`. Before 0.2.0 the plugin itself was also named `clear-claude`; check 1 covers an install that still carries that name.
 
 Run checks 1–8, then print one PASS/WARN/FAIL table plus remediation for everything that is not PASS. Report observations, not speculation.
 
@@ -23,31 +25,40 @@ Run checks 1–8, then print one PASS/WARN/FAIL table plus remediation for every
 
 ## Check 1 — plugin installed and enabled
 
-Run `claude plugin list --json`. Each entry is `{id, version, scope, enabled, installPath}` where `id` is `<name>@<marketplace>`. Find the entry whose id starts with `clear-claude@`.
+Run `claude plugin list --json`. Each entry is `{id, version, scope, enabled, installPath}` where `id` is `<name>@<marketplace>`. Find the entry whose id starts with `clear-partner@`.
 
 - Not found → **FAIL**. The plugin is not installed in any scope.
 - Found with `"enabled": false` → **FAIL**. Installed but switched off, so the style cannot apply.
 - Found and enabled → **PASS**. Report `id`, `version`, `scope`.
 
-Record `installPath`; checks 2–4 and 7 depend on it. If there is more than one `clear-claude@…` entry, report all of them and **WARN**: two installs in different scopes means the one you are inspecting may not be the one that loads.
+- No `clear-partner@…` entry, but one whose id starts with `clear-claude@` → **WARN**, and carry on with that entry. It is the same plugin under its former name. Claude Code 2.1.193 or later migrates it by itself at the next session start, from the marketplace's `renames` map; an older Claude Code reports `plugin-not-found` instead, and the remediation below is the way out.
+
+Record `installPath`; checks 2–4 and 7 depend on it. If there is more than one `clear-partner@…` entry, report all of them and **WARN**: two installs in different scopes means the one you are inspecting may not be the one that loads.
 
 Remediation — not installed:
 
 ```text
-claude plugin marketplace add OWNER/clear-claude
-claude plugin install clear-claude@clear-claude
+claude plugin marketplace add jessebldr/clear-claude
+claude plugin install clear-partner@clear-claude
 ```
 
-Remediation — installed but disabled: `claude plugin enable clear-claude`.
+Remediation — installed but disabled: `claude plugin enable clear-partner`.
+
+Remediation — still installed under the former name: update the catalog with `claude plugin marketplace update clear-claude` and restart Claude Code. If the old id is still listed after that, install the new name and remove the old one:
+
+```text
+claude plugin install clear-partner@clear-claude
+claude plugin uninstall clear-claude@clear-claude
+```
 
 ## Check 2 — manifest present and valid
 
 Read `<installPath>/.claude-plugin/plugin.json`.
 
 - Missing or not parseable as JSON → **FAIL**.
-- `name` is not exactly `clear-claude` → **FAIL** (the install is not Clear Claude, or has been edited).
+- `name` is not exactly `clear-partner` → **FAIL** (the install is not Clear Partner, or has been edited). One exception: `clear-claude` in an install that check 1 found under its former name is that older version, not a fault.
 - `version` missing, or not three dot-separated numbers → **WARN**. Claude Code does not enforce semver, so nothing else will catch this.
-- The manifest declares an `outputStyles` field → **WARN**, unless that field explicitly lists `output-styles/clear-partner.md`. Declaring `outputStyles` turns off the automatic scan of the `output-styles/` directory, so a declaration that misses the file silently disables the product. Clear Claude ships without this field on purpose.
+- The manifest declares an `outputStyles` field → **WARN**, unless that field explicitly lists `output-styles/clear-partner.md`. Declaring `outputStyles` turns off the automatic scan of the `output-styles/` directory, so a declaration that misses the file silently disables the product. Clear Partner ships without this field on purpose.
 
 Then run `claude plugin validate <installPath> --strict`. Exit 0 → **PASS**; any error or warning → report the tool's own message verbatim as the finding. Note in the report that this command validates the **manifest only** — it does not look at output styles at all, so a clean result here is necessary but not sufficient. Checks 3 and 4 are what cover the style file.
 
@@ -103,7 +114,7 @@ Report the winner explicitly, using the rule Claude Code actually applies:
 
 So when checks 1–4 pass, the expected winner is Clear Partner regardless of what the settings layers say — and an `outputStyle` setting that names something else is *not* a fault, it is simply overridden while the plugin is enabled. Say so rather than reporting it as a conflict.
 
-State the winner as one line, e.g. `Winner: Clear Partner (forced by plugin clear-claude; outputStyle in user settings is overridden)`.
+State the winner as one line, e.g. `Winner: Clear Partner (forced by plugin clear-partner; outputStyle in user settings is overridden)`.
 
 ## Check 7 — conflicting output styles
 
@@ -121,19 +132,19 @@ Any other style file that does **not** collide by name is not a conflict. Do not
 
 ## Check 8 — installed version vs marketplace version
 
-Run `claude plugin list --available --json`, which returns `{installed: […], available: […]}`. Find the `clear-claude` entry in `available` and compare its version with the installed version from check 1.
+Run `claude plugin list --available --json`, which returns `{installed: […], available: […]}`. Find the `clear-partner` entry in `available` and compare its version with the installed version from check 1.
 
 - Equal → **PASS**.
 - Installed older than available → **WARN**, with the two version numbers.
 - The marketplace is not in the list, or `available` is empty → **UNKNOWN**: the marketplace catalog is not registered locally, so no comparison is possible.
 
-`claude plugin details clear-claude` gives a second reading (version, source, component inventory) and is worth running when the JSON is ambiguous. Note that output styles never appear in that inventory — their absence there is normal and is not a finding.
+`claude plugin details clear-partner` gives a second reading (version, source, component inventory) and is worth running when the JSON is ambiguous. Note that output styles never appear in that inventory — their absence there is normal and is not a finding.
 
 Remediation for a stale install, in this order (catalog first, or `update` will not see the new version):
 
 ```text
 claude plugin marketplace update clear-claude
-claude plugin update clear-claude
+claude plugin update clear-partner
 ```
 
 Claude Code reports *"restart required to apply"* — say so, because a user who skips the restart will report that the update did nothing.
@@ -147,7 +158,7 @@ Clear Doctor — <PASS | WARN | FAIL>
 
 | # | Check                     | Result | Detail                         |
 |---|---------------------------|--------|--------------------------------|
-| 1 | Plugin installed/enabled  | PASS   | clear-claude@clear-claude 0.1.0, user scope |
+| 1 | Plugin installed/enabled  | PASS   | clear-partner@clear-claude 0.2.0, user scope |
 | … |                           |        |                                |
 
 Winner for output styles: <one line from check 6>

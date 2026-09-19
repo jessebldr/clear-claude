@@ -15,10 +15,13 @@ the terminal is wide enough, two when it is not.
 ## Layers
 
 ```text
-Clear Partner  → how Claude communicates          (prompt; plugins/clear-claude)
-Clear UI       → what the user sees at a glance   (statusline; plugins/clear-ui)
-Clear Mods     → how Claude Code behaves/renders  (function hooks; experimental/)
+Clear Partner    → how Claude communicates        (prompt; plugins/clear-partner)
+Clear UI         → what the user sees at a glance (statusline; plugins/clear-ui)
+Clear Transcript → how the transcript is rendered (function hooks, "Mods"; experimental/)
 ```
+
+The names are fixed in [ADR 0005](adr/0005-naming-and-install-paths.md); the third layer was
+called "Clear Mods" (`clear-mods`) until then.
 
 Scope: all three layers live inside stock Claude Code in a terminal. No desktop or web
 app, no replacement harness — see the Scope section of [roadmap-v2.md](roadmap-v2.md).
@@ -30,9 +33,9 @@ same problem in two layers**; installing one layer never installs another.
 
 ```text
 clear-claude/
-├── .claude-plugin/marketplace.json   ← lists clear-claude and clear-ui only
+├── .claude-plugin/marketplace.json   ← lists clear-partner and clear-ui only
 ├── plugins/
-│   ├── clear-claude/                 ← unchanged, stable
+│   ├── clear-partner/                ← unchanged, stable
 │   └── clear-ui/
 │       ├── .claude-plugin/plugin.json
 │       ├── src/
@@ -60,14 +63,14 @@ clear-claude/
 
 Decisions, with the alternative each one rejects:
 
-- **`clear-ui` is its own plugin.** A user can run `clear-claude` alone forever. Folding
-  the statusline into `clear-claude` would make an output-style install touch
+- **`clear-ui` is its own plugin.** A user can run `clear-partner` alone forever. Folding
+  the statusline into `clear-partner` would make an output-style install touch
   `settings.json`, which [architecture.md](architecture.md) already rejects.
-- **`clear-mods` stays outside the marketplace** until function hooks are documented and
+- **`clear-transcript` stays outside the marketplace** until function hooks are documented and
   on by default. A marketplace plugin that needs an undocumented env gate is exactly the
   "installs, enables, does nothing" failure this project was built to eliminate. It loads
-  only via `--plugin-dir`. When the API is documented it becomes `plugins/clear-mods`.
-- **`clear-ui` and `clear-mods` stay separate even then.** They have different stability
+  only via `--plugin-dir`. When the API is documented it becomes `plugins/clear-transcript`.
+- **`clear-ui` and `clear-transcript` stay separate even then.** They have different stability
   guarantees and different blast radius (one prints two lines; the other intercepts tool
   calls). They communicate through one small state file, never through code.
 - **`render.mjs` is pure and Node-free.** A hooks module has no Node and imports only its

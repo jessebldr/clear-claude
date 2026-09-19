@@ -8,61 +8,80 @@
 
 **Make Claude Code easier to understand without making it less capable.**
 
-My Claude Code talked like it was paid per word. So I fixed the communication layer —
-Clear Partner, an output style with two diagnostic skills and zero config surgery — and
-proved with real evals that the fix doesn't make Claude dumber.
+My Claude Code talked like it was paid per word, and its status line told me nothing. Clear
+Claude fixes both, as two small plugins that never touch each other:
 
-This repository is a marketplace with two independent plugins:
+- **Clear Partner** — how Claude talks to you. One output style: answer first, plain
+  English, concise by default, deep when you ask. Evals show it does not make Claude dumber.
+- **Clear UI** — what you can see at a glance. A status bar: model, project and git on the
+  left; context, 5-hour and weekly usage on the right.
 
-| Plugin | What it is | Touches your settings? |
-| --- | --- | --- |
-| `clear-claude` | **Clear Partner** — the output style, plus `clear-doctor` and `clear-audit`. The product. | No. Nothing is written outside the plugin. |
-| `clear-ui` | **Clear UI** — an optional status bar: model, project and git on the left; context, 5-hour and weekly usage on the right. | Yes: the `statusLine` key (and `subagentStatusLine` if you switch the activity row on), through a setup script you run on purpose. Uninstall restores what was there. |
+## Install
 
-Installing one never installs, requires, or changes the other.
-
----
-
-## Install (30-second setup)
-
-Clear Partner is two commands, identical on Windows, macOS, and Linux:
+The full Clear Claude, identical on Windows, macOS and Linux:
 
 ```text
 claude plugin marketplace add jessebldr/clear-claude
-claude plugin install clear-claude@clear-claude
+claude plugin install clear-partner@clear-claude
+claude plugin install clear-ui@clear-claude
 ```
 
-Or from inside a session: `/plugin marketplace add`, then `/plugin install`.
+Then start Claude Code and say **`set up clear ui`**. That is the whole setup.
 
-That's the whole setup. **There is no activation step** — Clear Partner declares
-`force-for-plugin: true`, so it applies automatically whenever the plugin is enabled.
-New plugins load on the next session; run `/reload-plugins` to pick it up immediately.
+**Want only one?** Run the first line and the line for that plugin. They are independent:
+neither installs, needs or changes the other.
 
-Scopes, updates, session-only loading, and the full command reference live in
-[docs/install.md](docs/install.md).
+- **Partner only** needs nothing else. There is no activation step: the style applies by
+  itself from the next session (or after `/reload-plugins`).
+- **UI only** needs Node 18 or newer, and the `set up clear ui` step — a plugin cannot
+  register a status line, so a script does it, on request.
 
-### Optional: Clear UI
+Inside a session the same commands work as `/plugin marketplace add …` and
+`/plugin install …`.
+
+### What changes on your machine
+
+- **Clear Partner: nothing outside the plugin.** No settings edit, no hooks, no files
+  elsewhere. While it is enabled its style is the active one; disable it to pick another.
+- **Clear UI: one key in `settings.json`**, and only when you ask. Setup prints its plan
+  before it writes, backs the file up, edits the `statusLine` key and no other byte, and
+  asks before replacing a status line you already have. By default the bar reaches no
+  network and reads no credential. [Every path it writes](docs/clear-ui-install.md#what-gets-written-and-where).
+
+### Check, update, remove
+
+- Check: say `clear doctor` (Clear Partner) or `clear ui doctor` (Clear UI). Both are
+  read-only.
+- Update: `claude plugin marketplace update clear-claude`, then
+  `claude plugin update clear-partner@clear-claude` and
+  `claude plugin update clear-ui@clear-claude`, then restart Claude Code.
+- Remove Clear UI: say `remove clear ui` **first** — it puts your previous status line
+  back — then `claude plugin uninstall clear-ui@clear-claude`.
+- Remove Clear Partner: `claude plugin uninstall clear-partner@clear-claude`. It leaves
+  nothing behind.
+
+**Installed `clear-claude@clear-claude` before?** That plugin is now called
+`clear-partner`. Update the marketplace and restart; Claude Code moves your install to the
+new name by itself. Details, and the one thing that changes for you:
+[docs/migration.md](docs/migration.md).
+
+Scopes, teams, CI flags and recovery: [docs/install.md](docs/install.md) (Clear Partner),
+[docs/clear-ui-install.md](docs/clear-ui-install.md) (Clear UI).
+
+---
+
+## See it
 
 ![A real Claude Code session with the Clear UI status bar at the bottom: the context chip fills in after the first answer, and an orange dot beside the branch follows the working tree](assets/clear-ui-demo.gif)
 
-*A recording of a real session, not a mock-up, cut to 17 seconds: the bar is the bottom row.
+*Clear UI in a real session, not a mock-up, cut to 17 seconds: the bar is the bottom row.
 Watch the context chip fill in, and the orange dot beside `main` appear when Claude creates a
 file and go when it is deleted. In a narrow terminal the same bar
 [becomes two rows](assets/clear-ui-narrow.gif). How it was recorded and cut:
 [demo/README.md](demo/README.md).*
 
-```text
-claude plugin install clear-ui@clear-claude
-```
-
-Then, in a session, say `set up clear ui`. A plugin cannot register a status line, so a
-setup script names it in your `settings.json`: it prints its plan before it writes, backs
-the file up, edits only that key, and asks before replacing a status line you already
-have. It needs Node 18 or newer. Everything it writes, and how to remove it, is in
-[docs/clear-ui-install.md](docs/clear-ui-install.md).
-
-**New in Clear UI 0.2 — your model's weekly limit on the bar (opt-in).** Claude Code's usage
-screen shows a weekly limit for one model that the status-line data does not carry. Say
+**Your model's weekly limit on the bar (opt-in, Clear UI 0.2 and later).** Claude Code's
+usage screen shows a weekly limit for one model that the status-line data does not carry. Say
 `turn on clear ui usage`, or run one command, and it becomes the last chip on the bar:
 
 ![A real terminal: one command switches the Clear UI usage provider on, then Claude Code starts and the bottom row ends with a fourth chip, "Fable 68%", after the weekly one](assets/clear-ui-scoped-usage.gif)
@@ -74,12 +93,14 @@ no credential read by Clear UI — and the chip disappears rather than show a nu
 vouch for. What it does, what it costs and what it is careful about:
 [plugins/clear-ui/README.md](plugins/clear-ui/README.md#usage-provider-opt-in).*
 
+Clear Partner is recorded side by side with stock Claude Code in the next section.
+
 ---
 
 ## Why Clear Claude exists
 
 Three failure modes I kept hitting with stock Claude Code. Each one is fixed by a
-specific component of this plugin — not by vibes, and not by a 400-line CLAUDE.md.
+specific component of Clear Partner — not by vibes, and not by a 400-line CLAUDE.md.
 
 ### #1: The agent buries the answer
 
@@ -87,17 +108,18 @@ specific component of this plugin — not by vibes, and not by a 400-line CLAUDE
 before the answer shows up — if it shows up. Long responses aren't the problem;
 *unstructured* responses are.
 
-**The fix** is [Clear Partner](plugins/clear-claude/output-styles/clear-partner.md):
+**The fix** is [Clear Partner](plugins/clear-partner/output-styles/clear-partner.md):
 answer first, plain English, concise by default. The least text that fully
 communicates the answer — never the shortest possible answer.
 
-![Two real Claude Code sessions answering "What does chmod 755 do?" side by side: stock on the left, with the clear-claude plugin on the right](assets/demo-chmod.gif)
+![Two real Claude Code sessions answering "What does chmod 755 do?" side by side: stock on the left, with the Clear Partner plugin on the right](assets/demo-chmod.gif)
 
-![Two real Claude Code sessions answering "How do I find which process is using port 3000 on Linux?" side by side: stock on the left, with the clear-claude plugin on the right](assets/demo-port-3000.gif)
+![Two real Claude Code sessions answering "How do I find which process is using port 3000 on Linux?" side by side: stock on the left, with the Clear Partner plugin on the right](assets/demo-port-3000.gif)
 
 *Real sessions, recorded, not mocked: same question, same model, minutes apart. The only
-difference is `--plugin-dir plugins/clear-claude`. It stops when the question is answered.
-The waiting is cut out; nothing inside a frame is touched. A third pair,
+difference is the plugin, loaded with `--plugin-dir`. It stops when the question is answered.
+The waiting is cut out; nothing inside a frame is touched — which is why the caption in the
+recording still carries the plugin's name from before it was renamed. A third pair,
 [disk space](assets/demo-disk-space.gif), is recorded the same way.*
 
 One recording is an anecdote, so the number comes from repeated runs instead: four runs
@@ -125,10 +147,10 @@ installs, enables, and does nothing.
 
 **The fix** is two read-only diagnostic skills that answer with facts, not impressions:
 
-- `/clear-claude:clear-doctor` — is it installed correctly? Prints a PASS/WARN/FAIL
+- `/clear-partner:clear-doctor` — is it installed correctly? Prints a PASS/WARN/FAIL
   table: install state, manifest validity, style frontmatter, settings-layer
   precedence, version match, conflicting styles. Never prints your settings contents.
-- `/clear-claude:clear-audit` — is it *actually working*? Walks Claude Code's own
+- `/clear-partner:clear-audit` — is it *actually working*? Walks Claude Code's own
   style-resolution rules to confirm Clear Partner is the active style, and compares
   the style file's SHA-256 against the recorded value so you know the prompt is
   unmodified.
@@ -137,7 +159,7 @@ installs, enables, and does nothing.
 
 ## What's inside
 
-**`clear-claude`** — the communication layer:
+**Clear Partner** (`clear-partner`) — the communication layer:
 
 | Component | Type | What it does |
 | --- | --- | --- |
@@ -148,7 +170,7 @@ installs, enables, and does nothing.
 This plugin is deliberately tiny: one text file, one manifest, two skills. No hooks, no
 MCP servers, no CLAUDE.md, no personality injected through three layers at once.
 
-**`clear-ui`** — the optional status bar:
+**Clear UI** (`clear-ui`) — the status layer:
 
 | Component | Type | What it does |
 | --- | --- | --- |
@@ -211,13 +233,15 @@ results, and the honest limits are in [docs/evals.md](docs/evals.md).
 - [x] Re-run evals against a new Claude Code version: 6/6 again on 2.1.278. Repeat per
   release; the suite is cheap (~$2)
 - [ ] `clear-doctor` auto-fix mode (currently read-only by design)
-- [x] Clear UI: an optional status bar as a second plugin (`clear-ui`, now 0.2.0)
+- [x] Clear UI: a status bar as a second plugin (`clear-ui`)
+- [x] One name per layer: the plugin `clear-claude` became `clear-partner`, with automatic
+  migration for existing installs ([ADR 0005](docs/adr/0005-naming-and-install-paths.md))
 - [x] Clear UI: CI green on Linux, macOS and Windows; its opt-in features (verification
   state, activity row) exercised end to end against real hook payloads on Windows
   ([what that showed](docs/clear-ui-dogfood.md))
 - [ ] Clear UI: the same run on a real Mac, which also settles the macOS timing budget
   ([checklist](docs/clear-ui-dogfood.md#checklist-for-a-mac))
-- [ ] Claude Mods: Anthropic is shipping function hooks ("Claude Mods",
+- [ ] Clear Transcript, the third layer: Anthropic is shipping function hooks ("Claude Mods",
   [anthropics/claude-code#91870](https://github.com/anthropics/claude-code/issues/91870)).
   When the API is documented and on by default, build the transcript renderer as a
   real mod. `verification-state` no longer waits for it — it shipped inside Clear UI on
@@ -229,48 +253,60 @@ The phase-by-phase plan is [docs/roadmap-v2.md](docs/roadmap-v2.md).
 
 ## Docs
 
-Clear Partner (`clear-claude`):
+Names, once: **Clear Claude** is the product and the marketplace (`clear-claude`).
+**Clear Partner** (`clear-partner`) and **Clear UI** (`clear-ui`) are its plugins, so an
+install id reads *layer@product*. Why: [ADR 0005](docs/adr/0005-naming-and-install-paths.md).
 
-- [docs/install.md](docs/install.md) — full lifecycle: install, update, verify,
-  disable, uninstall, recovery
-- [docs/troubleshooting.md](docs/troubleshooting.md) — symptom-first fixes, including
-  the silent failures no validation catches
-- [docs/philosophy.md](docs/philosophy.md) — why answer-first, what "concise" means
-  here, prompts-for-judgment vs mechanisms-for-mechanics
-- [docs/architecture.md](docs/architecture.md) — design decisions and the
-  `force-for-plugin` tradeoff
+Using it:
+
+- [docs/install.md](docs/install.md) — Clear Partner's full lifecycle: scopes, teams, CI
+  flags, verify, disable, uninstall, recovery
+- [docs/clear-ui-install.md](docs/clear-ui-install.md) — Clear UI: setup, what gets written
+  and where, configure, optional features, uninstall
+- [docs/migration.md](docs/migration.md) — coming from the plugin's former name
+- [docs/troubleshooting.md](docs/troubleshooting.md) — symptom-first fixes for Clear
+  Partner, including the silent failures no validation catches
+- [CHANGELOG.md](CHANGELOG.md) — what each release changes for you
+
+The proof:
+
+- [docs/evals.md](docs/evals.md) — the behavioural eval suite, what it proves and what it
+  does not
+- [demo/README.md](demo/README.md) — how every animated image here was recorded from real
+  sessions, what is controlled, the repeated-run numbers and the raw outputs
+- [docs/clear-ui-dogfood.md](docs/clear-ui-dogfood.md) — Clear UI's first end-to-end run
+  with real hook payloads, and the same run as a checklist for a Mac
+- [docs/research/](docs/research/) — platform behaviour as measured, each file tagged with
+  the Claude Code version it was verified on: the plugin system
+  ([phase 0](docs/research/phase0-research.md)), an
+  [isolated marketplace install](docs/research/marketplace-test.md), the status line
+  ([UI research](docs/research/ui-research.md),
+  [UX distillation](docs/research/ux-distillation.md)),
+  [headless `/usage`](docs/research/headless-usage.md) and
+  [function hooks](docs/research/mods-research-2.1.277.md)
+
+How it is built, and why:
+
+- [docs/philosophy.md](docs/philosophy.md) — why answer-first, what "concise" means here,
+  prompts for judgment vs mechanisms for mechanics
+- [docs/architecture.md](docs/architecture.md) — the repository and Clear Partner: design
+  decisions and the `force-for-plugin` tradeoff
+- [docs/ui-architecture.md](docs/ui-architecture.md) — Clear UI: every design decision,
+  with the measurement behind it
+- [plugins/clear-ui/README.md](plugins/clear-ui/README.md) — Clear UI's scripts, looks,
+  file layout and tests
 - [docs/adr/](docs/adr/) — architecture decision records
-- [docs/evals.md](docs/evals.md) — the behavioural eval suite, what it proves and
-  what it does not
-- [docs/research/marketplace-test.md](docs/research/marketplace-test.md) — recorded isolated install
-  test: every command, its output, proof the style activates
+- [docs/clear-partner-port.md](docs/clear-partner-port.md) — exactly how the shipped style
+  differs from the original (one line), and its recorded SHA-256
+- [docs/roadmap-v2.md](docs/roadmap-v2.md) — phases, what was built differently from plan,
+  what is still unverified
+
+Working on it:
+
+- [AGENTS.md](AGENTS.md) — the repository's rules for coding agents and contributors:
+  layout, commands, invariants, where each fact lives
 - [docs/releasing.md](docs/releasing.md) — how to cut a release; a prompt edit is a
   version bump
-- [docs/clear-partner-port.md](docs/clear-partner-port.md) — exactly how the shipped
-  style differs from the original (one line)
-- [docs/research/phase0-research.md](docs/research/phase0-research.md) — verified platform behaviour
-  for Claude Code 2.1.274
-
-Clear UI (`clear-ui`):
-
-- [docs/clear-ui-install.md](docs/clear-ui-install.md) — install, what gets written
-  and where, configure, uninstall
-- [docs/clear-ui-dogfood.md](docs/clear-ui-dogfood.md) — the first end-to-end run with
-  real hook payloads, and the same run as a checklist for a Mac
-- [plugins/clear-ui/README.md](plugins/clear-ui/README.md) — scripts, looks, file
-  layout, tests
-- [docs/ui-architecture.md](docs/ui-architecture.md) — every design decision, with the
-  measurement behind it
-- [docs/roadmap-v2.md](docs/roadmap-v2.md) — phases, what was built differently from
-  plan, what is still unverified
-- [docs/research/ui-research.md](docs/research/ui-research.md),
-  [docs/research/ux-distillation.md](docs/research/ux-distillation.md),
-  [docs/research/mods-research-2.1.277.md](docs/research/mods-research-2.1.277.md) — the evidence
-
-Both:
-
-- [demo/README.md](demo/README.md) — how every animated image here was recorded from
-  real sessions, what is controlled, the repeated-run numbers and the raw outputs
 
 ## License
 

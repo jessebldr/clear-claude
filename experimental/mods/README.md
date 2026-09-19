@@ -89,8 +89,8 @@ Being explicit about the limits of the above, because `[BINARY]` invites overrea
 ## What this means for Clear Claude
 
 **Stable Clear Claude does not depend on any of this, and will not until the surface is
-documented.** The marketplace ships two plugins: `clear-claude`, one output style and
-two read-only skills, and the optional `clear-ui`, a status bar that uses only
+documented.** The marketplace ships two plugins: `clear-partner`, one output style and
+two read-only skills, and `clear-ui`, a status bar that uses only
 documented classic hooks. Neither touches function hooks.
 
 Three standing rules:
@@ -99,7 +99,8 @@ Three standing rules:
    do so. A preview flag set machine-wide changes the behaviour of every plugin and
    every session, not only ours.
 2. **Any experiment stays fully isolated and opt-in** — its own directory, its own
-   plugin, never loaded by installing `clear-claude`.
+   plugin, never loaded by installing `clear-partner` or `clear-ui`. What graduates from here is
+   the third layer, Clear Transcript ([ADR 0005](../../docs/adr/0005-naming-and-install-paths.md)).
 3. **Anything built here is a mechanic, not a judgment.** The project's dividing line
    (*use prompts for judgment, deterministic mechanisms for mechanics* — see
    [philosophy.md](../../docs/philosophy.md)) is what makes these modules interesting in

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Records the same question twice in real Claude Code sessions that differ by one thing, the
-# clear-claude plugin. Joining the two recordings side by side is edit.mjs's job.
+# Clear Partner plugin. Joining the two recordings side by side is edit.mjs's job.
 #
 # usage: demo/record-pair.sh <slug> "<question>"
 #        writes <slug>-{before,after}.tape, frames-<slug>-{before,after}/ and
@@ -52,7 +52,7 @@ TAPE
 }
 
 tape before "claude --setting-sources project"
-tape after  "claude --setting-sources project --plugin-dir plugins/clear-claude"
+tape after  "claude --setting-sources project --plugin-dir plugins/clear-partner"
 for arm in before after; do
   rm -rf "frames-$slug-$arm"
   vhs "$slug-$arm.tape" > "$slug-$arm.log" 2>&1

@@ -1,0 +1,39 @@
+# Clear Claude
+
+> Clear Claude makes Claude Code easier to understand without making it less capable. It is a Claude Code plugin marketplace (`clear-claude`, at github.com/jessebldr/clear-claude) with two independent plugins: Clear Partner (`clear-partner@clear-claude`), an output style that makes Claude answer first and stay concise without dropping substance, and Clear UI (`clear-ui@clear-claude`), a status bar. The plugin `clear-partner` was named `clear-claude` before marketplace 0.4.0.
+
+This file is an index. Every fact lives in exactly one of the documents below; nothing is restated here.
+
+## Start here
+
+- [README](README.md): what it is, the install commands, what changes on the user's machine, how to update and remove it
+- [AGENTS.md](AGENTS.md): repository rules for coding agents — layout, commands, invariants, where each fact lives
+- [CHANGELOG](CHANGELOG.md): what each release changes for a user
+
+## Using it
+
+- [Install, update and remove Clear Partner](docs/install.md)
+- [Install, set up and remove Clear UI](docs/clear-ui-install.md)
+- [Migrating from clear-claude@clear-claude](docs/migration.md)
+- [Troubleshooting Clear Partner](docs/troubleshooting.md)
+
+## Design
+
+- [Names and install paths (ADR 0005)](docs/adr/0005-naming-and-install-paths.md)
+- [One plugin per layer (ADR 0004)](docs/adr/0004-one-plugin-per-layer.md)
+- [Architecture: the repository and Clear Partner](docs/architecture.md)
+- [Clear UI architecture](docs/ui-architecture.md)
+- [Philosophy](docs/philosophy.md)
+- [The Clear Partner prompt](plugins/clear-partner/output-styles/clear-partner.md)
+
+## Evidence
+
+- [Behavioural evals and their limits](docs/evals.md)
+- [How the demos were recorded, with repeated-run numbers](demo/README.md)
+- [Platform research, tagged by Claude Code version](docs/research/)
+
+## Optional
+
+- [Releasing](docs/releasing.md)
+- [Roadmap](docs/roadmap-v2.md)
+- [Clear UI plugin README](plugins/clear-ui/README.md)
