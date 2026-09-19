@@ -35,6 +35,8 @@ const readJson = (path) => JSON.parse(read(path))
 const STYLE = 'plugins/clear-partner/output-styles/clear-partner.md'
 const STYLE_SOURCE = 'source/clear-partner.md'
 const HASH_RECORDS = ['plugins/clear-partner/skills/clear-audit/SKILL.md', 'docs/clear-partner-port.md']
+const EXPERIMENT = 'experimental/clear-transcript'
+const EXPERIMENT_NAME = 'clear-transcript'
 const STYLE_KEYS = ['name', 'description', 'keep-coding-instructions', 'force-for-plugin']
 
 // Renames this marketplace has published. Append-only, like the map itself: users who skipped
@@ -264,4 +266,4 @@ if (findings.length > 0) {
   console.error(`\n${findings.length} finding${findings.length === 1 ? '' : 's'}.`)
   process.exit(1)
 }
-console.log(`check-repo: ok — versions, names, prompt record, vocabulary and links agree (${files.length} files).`)
+console.log(`check-repo: ok — versions, names, prompt record, vocabulary, links and the experiment agree (${files.length} files).`)

@@ -1,0 +1,14 @@
+{
+  "name": "clear-transcript",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Clear Transcript, an experimental function-hooks plugin for Claude Code. The version that counts is the one in .claude-plugin/plugin.json; this file exists for `npm test` and the Node engine floor of the unit tests. The plugin itself runs inside Claude Code and needs no Node.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test test/unit/blocks.test.mjs test/unit/answer.test.mjs test/unit/tools.test.mjs"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "description": "Clear Transcript: ui.render hooks on AssistantMessage and ToolGroup (terminal only), a UserMessage observer that tells the expanded view apart, and the /clear-transcript command. Presentation only.",
+  "modules": ["./register.js"]
+}

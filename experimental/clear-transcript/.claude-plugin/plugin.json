@@ -1,0 +1,34 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "clear-transcript",
+  "displayName": "Clear Transcript",
+  "description": "Experimental. How the conversation is drawn inside stock Claude Code: headings in an answer get a hierarchy, and a settled tool group names its files and commands and shows which of them failed, instead of a bare count. Presentation only: no word the model wrote is removed, reordered or added, ctrl+o shows every row as Claude Code draws it, and /clear-transcript off does the same in place. Built on function hooks (Claude Mods), which are early access: it loads only where they are enabled and may break on any Claude Code release. The transcript layer of Clear Claude; independent of Clear Partner and Clear UI.",
+  "version": "0.1.0",
+  "author": {
+    "name": "jessebldr"
+  },
+  "license": "MIT",
+  "keywords": [
+    "transcript",
+    "ui",
+    "function-hooks",
+    "mods",
+    "developer-experience"
+  ],
+  "userConfig": {
+    "headings": {
+      "type": "boolean",
+      "title": "Heading hierarchy in answers",
+      "description": "Draw the headings of an answer as a hierarchy. Off: every answer is drawn by Claude Code.",
+      "required": false,
+      "default": true
+    },
+    "toolGroups": {
+      "type": "boolean",
+      "title": "Named tool groups",
+      "description": "A finished group of reads, searches and commands names its targets and shows failures. Off: every group is drawn by Claude Code.",
+      "required": false,
+      "default": true
+    }
+  }
+}
