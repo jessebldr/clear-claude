@@ -1,0 +1,4 @@
+# Bash and VHS read these files; a CRLF checkout on Windows would break them.
+*.sh text eol=lf
+*.tape text eol=lf
+*.mjs text eol=lf
