@@ -81,9 +81,10 @@ What the platform offers, verified on Claude Code 2.1.278 rather than assumed:
 - **Good:** one word, one object. `marketplace update clear-claude` and
   `plugin update clear-partner` no longer look like the same command twice.
 - **Good:** existing users' settings migrate by themselves on Claude Code 2.1.193 or later.
-- **Bad:** for an install from GitHub the migration has a gap: the first session after the
-  marketplace update has the new key but not yet the plugin's files under the new name, so
-  it runs without Clear Partner; the next one has it. One `install` line closes the gap,
+- **Bad:** for an install from GitHub the migration has a gap: after the marketplace
+  update the settings have the new key but the plugin's files are not yet cached under the
+  new name, so the next session — two, in one of two measured runs — runs without Clear
+  Partner until Claude Code has fetched them. One `install` line closes the gap,
   and the upgrade instructions lead with it. A disabled install is not migrated at all.
 - **Bad:** skill invocations change from `/clear-claude:clear-doctor` to
   `/clear-partner:clear-doctor`, and the style's qualified name from

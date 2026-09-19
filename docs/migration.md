@@ -20,7 +20,7 @@ Check it with `clear doctor`, or `/clear-partner:clear-doctor`.
 
 ### If you only update the marketplace
 
-It still works, one session later. Claude Code 2.1.193 or later has a rename mechanism: the
+It still works, a session or two later. Claude Code 2.1.193 or later has a rename mechanism: the
 marketplace's `renames` map says `clear-claude` is now `clear-partner`, so at the next start
 Claude Code shows this once —
 
@@ -30,9 +30,10 @@ Renamed to "clear-partner" in the "clear-claude" marketplace
 
 — and rewrites `clear-claude@clear-claude` to `clear-partner@clear-claude` in the
 `enabledPlugins` (and `pluginConfigs`) of your user, project and local settings. What it does
-not have yet is the plugin's files under the new name, so **that first session runs without
-Clear Partner** (`plugin-cache-miss` in the debug log) while Claude Code fetches them. From
-the second session it is back. The `install` line above is what skips that gap.
+not have yet is the plugin's files under the new name, so **the next session runs without
+Clear Partner** (`plugin-cache-miss` in the debug log) until Claude Code has fetched them by
+itself. In two measured runs that took one session and two. The `install` line above is what
+skips that gap, which is why it is the recommended path and not a fallback.
 
 ### Things that look like errors and are not
 
@@ -123,7 +124,14 @@ marketplace moved.
   `/plugin install` after a cache miss; on 2.1.278 it fetched the plugin by itself.
 - Second session: two skills loaded from `clear-partner`, and `Using forced plugin output
   style: clear-partner:Clear Partner`.
-- `clear-ui@clear-claude` was untouched throughout: same key, same version, same cache.
+- **Run again from scratch, the gap was longer:** sessions one *and* two logged
+  `plugin-cache-miss` and no forced style; sessions three and four forced the style. The
+  sessions here are `claude -p` runs that end at once for want of a credential, so a fetch
+  started by one may simply not have finished before the next; an interactive session
+  that stays open was not measured. Either way the number of sessions is not something to
+  promise.
+- `clear-ui@clear-claude` stayed listed at 0.2.0, enabled, with its key unchanged, in
+  every run.
 
 **Upgrade from a local clone** (a `directory` marketplace, as used when testing a checkout):
 the same notice and the same settings rewrite, and no gap — the first session loaded the

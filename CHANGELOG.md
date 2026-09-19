@@ -41,8 +41,8 @@ SHA-256 — and no change to Clear UI's code.
     `claude plugin install clear-partner@clear-claude`, then restart. Claude Code (2.1.193
     or later) shows `Renamed to "clear-partner" in the "clear-claude" marketplace` once and
     rewrites the key in your settings by itself. Skip the `install` line and it still
-    works, but the first session after the update runs without Clear Partner while Claude
-    Code fetches it under the new name. The old `claude plugin update clear-claude` now
+    works, but the next session or two run without Clear Partner until Claude Code has
+    fetched it under the new name. The old `claude plugin update clear-claude` now
     answers "not found"; that is expected. All of it measured on 2.1.278:
     [docs/migration.md](docs/migration.md).
   - **What you will notice:** the skills' full names are `/clear-partner:clear-doctor` and
