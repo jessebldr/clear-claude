@@ -60,7 +60,10 @@ function makeRepo() {
   git(dir, 'commit', '-q', '-m', 'first')
   return dir
 }
-const cleanup = dir => rmSync(dir, { recursive: true, force: true, maxRetries: 3 })
+// readGit answers "slow" the moment its timer fires and does not wait for the killed process to
+// be gone. On Windows that process still holds the repository as its working directory for a
+// moment, and removing the directory fails with EBUSY until it has exited -- so be patient.
+const cleanup = dir => rmSync(dir, { recursive: true, force: true, maxRetries: 30, retryDelay: 100 })
 
 // Neither side of the timeout may be a race against a real clock. On a Windows CI runner a git
 // spawn takes longer than the 150 ms the status line allows, so a test about what git *answers*
