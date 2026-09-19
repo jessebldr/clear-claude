@@ -51,6 +51,15 @@ const JOBS = {
     cover: 632,
     panes: [{ frames: 'clear-ui-wide', title: 'CLEAR UI  the bottom row of a real Claude Code session', colour: BLUE, note: 'watch ctx, and the dot beside main' }],
   },
+  // The opt-in usage provider: one command, then the scoped chip at the right end of the bar.
+  // The last frame has the command, the answer and the chip on it, so it is the cover too.
+  'clear-ui-scoped-usage': {
+    target: 18,
+    cover: 'last',
+    // The two rows of the status bar in a 1300 x 720 recording at font size 15.
+    closeup: { y: 618, height: 56, air: 14 },
+    panes: [{ frames: 'clear-ui-usage', title: 'CLEAR UI 0.2  opt-in usage provider', colour: BLUE, note: 'watch the last chip on the bottom row' }],
+  },
   'demo-port-3000': pair('port', 20),
   'demo-disk-space': pair('disk', 20),
   'demo-chmod': pair('chmod', 20),
@@ -138,6 +147,20 @@ function build(name, job) {
   const gif = join(ASSETS, `${name}.gif`)
   ffmpeg(['-f', 'concat', '-safe', '0', '-i', list, '-filter_complex', 'split[x][y];[x]palettegen=stats_mode=full:max_colors=256[p];[y][p]paletteuse=dither=none:diff_mode=rectangle', '-fps_mode', 'vfr', gif])
   copyFileSync(png(cover), join(ASSETS, `${name}.png`))
+
+  // A close-up for places too small to read a whole terminal in: rows cut from the recording's
+  // last frame, on the terminal's ground, at twice the size. A crop and a scale, nothing else.
+  if (job.closeup) {
+    const [pane] = job.panes
+    const size = probe(frame(pane.frames, 'text', last))
+    const { y, height, air } = job.closeup
+    ffmpeg([
+      '-f', 'lavfi', '-i', `color=c=${TERMINAL}:s=${size}`,
+      '-i', frame(pane.frames, 'text', last),
+      '-filter_complex', `[0][1]overlay=format=auto,crop=iw:${height}:0:${y},pad=iw:ih+${air * 2}:0:${air}:color=${TERMINAL},scale=iw*2:ih*2:flags=lanczos`,
+      '-frames:v', '1', join(ASSETS, `${name}-bar.png`),
+    ])
+  }
 
   const seconds = COVER_SECONDS + played.length / FPS + HOLD_SECONDS
   console.log(

@@ -61,6 +61,19 @@ the file up, edits only that key, and asks before replacing a status line you al
 have. It needs Node 18 or newer. Everything it writes, and how to remove it, is in
 [docs/clear-ui-install.md](docs/clear-ui-install.md).
 
+**New in Clear UI 0.2 — your model's weekly limit on the bar (opt-in).** Claude Code's usage
+screen shows a weekly limit for one model that the status-line data does not carry. Say
+`turn on clear ui usage`, or run one command, and it becomes the last chip on the bar:
+
+![A real terminal: one command switches the Clear UI usage provider on, then Claude Code starts and the bottom row ends with a fourth chip, "Fable 68%", after the weekly one](assets/clear-ui-scoped-usage.gif)
+
+*Also a recording of a real session, 13 seconds, with the recording account's own numbers.
+Off by default, and with it off the bar reaches no network. With it on, a background worker
+runs Claude Code's own `claude -p /usage` at most every ten minutes — no model call, no cost,
+no credential read by Clear UI — and the chip disappears rather than show a number it cannot
+vouch for. What it does, what it costs and what it is careful about:
+[plugins/clear-ui/README.md](plugins/clear-ui/README.md#usage-provider-opt-in).*
+
 ---
 
 ## Why Clear Claude exists

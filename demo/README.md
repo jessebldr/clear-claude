@@ -10,11 +10,12 @@ list of keys that were pressed.
 
 ## The set
 
-Primary — the three shown in the README, and the ones to post:
+Primary — the four shown in the README, and the ones to post:
 
 | Image | Length | Tape | What it shows |
 | --- | --- | --- | --- |
 | `assets/clear-ui-demo.gif` | 17 s | `clear-ui-wide.tape` | Clear UI as the bottom row of a real session. The context chip fills in after the first answer; the orange dot beside the branch appears when Claude creates a file and goes when Claude deletes it. |
+| `assets/clear-ui-scoped-usage.gif` | 13 s | `clear-ui-usage.tape` | Clear UI 0.2's opt-in usage provider. One command switches it on; Claude Code starts, and the bottom row ends with a fourth chip — the weekly limit scoped to one model, under the name Claude Code gives it. |
 | `assets/demo-chmod.gif` | 16 s | `chmod-before.tape`, `chmod-after.tape` | One question in two sessions that differ only by the `clear-claude` plugin: 216 → 110 words. |
 | `assets/demo-port-3000.gif` | 17 s | `port-*.tape` | Same, second question: 136 → 78 words. |
 
@@ -26,7 +27,10 @@ Secondary — linked, not embedded:
 | `assets/clear-ui-narrow.gif` | 15 s | `clear-ui-narrow.tape` | The status bar in a 760 px terminal: two rows. |
 
 Every GIF has a PNG of the same name beside it: its cover frame, for places an animation does
-not play — a social card, a marketplace listing, an email.
+not play — a social card, a marketplace listing, an email. The usage provider recording also
+has `assets/clear-ui-scoped-usage-bar.png`: the two rows of the status bar cut from its last
+frame at twice the size, for places too small to read a whole terminal in. `edit.mjs` makes
+it; it is a crop and a scale of a recorded frame, and nothing else.
 
 One look across the set: primary assets are 1300 px wide, the narrow one 720; the same
 caption banner, margins and terminal ground; before and after panes are the same size, font
@@ -52,6 +56,27 @@ layer on the terminal's ground colour, with 10 px of air added on the right (VHS
 terminal on the left only) and a caption banner above. The word counts on the banners are
 not estimates: [`words.mjs`](words.mjs) reads the transcripts of the two sessions that were
 recorded.
+
+## The usage provider recording: what is real, and one thing to know
+
+`clear-ui-usage.tape` was recorded on 2026-09-19 against Claude Code 2.1.278 with `clear-ui`
+0.2.0 installed from the marketplace, starting from the default: provider off, no cached
+answer. The `Fable 68%` on the bar is the recording account's real scoped weekly usage that
+evening, fetched by Claude Code's own `claude -p /usage`; the `7d 69%` beside it comes from the
+status-line data as always. The answer on screen is the model's own reading of the repository,
+not a script.
+
+The chip is already there when the bar first appears. Other Claude Code sessions were open on
+the machine, and the provider is shared between sessions: the first status-line tick anywhere
+after `usage on` started the refresh, and the answer was in the cache during the seven seconds
+before the recorded session drew its first bar. On a machine with no other session open, the
+chip arrives a few seconds after the bar does.
+
+The command is the repository's own `configure.mjs`, run from the clone. The first take ran
+the installed 0.2.0 copy and was discarded: its output printed `weeklyScopedon` and
+`verificationon`, a column-width slip fixed on `main` after the release (see the CHANGELOG,
+Unreleased). That is a product fault and its fix, not a result being picked — the bar and the
+number were the same in both takes.
 
 ## Before / after: what is controlled
 
@@ -127,6 +152,7 @@ once and accept the workspace prompt), and, for the status bar tapes, Clear UI i
 ```sh
 demo/record.sh clear-ui-wide
 demo/record.sh clear-ui-narrow
+demo/record.sh clear-ui-usage       # first: `configure.mjs usage off`, and delete cache/usage*
 demo/record-pair.sh chmod "What does chmod 755 do?"
 demo/record-pair.sh port  "How do I find which process is using port 3000 on Linux?"
 demo/record-pair.sh disk  "How do I check disk space on Linux?"

@@ -14,8 +14,14 @@ On `main`, not in a tagged version yet; ships with the next `clear-ui` release.
 
 ### Fixed
 
-- `configure.mjs show` printed `weeklyScopedon`: the new segment's name is exactly as wide as the
-  column was. Display only — the setting itself was always read and written correctly.
+- `configure.mjs show` printed `weeklyScopedon` and `verificationon`: both names are exactly as
+  wide as the column was, and `verification` had been since 0.1.0 — found when the second one
+  turned up in a recording. Display only; the settings were always read and written correctly.
+
+### Added
+
+- A recording of the usage provider, `assets/clear-ui-scoped-usage.gif`, with its tape and a
+  note on what in it is real ([demo/README.md](demo/README.md)). Docs and media only.
 
 ## [0.3.0] - 2026-09-19
 
