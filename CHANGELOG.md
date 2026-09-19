@@ -10,7 +10,7 @@ and gets its own entry here and its own version bump.
 
 ## [0.2.2] - 2026-09-19
 
-Not yet published. Marketplace 0.2.2: `clear-claude` 0.1.1 — **a prompt change, so a behaviour
+Published as tag `v0.2.2`. Marketplace 0.2.2: `clear-claude` 0.1.1 — **a prompt change, so a behaviour
 change** — and `clear-ui` unchanged at 0.1.1.
 
 ### Changed

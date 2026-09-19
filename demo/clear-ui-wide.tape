@@ -16,9 +16,7 @@ Set Framerate 12
 Set TypingSpeed 35ms
 Hide
 # VHS on Windows can drop the first keystroke; a leading space is harmless to bash.
-# DEV_STYLE: until clear-claude 0.1.1 is what the marketplace serves, the alias loads the
-# working-tree copy of the plugin, which wins over the installed one. Drop the alias after that.
-Type " cd ~/demo/clear-claude && export CLAUDE_CODE_DISABLE_CLAUDE_MDS=1 && alias claude='claude --plugin-dir ~/work/clear-claude/plugins/clear-claude' && clear"
+Type " cd ~/demo/clear-claude && export CLAUDE_CODE_DISABLE_CLAUDE_MDS=1 && clear"
 Enter
 Sleep 1s
 Show

@@ -70,9 +70,10 @@ after:   claude --setting-sources project --plugin-dir plugins/clear-claude
 - The only difference is `--plugin-dir plugins/clear-claude`: the plugin exactly as this
   repository ships it, `clear-claude` 0.1.1.
 
-The status bar tapes hide one more thing, marked `DEV_STYLE` in the tape: an alias that loads
-the working-tree copy of `clear-claude`, because the recording was made before 0.1.1 was what
-the marketplace served. Drop the alias once it is.
+The published status bar recordings were made a few hours before 0.1.1 was what the
+marketplace served, so for that one take a hidden alias loaded the working-tree copy of
+`clear-claude` — the same text that was then released. The tapes as committed have no alias:
+they record whatever `clear-claude` the machine has installed.
 
 ## No picking
 
