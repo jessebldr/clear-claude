@@ -25,7 +25,7 @@ Each plugin carries its own version; the marketplace version tracks the newest c
 | 0.2.0 | `clear-ui` 0.1.0 appears as a second, optional marketplace plugin (Phases A–C). Because Phases D and F were built on the same branch, it also carries the activity line and `verification-state` on **documented** classic hooks — both opt-in, off by default. |
 | 0.2.x | Windows + macOS dogfooding; first green cross-platform CI run (Phase E); the opt-in features exercised against real hook payloads. |
 | 0.3.0 | Unassigned. Was `verification-state` (Phase F), which shipped inside 0.2.0. |
-| 0.4.0-exp | First function-hooks mod, outside the marketplace, `--plugin-dir` only (Phase G). |
+| 0.4.0-exp | First function-hooks mod, outside the marketplace, `--plugin-dir` only (Phase G1). G2 is a research spike and carries no version. |
 | 1.0 | Only after function hooks are documented, on by default, and the layer boundaries have survived real use. |
 
 Change from the earlier sketch: verification-state moves **ahead of** the first mod,
@@ -157,16 +157,63 @@ source of Codex CLI, Oh My Pi, OpenCode and T3 Code; `anything-to-html` could no
   are not counted at all. Two files per session, one writer each, instead of one shared file
   that concurrent hooks would have to read, modify and write back.
 
-### Phase G — first experimental mod
+### Phase G — Clear Transcript, the first experimental mod
 
-- **Prerequisite:** the UX distillation above.
+Clear Transcript is the part of the experience the status bar cannot reach: what the
+conversation itself looks like in the stock Claude Code terminal. It has two halves, and
+only the first has been designed.
+
+- **Prerequisite (both):** the UX distillation above.
+- **Entry conditions (both):** function hooks appear in official docs, or the gate defaults
+  on. Until then no mod is built. G2's research spike is the one exception, because a
+  spike is disposable, loads only with `--plugin-dir`, and ships nothing.
+
+#### G1 — tool and sub-agent presentation (the phase as planned so far)
+
 - **Create:** `experimental/mods/activity-renderer/` — collapses finished, non-expanded
   `ToolGroup` rows to one line; returns `next(e)` whenever `isExpanded`. Tests via
-  `claude plugin test`.
-- **Entry conditions:** function hooks appear in official docs, or the gate defaults on.
-  Until then this phase does not start.
+  `claude plugin test`. Collapse rules:
+  [ux-distillation.md](ux-distillation.md), "Implications for Phase G".
+- **Evidence so far:** Spike C — replacing a finished, non-expanded `ToolGroup` drew, and
+  ctrl+o still showed the engine's full row.
 - **Risks:** API churn between releases; hiding something that mattered — error rows are
   never collapsed.
+
+#### G2 — assistant response presentation (missing until now; research only)
+
+G1 tidies everything *around* the answer and leaves the answer itself — the thing the user
+actually reads — exactly as stock Claude Code draws it. Clear Partner shapes what the
+answer says; nothing yet shapes how it is laid out on screen.
+
+- **Goal:** information hierarchy and progressive disclosure for the assistant's own
+  response, inside the stock terminal: the conclusion visually first, supporting detail
+  quieter or folded, long code and long lists previewed with a stated way to see the rest.
+- **Not the goal:** HTML, a web view, a desktop app, a side window, a custom harness, or
+  rewriting what the model said. Same scope rule as the rest of this roadmap. The text of
+  the answer is never changed or dropped — presentation only, and the full response must
+  stay reachable, as ctrl+o does for tool rows in G1.
+- **This phase is a research spike and nothing more.** The one question: does `ui.render`
+  expose `AssistantMessage` — and the Markdown inside it — deeply enough to restructure?
+  Known: the terminal raises `ui.render` for `AssistantMessage` (Spike C), and the
+  component is in the `RenderComponent` type list. **Unknown, and what the spike must
+  answer:**
+  1. What the props carry: one raw Markdown string, a parsed block tree (headings,
+     paragraphs, lists, code), or something opaque.
+  2. Whether a returned tree can be built from parts of the message — per block — or only
+     replace the message whole.
+  3. How streaming behaves: one render per delta, per block, or once at the end; and
+     whether a rewrite mid-stream flickers or is skipped.
+  4. Whether Claude Code's own Markdown and syntax-highlight rendering can be reused inside
+     a returned tree, or a mod would have to re-implement it.
+  5. Whether the unmodified response stays reachable (ctrl+o, transcript view, copy).
+- **Deliver:** a spike under `experimental/spikes/function-hooks/`, recording prop *keys*
+  and shapes only, never message content; findings written into
+  [mods-research-2.1.277.md](mods-research-2.1.277.md) or its successor; then a go / no-go.
+- **No-go is an acceptable result.** If the props are an opaque string and the only lever
+  is re-implementing Markdown rendering, G2 stops there and is recorded under
+  "Not planned" with the evidence.
+- **Not started. No design, no code, no renderer.** Nothing in G2 is built until the spike
+  answers the questions above and the entry conditions hold.
 
 ## Not planned
 

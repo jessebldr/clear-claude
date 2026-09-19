@@ -25,7 +25,7 @@
     {
       "name": "clear-ui",
       "source": "./plugins/clear-ui",
-      "description": "Optional status line: model, effort and project on one line; context, 5-hour and weekly usage on the other. Drawn only from the data Claude Code already provides — no network, no credentials, no transcript parsing. Installing it is a separate, reversible step; clear-claude does not depend on it.",
+      "description": "Optional adaptive status bar: model, effort, project and git branch on the left; context, 5-hour and weekly usage on the right. One row when the terminal is wide enough, two when it is not. Drawn only from the data Claude Code already provides plus one cached git status — no network, no credentials, no transcript parsing. Installing it is a separate, reversible step; clear-claude does not depend on it.",
       "version": "0.1.0",
       "license": "MIT",
       "keywords": [

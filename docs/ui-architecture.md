@@ -9,7 +9,8 @@
 Not "Claude Code needs more information on screen." Claude Code already exposes useful
 state, scattered across the footer, the spinner, `/usage`, `/context`, `/tasks` and the
 shell. The user has to reconstruct the situation: how much room is left, when quota
-resets, whether the repo is dirty. Clear UI turns that into two calm lines.
+resets, whether the repo is dirty. Clear UI turns that into one calm bar — a single row when
+the terminal is wide enough, two when it is not.
 
 ## Layers
 
