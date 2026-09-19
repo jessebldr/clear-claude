@@ -31,7 +31,7 @@ Run `claude plugin list --json`. Each entry is `{id, version, scope, enabled, in
 - Found with `"enabled": false` → **FAIL**. Installed but switched off, so the style cannot apply.
 - Found and enabled → **PASS**. Report `id`, `version`, `scope`.
 
-- No `clear-partner@…` entry, but one whose id starts with `clear-claude@` → **WARN**, and carry on with that entry. It is the same plugin under its former name. Claude Code 2.1.193 or later migrates it by itself at the next session start, from the marketplace's `renames` map; an older Claude Code reports `plugin-not-found` instead, and the remediation below is the way out.
+- No `clear-partner@…` entry, but one whose id starts with `clear-claude@` → **WARN**, and carry on with that entry. It is the same plugin under its former name, from before 0.2.0. If the entry carries a note that it was renamed, Claude Code has already moved the settings key and only the install under the new name is missing.
 
 Record `installPath`; checks 2–4 and 7 depend on it. If there is more than one `clear-partner@…` entry, report all of them and **WARN**: two installs in different scopes means the one you are inspecting may not be the one that loads.
 
@@ -44,12 +44,14 @@ claude plugin install clear-partner@clear-claude
 
 Remediation — installed but disabled: `claude plugin enable clear-partner`.
 
-Remediation — still installed under the former name: update the catalog with `claude plugin marketplace update clear-claude` and restart Claude Code. If the old id is still listed after that, install the new name and remove the old one:
+Remediation — still installed under the former name:
 
 ```text
+claude plugin marketplace update clear-claude
 claude plugin install clear-partner@clear-claude
-claude plugin uninstall clear-claude@clear-claude
 ```
+
+Then restart. `claude plugin update clear-claude` answering "not found" is expected after the rename, not a second fault.
 
 ## Check 2 — manifest present and valid
 

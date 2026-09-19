@@ -28,7 +28,7 @@
       "displayName": "Clear UI",
       "source": "./plugins/clear-ui",
       "description": "The status layer of Clear Claude. An adaptive status bar: model, effort, project and git branch on the left; context, 5-hour and weekly usage on the right. One row when the terminal is wide enough, two when it is not. By default drawn only from the data Claude Code already provides plus one cached git status — no network, no credentials, no transcript parsing. One opt-in extra, off by default: a usage provider that runs Claude Code's own `claude -p /usage` in the background, at most every ten minutes, to show the weekly limit scoped to one model. Claude Code reaches the network for that with its own sign-in; Clear UI itself reads no credential and calls no API. Showing the bar is a separate, reversible setup step. Independent of Clear Partner: neither needs the other.",
-      "version": "0.2.1",
+      "version": "0.2.0",
       "license": "MIT",
       "keywords": [
         "statusline",

@@ -61,8 +61,9 @@ Inside a session the same commands work as `/plugin marketplace add …` and
   nothing behind.
 
 **Installed `clear-claude@clear-claude` before?** That plugin is now called
-`clear-partner`. Update the marketplace and restart; Claude Code moves your install to the
-new name by itself. Details, and the one thing that changes for you:
+`clear-partner`. Run `claude plugin marketplace update clear-claude`, then the
+`clear-partner` install line above, and restart. Claude Code moves your settings to the new
+name by itself. What changes for you, and what was measured:
 [docs/migration.md](docs/migration.md).
 
 Scopes, teams, CI flags and recovery: [docs/install.md](docs/install.md) (Clear Partner),
