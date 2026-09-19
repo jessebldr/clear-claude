@@ -1,6 +1,6 @@
 # Clear UI — architecture and v0.1 design
 
-**Status: Phases A–D and F are implemented in `plugins/clear-ui` and installed by its setup script; the activity row is opt-in. Mods are not started.** Platform facts come from
+**Status: Phases A–D and F are implemented in `plugins/clear-ui` and installed by its setup script; the activity row is opt-in. The transcript layer is built as the experimental `clear-transcript` and has its own page, [clear-transcript.md](clear-transcript.md); this one is about Clear UI.** Platform facts come from
 [mods-research-2.1.277.md](research/mods-research-2.1.277.md); ecosystem lessons from
 [ui-research.md](research/ui-research.md).
 
@@ -56,8 +56,9 @@ clear-claude/
 │       ├── skills/{setup,configure,doctor}/SKILL.md
 │       └── test/{fixtures,golden,*.test.mjs}
 ├── experimental/
+│   ├── clear-transcript/             ← the transcript layer: a function-hooks plugin, --plugin-dir only
 │   ├── mods/                         ← research notes
-│   └── spikes/function-hooks/        ← disposable spikes (exist today)
+│   └── spikes/function-hooks/        ← disposable spikes
 └── docs/
 ```
 
@@ -429,8 +430,9 @@ The skills are thin wrappers that run it and relay its output.
 | active agents | renders | — | native `subagentStatusLine` feed; no mod needed |
 | background command count | renders | — | documented `Stop` hook `background_tasks[]` |
 | verification state | **renders** | — (classic hooks **observe**) | one producer writes the record, one consumer draws it |
-| collapse / calm tool rows | — | **owns** | main transcript; `ui.render` only |
-| spinner wording | — | owns | `ui.render` Spinner |
+| names and failures of a settled tool group | — | **owns** (built) | main transcript; `ui.render` `ToolGroup`. Stock already collapses the rows; what it loses doing so is the mod's to put back |
+| heading hierarchy in an answer | — | **owns** (built) | `ui.render` `AssistantMessage` |
+| spinner wording | — | not built | stock has settings for it; a second way in another layer is what this project refuses |
 | strip ANSI / dedupe tool output | — | owns (if ever) | `tool.call` result; high risk |
 | compact hand-off | — | owns (if ever) | `session.compact` |
 | tone, length, explanation | — | — | Clear Partner, nowhere else |
@@ -572,6 +574,7 @@ Setup → no settings file, unparseable settings (must refuse), existing foreign
 statusLine (Keep/Replace), re-run idempotence, uninstall restores the previous value,
 unrelated keys byte-identical after apply.
 
-Mods (when they start) → `claude plugin test` with the gate set in CI only: event order,
-pass-through equality, behaviour with the gate off (plugin must be inert, not broken),
-state cleanup at `session.end`, raw output still reachable after a collapse.
+Mods → the pure core under `node --test`, and the hooks under `claude plugin test` with the gate
+set for that one command: what is drawn, pass-through for everything in doubt, the expanded view
+and the off-switch reaching the engine, hostile text. What Clear Transcript's suites cover, and
+what only a recording can show, is in [clear-transcript.md](clear-transcript.md#tests).

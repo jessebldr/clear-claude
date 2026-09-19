@@ -11,6 +11,11 @@ not a plan and not a promise.
 > established" items below are now established — it runs, the product name is "Claude
 > Mods", and a `session.compact` event exists. The standing rules below still apply.
 
+> **Update, 2026-09-20.** The third layer now exists: [`experimental/clear-transcript`](../clear-transcript/README.md),
+> built against 2.1.278 and still outside the marketplace, for the reasons in the three standing
+> rules below, which it keeps. It is none of the three hypothetical modules sketched here. Current
+> platform state: [docs/research/mods-research-2.1.278.md](../../docs/research/mods-research-2.1.278.md).
+
 **Verified against:** Claude Code **2.1.274**, Linux, 2026-09-17.
 Evidence tiers follow [phase0-research.md](../../docs/research/phase0-research.md):
 `[HELP]` = quoted from `--help`, `[VALIDATOR]` = observed from `claude plugin validate`,

@@ -8,6 +8,48 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Because the product is a prompt, any edit to `clear-partner.md` is a behaviour change
 and gets its own entry here and its own version bump.
 
+## Unreleased
+
+Carried by no marketplace release: `clear-transcript` lives outside the marketplace until Claude
+Code documents function hooks and switches them on, and it has its own version, 0.1.0. Nothing
+here changes `clear-partner` or `clear-ui`, and installing either still installs neither mod nor
+gate.
+
+### Added
+
+- **Clear Transcript, the third layer, as an experimental plugin** you run from a clone:
+  `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude --plugin-dir experimental/clear-transcript`. It
+  cannot be installed, on purpose ([docs/clear-transcript.md](docs/clear-transcript.md)). With it
+  loaded, on Claude Code 2.1.278:
+  - A finished group of tool calls **names its files and commands, and gives each failed call its
+    own line** — `Read sum.mjs, format.mjs, parse.mjs`, `failed  node --test · Exit code 1` —
+    where stock draws `Read 3 files, ran 2 shell commands`. In the recorded session that count
+    stood for two commands that had both failed, with nothing on screen saying so.
+  - **Section titles (`#`, `##`) in an answer are underlined.** Stock draws every heading level as
+    the same plain bold. Nothing else in an answer is touched — code, tables, lists and
+    sub-headings are Claude Code's own drawing — and an answer stays exactly as tall as before.
+  - **ctrl+o shows every row as Claude Code draws it**, and `/clear-transcript off` does the same
+    in place. No word the model wrote is removed, reordered or added; nothing is folded or hidden.
+  - Two `/config` switches, one per behaviour. It hooks `ui.render` only: no tool calls, no
+    prompts, no files, no network — `claude plugin validate experimental/clear-transcript` prints
+    the list, without the gate.
+- Research behind it, for anyone building on function hooks:
+  [what the platform allows on 2.1.278](docs/research/mods-research-2.1.278.md), measured in
+  recorded sessions and with `claude plugin test`, and
+  [how twelve coding agents present a transcript](docs/research/transcript-ux.md), with what
+  their users reward and punish. Recorded sessions:
+  [docs/clear-transcript-dogfood.md](docs/clear-transcript-dogfood.md).
+
+### Changed
+
+- The roadmap's Phase G is rewritten as what was built rather than what was planned, and says
+  which parts are proven, which depend on an experimental API, and what is blocked only by it
+  ([docs/roadmap-v2.md](docs/roadmap-v2.md)). The earlier plan to *collapse* tool rows is gone:
+  stock already collapses them, and the evidence is that the collapse is the problem.
+- CI tests Clear Transcript's pure core on Linux, macOS and Windows, validates it, checks what its
+  hooks may touch, and runs its hooks in Claude Code's own test host. `scripts/check-repo.mjs`
+  fails if it is ever listed in the marketplace while it lives under `experimental/`.
+
 ## [0.4.1] - 2026-09-20
 
 Marketplace 0.4.1: `clear-partner` 0.2.1 and `clear-ui` 0.2.1. A closing release for both
