@@ -232,7 +232,18 @@ test('doctor reports FAIL before an install and PASS after one, and stays read-o
   run(home, ['apply'])
   const after = runDoctor()
   assert.equal(after.status, 0)
-  assert.match(after.stdout, /Clear UI Doctor — PASS/)
+  // Every row but one is about the install, and must pass. `Git speed` is about the machine: on
+  // a loaded Windows CI runner git took 190 ms against the 150 ms budget, the row said WARN as
+  // it should, and a test that demanded an overall PASS failed for it. So the verdict is held
+  // to what the install decides, and that one row may be either.
+  const rows = after.stdout.split('\n').filter(line => /^ {2}\S/.test(line))
+  assert.ok(rows.length >= 10, after.stdout)
+  for (const row of rows) {
+    if (/^ {2}Git speed /.test(row)) assert.match(row, /Git speed\s+(PASS|WARN|UNKNOWN) /, row)
+    else assert.match(row, / (PASS|UNKNOWN) /, row)
+  }
+  const gitIsSlowHere = rows.some(row => /^ {2}Git speed\s+WARN /.test(row))
+  assert.match(after.stdout, gitIsSlowHere ? /Clear UI Doctor — WARN/ : /Clear UI Doctor — PASS/)
   assert.match(after.stdout, /statusLine\s+PASS\s+points at Clear UI/)
   assert.match(after.stdout, /Dry render\s+PASS/)
   cleanup(home)
