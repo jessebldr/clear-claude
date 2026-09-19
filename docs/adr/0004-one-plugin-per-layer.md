@@ -1,6 +1,8 @@
 # ADR 0004: One plugin per layer; experimental mods stay outside the marketplace
 
-**Status:** Accepted · **Date:** 2026-09-19
+**Status:** Accepted · **Date:** 2026-09-19 · Amended by [ADR 0005](0005-naming-and-install-paths.md):
+the plugin called `clear-claude` below is now `clear-partner`, and "Clear Mods" /
+`plugins/clear-mods` is now Clear Transcript / `plugins/clear-transcript`. The decision stands.
 
 ## Context
 

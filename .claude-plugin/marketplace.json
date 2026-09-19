@@ -1,19 +1,20 @@
 {
   "name": "clear-claude",
-  "description": "Clear Claude — a minimal, opinionated Claude Code setup for clear communication without reduced engineering capability.",
+  "description": "Clear Claude — Claude Code that is easier to read and to keep an eye on, without being less capable. Two independent plugins: Clear Partner (how Claude communicates) and Clear UI (a status bar).",
   "owner": {
     "name": "jessebldr"
   },
   "metadata": {
-    "description": "Clear Claude — a minimal, opinionated Claude Code setup for clear communication without reduced engineering capability.",
-    "version": "0.3.0"
+    "description": "Clear Claude — Claude Code that is easier to read and to keep an eye on, without being less capable. Two independent plugins: Clear Partner (how Claude communicates) and Clear UI (a status bar).",
+    "version": "0.4.0"
   },
   "plugins": [
     {
-      "name": "clear-claude",
-      "source": "./plugins/clear-claude",
-      "description": "Ships the Clear Partner output style: answer-first, plain English, concise by default, deep when asked. Keeps Claude Code's coding instructions intact. Includes the clear-doctor and clear-audit diagnostic skills.",
-      "version": "0.1.1",
+      "name": "clear-partner",
+      "displayName": "Clear Partner",
+      "source": "./plugins/clear-partner",
+      "description": "The communication layer of Clear Claude. One output style — answer-first, plain English, concise by default, deep when asked — that keeps Claude Code's coding instructions intact and applies automatically while the plugin is enabled. Includes two read-only diagnostic skills, clear-doctor and clear-audit. Writes nothing outside the plugin. Named clear-claude before 0.2.0; existing installs migrate automatically.",
+      "version": "0.2.0",
       "license": "MIT",
       "keywords": [
         "output-style",
@@ -24,8 +25,9 @@
     },
     {
       "name": "clear-ui",
+      "displayName": "Clear UI",
       "source": "./plugins/clear-ui",
-      "description": "Optional adaptive status bar: model, effort, project and git branch on the left; context, 5-hour and weekly usage on the right. One row when the terminal is wide enough, two when it is not. By default drawn only from the data Claude Code already provides plus one cached git status — no network, no credentials, no transcript parsing. One opt-in extra, off by default: a usage provider that runs Claude Code's own `claude -p /usage` in the background, at most every ten minutes, to show the weekly limit scoped to one model. Claude Code reaches the network for that with its own sign-in; Clear UI itself reads no credential and calls no API. Installing it is a separate, reversible step; clear-claude does not depend on it.",
+      "description": "The status layer of Clear Claude. An adaptive status bar: model, effort, project and git branch on the left; context, 5-hour and weekly usage on the right. One row when the terminal is wide enough, two when it is not. By default drawn only from the data Claude Code already provides plus one cached git status — no network, no credentials, no transcript parsing. One opt-in extra, off by default: a usage provider that runs Claude Code's own `claude -p /usage` in the background, at most every ten minutes, to show the weekly limit scoped to one model. Claude Code reaches the network for that with its own sign-in; Clear UI itself reads no credential and calls no API. Showing the bar is a separate, reversible setup step. Independent of Clear Partner: neither needs the other.",
       "version": "0.2.0",
       "license": "MIT",
       "keywords": [
@@ -36,5 +38,8 @@
         "developer-experience"
       ]
     }
-  ]
+  ],
+  "renames": {
+    "clear-claude": "clear-partner"
+  }
 }

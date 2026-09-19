@@ -8,7 +8,7 @@ output styles at all, so this failure is completely silent — no error, no warn
 Start here:
 
 ```text
-/clear-claude:clear-doctor
+/clear-partner:clear-doctor
 ```
 
 It runs the checks below in order and prints a PASS/WARN/FAIL table with the exact fix.
@@ -45,11 +45,12 @@ only direct observation available; everything else is inference.
 claude plugin list --json
 ```
 
-Find the entry whose `id` starts with `clear-claude@` and check `"enabled": true`. If it
-is `false`, run `claude plugin enable clear-claude`.
+Find the entry whose `id` starts with `clear-partner@` (or `clear-claude@`, the plugin's
+name before 0.2.0 — see [migration.md](migration.md)) and check `"enabled": true`. If it
+is `false`, run `claude plugin enable clear-partner`.
 
 **Do not expect to see the style in `plugin details`.** Output styles never appear in
-the component inventory in this version. `claude plugin details clear-claude` listing
+the component inventory in this version. `claude plugin details clear-partner` listing
 two skills and no style is correct behaviour, not a finding.
 
 If all of that is fine, the cause is one of sections 2, 3, or 6.
@@ -156,7 +157,7 @@ knows about. Always run both, in this order:
 
 ```text
 claude plugin marketplace update clear-claude
-claude plugin update clear-claude
+claude plugin update clear-partner
 ```
 
 **You skipped the restart.** Claude Code prints *"restart required to apply"*. Restart
@@ -206,10 +207,10 @@ project, local, and policy. The `/config` picker will appear to be overridden, b
 it is.
 
 ```text
-claude plugin disable clear-claude
+claude plugin disable clear-partner
 ```
 
-Then pick your style. `claude plugin enable clear-claude` brings Clear Partner back.
+Then pick your style. `claude plugin enable clear-partner` brings Clear Partner back.
 There is no partial or per-project override; `force-for-plugin` is the only
 auto-activation control this version provides, and it is all-or-nothing. The reasoning
 is in [architecture.md](architecture.md); the philosophy behind accepting that tradeoff
@@ -226,7 +227,7 @@ If Clear Partner is active but behaving differently than documented, the prompt 
 may have been edited — by you, by a merge, or by a line-ending conversion.
 
 ```text
-/clear-claude:clear-audit
+/clear-partner:clear-audit
 ```
 
 Part B hashes the installed file and compares it against the recorded SHA-256 in
@@ -251,8 +252,8 @@ report, and they print the fixes for you to run — they never edit a file, chan
 setting, or delete anything.
 
 ```text
-/clear-claude:clear-doctor
-/clear-claude:clear-audit
+/clear-partner:clear-doctor
+/clear-partner:clear-audit
 ```
 
 Plain language works too ("diagnose my Clear Claude install", "is Clear Partner really

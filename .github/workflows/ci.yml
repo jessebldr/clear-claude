@@ -1,10 +1,12 @@
 name: CI
 
 # What this workflow does, precisely. The marketplace holds two independent plugins:
-#   - `validate` runs Claude Code's own manifest and component validator in strict
-#     mode over the marketplace and both plugins, clear-claude and clear-ui.
+#   - `validate` runs this repository's own consistency check (scripts/check-repo.mjs:
+#     versions agree, the recorded prompt hash is current, plugin names are canonical,
+#     Markdown links resolve), then Claude Code's manifest and component validator in
+#     strict mode over the marketplace and both plugins, clear-partner and clear-ui.
 #   - `clear-ui` runs that plugin's test suite, a demo render and a timing bench on
-#     Linux, macOS and Windows. clear-claude is a prompt and two skills, so it has no
+#     Linux, macOS and Windows. clear-partner is a prompt and two skills, so it has no
 #     tests to run here.
 #
 # What it does NOT do, and why:
@@ -33,6 +35,12 @@ jobs:
         with:
           node-version: '22'
 
+      # Ours, and first because it needs nothing installed: the facts this repository states
+      # in more than one place (versions, the prompt's SHA-256, the plugin ids in every
+      # install command) and every relative Markdown link.
+      - name: Repository consistency
+        run: node scripts/check-repo.mjs
+
       - name: Install Claude Code
         run: npm i -g @anthropic-ai/claude-code
 
@@ -44,11 +52,11 @@ jobs:
       - name: Validate marketplace manifest
         run: claude plugin validate .claude-plugin/marketplace.json --strict
 
-      - name: Validate clear-claude manifest
-        run: claude plugin validate plugins/clear-claude --strict
+      - name: Validate clear-partner manifest
+        run: claude plugin validate plugins/clear-partner --strict
 
-      - name: Validate clear-claude skills
-        run: claude plugin validate plugins/clear-claude/skills --strict
+      - name: Validate clear-partner skills
+        run: claude plugin validate plugins/clear-partner/skills --strict
 
       - name: Validate clear-ui manifest and components
         run: |

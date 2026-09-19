@@ -1,4 +1,4 @@
-# Roadmap v2 — Clear UI and Clear Mods
+# Roadmap v2 — Clear UI and Clear Transcript
 
 Design: [ui-architecture.md](ui-architecture.md). Evidence:
 [mods-research-2.1.277.md](research/mods-research-2.1.277.md), [ui-research.md](research/ui-research.md).
@@ -21,13 +21,14 @@ Each plugin carries its own version; the marketplace version tracks the newest c
 
 | Marketplace | Contents |
 | --- | --- |
-| 0.1.x | Harden `clear-claude`. No behaviour change to Clear Partner. |
+| 0.1.x | Harden `clear-claude` (the plugin now named `clear-partner`). No behaviour change to Clear Partner. |
 | 0.2.0 | `clear-ui` 0.1.0 appears as a second, optional marketplace plugin (Phases A–C). Because Phases D and F were built on the same branch, it also carries the activity line and `verification-state` on **documented** classic hooks — both opt-in, off by default. |
 | 0.2.1 | `clear-ui` 0.1.1. First green cross-platform CI run (Phase E) and the two fixes it led to; the opt-in features exercised end to end against real hook payloads on Windows; real recordings replace drawn images. |
 | 0.2.2 | `clear-claude` 0.1.1: explicit response-shape constraints outrank the style's defaults, and a short set of commands is a list, not a table — each change made only after an eval case failed. Demo set cut to 15–17 s and re-recorded. |
 | 0.2.x | macOS dogfooding on real hardware, which also settles the macOS timing budget; two weeks of daily use. |
 | 0.3.0 | `clear-ui` 0.2.0: the opt-in usage provider — the weekly limit scoped to one model, from Claude Code's own headless `/usage`, behind a cache; off by default, and the default bar unchanged. (The slot was once `verification-state`, Phase F, which shipped inside 0.2.0.) |
-| 0.4.0-exp | First function-hooks mod, outside the marketplace, `--plugin-dir` only (Phase G1). G2 is a research spike and carries no version. |
+| 0.4.0 | One name per layer: the plugin `clear-claude` becomes `clear-partner` 0.2.0, migrated for existing installs by `renames`; one install story across README, skills and docs; `AGENTS.md` and a repository check in CI ([ADR 0005](adr/0005-naming-and-install-paths.md)). `clear-ui` stays at 0.2.0. No change to the Clear Partner prompt. |
+| exp | First function-hooks mod (Clear Transcript), outside the marketplace, `--plugin-dir` only (Phase G1); it carries no marketplace version — the slot once pencilled in as "0.4.0-exp" went to the release above. G2 is a research spike. |
 | 1.0 | Only after function hooks are documented, on by default, and the layer boundaries have survived real use. |
 
 Change from the earlier sketch: verification-state moves **ahead of** the first mod,

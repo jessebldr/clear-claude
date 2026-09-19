@@ -15,7 +15,7 @@ Type " cd ~/demo/clear-claude && export CLAUDE_CODE_DISABLE_CLAUDE_MDS=1 && clea
 Enter
 Sleep 1s
 Show
-Type "claude --setting-sources project --plugin-dir plugins/clear-claude"
+Type "claude --setting-sources project --plugin-dir plugins/clear-partner"
 Sleep 600ms
 Enter
 Sleep 8s

@@ -24,7 +24,8 @@ plugin is the entire setup, on every machine.
 - **Good:** zero-config install; the plugin cannot be installed-but-inert.
 - **Bad:** while the plugin is enabled, the user cannot conveniently select a
   different output style. This is a platform limitation, not our invention.
-- **Mitigation:** `claude plugin disable clear-claude` reversibly restores the
+- **Mitigation:** `claude plugin disable clear-partner` (the plugin was named `clear-claude` when this was
+  written; see [ADR 0005](0005-naming-and-install-paths.md)) reversibly restores the
   default style in one command, and the plugin never touches `settings.json`, so
   disable/uninstall leaves no residue. The tradeoff is stated up front in the
   README and in `docs/architecture.md`.

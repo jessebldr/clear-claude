@@ -16,7 +16,7 @@ Primary — the four shown in the README, and the ones to post:
 | --- | --- | --- | --- |
 | `assets/clear-ui-demo.gif` | 17 s | `clear-ui-wide.tape` | Clear UI as the bottom row of a real session. The context chip fills in after the first answer; the orange dot beside the branch appears when Claude creates a file and goes when Claude deletes it. |
 | `assets/clear-ui-scoped-usage.gif` | 13 s | `clear-ui-usage.tape` | Clear UI 0.2's opt-in usage provider. One command switches it on; Claude Code starts, and the bottom row ends with a fourth chip — the weekly limit scoped to one model, under the name Claude Code gives it. |
-| `assets/demo-chmod.gif` | 16 s | `chmod-before.tape`, `chmod-after.tape` | One question in two sessions that differ only by the `clear-claude` plugin: 216 → 110 words. |
+| `assets/demo-chmod.gif` | 16 s | `chmod-before.tape`, `chmod-after.tape` | One question in two sessions that differ only by the Clear Partner plugin: 216 → 110 words. |
 | `assets/demo-port-3000.gif` | 17 s | `port-*.tape` | Same, second question: 136 → 78 words. |
 
 Secondary — linked, not embedded:
@@ -84,7 +84,7 @@ Both arms are stock Claude Code 2.1.278 on the same machine, same model, minutes
 
 ```text
 before:  claude --setting-sources project
-after:   claude --setting-sources project --plugin-dir plugins/clear-claude
+after:   claude --setting-sources project --plugin-dir plugins/clear-partner
 ```
 
 - `--setting-sources project` leaves the recording machine's user settings out: no output style,
@@ -92,13 +92,19 @@ after:   claude --setting-sources project --plugin-dir plugins/clear-claude
 - `CLAUDE_CODE_DISABLE_CLAUDE_MDS=1` is exported in a hidden line of each tape, so no `CLAUDE.md`
   shapes either answer. The hidden line does that and changes directory, nothing else; it is in
   the tape for anyone to read.
-- The only difference is `--plugin-dir plugins/clear-claude`: the plugin exactly as this
-  repository ships it, `clear-claude` 0.1.1.
+- The only difference is `--plugin-dir plugins/clear-partner`: the plugin exactly as this
+  repository ships it, Clear Partner 0.1.1.
+
+These were recorded when the plugin, and its directory under `plugins/`, was still named
+`clear-claude`; it is now `clear-partner` ([ADR 0005](../docs/adr/0005-naming-and-install-paths.md)).
+Same files, same prompt bytes — only the name moved, so the commands here use the new path.
+The caption inside the side-by-side GIFs, "+ clear-claude plugin", is part of the recording
+and stays as recorded; `edit.mjs` writes the new name from the next take on.
 
 The published status bar recordings were made a few hours before 0.1.1 was what the
 marketplace served, so for that one take a hidden alias loaded the working-tree copy of
-`clear-claude` — the same text that was then released. The tapes as committed have no alias:
-they record whatever `clear-claude` the machine has installed.
+Clear Partner — the same text that was then released. The tapes as committed have no alias:
+they record whatever Clear Partner the machine has installed.
 
 ## No picking
 
@@ -115,9 +121,9 @@ recordings honest:
    question was run four times per arm with `claude -p` under the same flags. Every raw output
    is in [`runs/`](runs), unedited.
 
-`clear-claude` 0.1.1, [`runs/2026-09-19-style-0.1.1/`](runs/2026-09-19-style-0.1.1):
+Clear Partner 0.1.1, [`runs/2026-09-19-style-0.1.1/`](runs/2026-09-19-style-0.1.1):
 
-| Question | Stock, 4 runs | With clear-claude, 4 runs | Mean change |
+| Question | Stock, 4 runs | With Clear Partner, 4 runs | Mean change |
 | --- | --- | --- | --- |
 | What does chmod 755 do? | 216, 197, 232, 185 | 114, 103, 110, 103 | 208 → 108 (−48 %) |
 | How do I find which process is using port 3000 on Linux? | 131, 132, 121, 157 | 65, 68, 64, 83 | 135 → 70 (−48 %) |
@@ -129,7 +135,7 @@ whitespace-separated tokens of the raw Markdown. Counting only tokens that conta
 or a digit, so that table rules and pipes do not count, gives 461 → 232 (−50 %): the drop is
 not a counting artefact.
 
-For comparison, `clear-claude` 0.1.0 measured 524 → 372 (−29 %) the same way
+For comparison, Clear Partner 0.1.0 measured 524 → 372 (−29 %) the same way
 ([`runs/2026-09-19/`](runs/2026-09-19)); by the stricter count, 463 → 311 (−33 %). Two things
 changed in 0.1.1, both because an eval case failed first ([docs/evals.md](../docs/evals.md)):
 a reply shape the user asks for now outranks the style's defaults, and a short set of

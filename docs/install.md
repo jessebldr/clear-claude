@@ -1,13 +1,15 @@
-# Install, update, and removal
+# Clear Partner: install, update, and removal
 
-Complete command reference for the whole lifecycle: install, update, verify, disable,
-uninstall, switch away, and recover. The README covers the common path in four
-commands; this document covers everything else, including scopes and the flags that
-matter in CI.
+Complete command reference for Clear Partner's whole lifecycle: install, update, verify,
+disable, uninstall, switch away, and recover. The [README](../README.md#install) has the
+quick path for the whole of Clear Claude; this document covers everything else for this
+plugin, including scopes and the flags that matter in CI.
 
-This document covers the `clear-claude` plugin (Clear Partner). The marketplace's other
-plugin, the optional `clear-ui` status bar, installs separately and has its own
-lifecycle: see [clear-ui-install.md](clear-ui-install.md). Neither needs the other.
+Clear Partner is the plugin `clear-partner` in the marketplace `clear-claude`. The
+marketplace's other plugin, the `clear-ui` status bar, installs separately and has its own
+lifecycle: see [clear-ui-install.md](clear-ui-install.md). Neither needs the other. If you
+installed this plugin when it was still called `clear-claude`, see
+[migration.md](migration.md).
 
 Every command here is quoted from `claude plugin --help` on Claude Code **2.1.274** and
 is recorded with its evidence tier in
@@ -16,16 +18,17 @@ is recorded with its evidence tier in
 ## Before you start
 
 - **Claude Code 2.1.274 or later.** Check with `claude --version`. Earlier versions are
-  not tested; `force-for-plugin`, which Clear Claude depends on, is verified only on
-  2.1.274.
-- **No other prerequisites.** The `clear-claude` plugin is one Markdown file, two skills
+  not tested; `force-for-plugin`, which Clear Partner depends on, was first verified on
+  2.1.274 and last on 2.1.278.
+- **No other prerequisites.** The `clear-partner` plugin is one Markdown file, two skills
   and a JSON manifest. There is no shell script, no Node dependency, no symlink, and no
   absolute path in the package. (Node 18+ is a requirement of `clear-ui` only.)
-- **Two names, and they are identical here.** Commands take `<plugin>` or
-  `<plugin>@<marketplace>`. This repository's marketplace is named `clear-claude` and
-  this plugin is also named `clear-claude`, so the fully qualified id is
-  `clear-claude@clear-claude`. Unambiguous short forms work too. The status bar is
-  `clear-ui@clear-claude`.
+- **Two names.** Commands take `<plugin>` or `<plugin>@<marketplace>`. The marketplace
+  is `clear-claude` (the product) and this plugin is `clear-partner` (the layer), so the
+  fully qualified id is `clear-partner@clear-claude`. The status bar is
+  `clear-ui@clear-claude`. The short form `clear-partner` works wherever it is
+  unambiguous; this document uses the full id in anything you might paste into a script.
+  Commands under `claude plugin marketplace …` take the marketplace's name.
 
 ### Terminal vs in-session
 
@@ -54,18 +57,17 @@ that plugin.
 ## Install
 
 ```text
-claude plugin marketplace add OWNER/clear-claude
-claude plugin install clear-claude@clear-claude
+claude plugin marketplace add jessebldr/clear-claude
+claude plugin install clear-partner@clear-claude
 ```
 
-Replace `OWNER` with the GitHub owner once this repository is published. `marketplace
-add` accepts a URL, a filesystem path, or a GitHub `owner/repo` shorthand.
+`marketplace add` accepts a URL, a filesystem path, or a GitHub `owner/repo` shorthand.
 
 Into a project instead of your user account:
 
 ```text
-claude plugin marketplace add OWNER/clear-claude --scope project
-claude plugin install clear-claude@clear-claude --scope project
+claude plugin marketplace add jessebldr/clear-claude --scope project
+claude plugin install clear-partner@clear-claude --scope project
 ```
 
 Full flag set for the two commands:
@@ -78,7 +80,7 @@ claude plugin install|i <plugin>  [-s|--scope <user|project|local>]
                                   [-y|--yes] [--accept-command <sha256>]
 ```
 
-Clear Claude declares no `userConfig` options, so `--config` has nothing to set here.
+Clear Partner declares no `userConfig` options, so `--config` has nothing to set here.
 
 **There is no activation step.** Clear Partner declares `force-for-plugin: true`, so it
 applies automatically while the plugin is enabled. The cost is that you cannot
@@ -92,22 +94,22 @@ already have open, run `/reload-plugins`.
 
 ### Install from a local checkout
 
-For testing a change, or before publication:
+For testing a change:
 
 ```text
 claude plugin marketplace add /path/to/clear-claude
-claude plugin install clear-claude@clear-claude
+claude plugin install clear-partner@clear-claude
 ```
 
 Point `add` at the directory containing `.claude-plugin/marketplace.json` — this
-repository root, not `plugins/clear-claude`. Use your platform's own path syntax.
+repository root, not `plugins/clear-partner`. Use your platform's own path syntax.
 
 ### Load for one session only
 
 Neither of these installs anything; both last until the session ends.
 
 ```text
-claude --plugin-dir /path/to/clear-claude/plugins/clear-claude
+claude --plugin-dir /path/to/clear-claude/plugins/clear-partner
 claude --plugin-url https://example.com/clear-claude.zip
 ```
 
@@ -117,7 +119,7 @@ than the marketplace root, and is repeatable; a folder of plugins loads each chi
 ### Non-interactive and CI
 
 `-y|--yes` is **required** whenever stdin or stdout is not a TTY and a
-marketplace-declared command needs confirmation. Clear Claude's marketplace declares no
+marketplace-declared command needs confirmation. The Clear Claude marketplace declares no
 commands, so this should not arise — but scripts that install several plugins will hit
 it eventually.
 
@@ -133,7 +135,7 @@ version:
 
 ```text
 claude plugin marketplace update clear-claude
-claude plugin update clear-claude
+claude plugin update clear-partner
 ```
 
 ```text
@@ -145,7 +147,7 @@ claude plugin update <plugin> [-s|--scope <user|project|local|managed>]
 Claude Code reports **"restart required to apply"**. Restart the session; an update that
 appears to have done nothing is almost always a missing restart.
 
-Clear Claude uses semantic versioning and treats any edit to the style prompt as a
+Clear Partner uses semantic versioning and treats any edit to the style prompt as a
 behaviour change with its own CHANGELOG entry — read
 [CHANGELOG.md](../CHANGELOG.md) before updating if you care what changed.
 
@@ -153,7 +155,7 @@ behaviour change with its own CHANGELOG entry — read
 
 ```text
 claude plugin list
-claude plugin details clear-claude
+claude plugin details clear-partner
 ```
 
 `list` shows installed plugins with their scope and enabled state. `details` prints the
@@ -179,8 +181,8 @@ compare the installed version against the marketplace version.
 The plugin ships two read-only diagnostic skills. Run them in a session:
 
 ```text
-/clear-claude:clear-doctor      # is it installed correctly?
-/clear-claude:clear-audit       # is it actually active, and unmodified?
+/clear-partner:clear-doctor      # is it installed correctly?
+/clear-partner:clear-audit       # is it actually active, and unmodified?
 ```
 
 Neither one changes a file or a setting; both print the fixes for you to run. See
@@ -191,10 +193,15 @@ Neither one changes a file or a setting; both print the fixes for you to run. Se
 From a clone of this repository — this is what CI runs:
 
 ```text
-claude plugin validate . --strict
-claude plugin validate plugins/clear-claude --strict
-claude plugin validate plugins/clear-claude/skills --strict
+node scripts/check-repo.mjs
+claude plugin validate .claude-plugin/marketplace.json --strict
+claude plugin validate plugins/clear-partner --strict
+claude plugin validate plugins/clear-partner/skills --strict
 ```
+
+(and the same two `validate` lines for `plugins/clear-ui`). `check-repo.mjs` is this
+repository's own check: versions agree, the recorded prompt hash is current, names are
+canonical, links resolve.
 
 ```text
 claude plugin validate <path> [--json] [--strict]
@@ -212,8 +219,8 @@ silently fails to work at runtime. `clear-doctor` exists to close that gap.
 Keeps the plugin installed and switches its behaviour off:
 
 ```text
-claude plugin disable clear-claude
-claude plugin enable clear-claude
+claude plugin disable clear-partner
+claude plugin enable clear-partner
 ```
 
 ```text
@@ -224,20 +231,20 @@ claude plugin disable [plugin]  [-a|--all] [-s|--scope <user|project|local>] [--
 Both auto-detect the scope. `disable --all` switches off every plugin, which is useful
 when you are isolating which one is causing a problem.
 
-Disabling Clear Claude removes Clear Partner's influence completely and restores normal
+Disabling the plugin removes Clear Partner's influence completely and restores normal
 output-style selection immediately.
 
 ## Switching to a different output style
 
-While Clear Claude is enabled, Clear Partner is forced and wins over the `outputStyle`
+While the plugin is enabled, Clear Partner is forced and wins over the `outputStyle`
 setting in every layer. To use another style, disable the plugin first:
 
 ```text
-claude plugin disable clear-claude
+claude plugin disable clear-partner
 ```
 
 Then pick your style in `/config` or with `/output-style`. Re-enable with `claude plugin
-enable clear-claude` when you want Clear Partner back.
+enable clear-partner` when you want Clear Partner back.
 
 There is no per-project or per-glob override: `force-for-plugin` is the only
 auto-activation control output styles have in this version, and it is all-or-nothing
@@ -247,9 +254,12 @@ while the plugin is enabled. The reasoning for accepting that is in
 ## Uninstall
 
 ```text
-claude plugin uninstall clear-claude
+claude plugin uninstall clear-partner@clear-claude
 claude plugin marketplace remove clear-claude
 ```
+
+Skip the second line if you are keeping Clear UI: removing the marketplace takes away the
+catalog its updates come from.
 
 ```text
 claude plugin uninstall|remove <plugin> [-s|--scope <user|project|local>]
@@ -265,7 +275,7 @@ claude plugin marketplace remove|rm <name> [--scope <user|project|local>]
 - `claude plugin prune` (alias `autoremove`) cleans up orphaned installs; it supports
   `--dry-run`.
 
-Clear Claude writes nothing outside its own plugin directory — in particular it never
+Clear Partner writes nothing outside its own plugin directory — in particular it never
 touches your `settings.json` — so uninstalling leaves no residue to clean up by hand.
 
 ## Recovery if the plugin fails to load
@@ -275,7 +285,7 @@ Work down the list; each step is more aggressive than the last.
 1. **Re-validate the manifests** in a checkout — `claude plugin validate . --strict`. A
    malformed `plugin.json` is the most common cause of a plugin that will not load.
 2. **Reload without restarting** — `/reload-plugins` in the session.
-3. **Disable just this plugin** — `claude plugin disable clear-claude`.
+3. **Disable just this plugin** — `claude plugin disable clear-partner`.
 4. **Start a minimal session** —
 
    ```text
@@ -303,10 +313,10 @@ different to say.
 
 | Claim | Status |
 | --- | --- |
-| Commands and manifests behave as documented | **Verified on Linux**, Claude Code 2.1.274 |
+| Commands and manifests behave as documented | **Verified on Linux**, Claude Code 2.1.274 ([marketplace-test.md](research/marketplace-test.md)) |
 | Package contains no platform-specific content, absolute paths, symlinks, or scripts | **Verified by inspection** |
-| Same commands work on Windows | **Not verified** — expected identical because Claude Code abstracts the difference |
-| Same commands work on macOS | **Not verified** — same reasoning |
+| Same commands work on Windows | **Verified on native Windows 11**, Claude Code 2.1.278: install from GitHub, forced style, `clear-doctor` PASS, recorded SHA-256 in the plugin cache ([clear-ui-dogfood.md](clear-ui-dogfood.md#installed-the-way-a-user-does--windows-11-2026-09-19-v021--pass)); fresh install and the rename upgrade under the current names ([migration.md](migration.md#what-was-measured)) |
+| Same commands work on macOS | **Not verified** — expected identical because Claude Code abstracts the difference |
 
 Two places where the platform does show through, both outside the plugin itself:
 
@@ -315,7 +325,7 @@ Two places where the platform does show through, both outside the plugin itself:
 - **Hashing a file by hand**, if you are checking the style file manually rather than
   letting `clear-audit` do it: `sha256sum` (Linux), `shasum -a 256` (macOS),
   `certutil -hashfile <file> SHA256` or PowerShell `Get-FileHash -Algorithm SHA256`
-  (Windows). Untested on macOS and Windows by us; these are the standard tools on each.
+  (Windows). Untested on macOS by us; these are the standard tools on each.
 
 One portability caveat worth knowing: if Git converts the style file to CRLF line
 endings on checkout (`core.autocrlf=true`), its SHA-256 will not match the recorded

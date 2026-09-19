@@ -1,7 +1,8 @@
 # Clear UI
 
-**Status: installable, and optional.** `clear-claude` does not depend on it, and installing
-`clear-claude` never installs this. Design:
+**Status: installable.** The status layer of Clear Claude, as the plugin
+`clear-ui@clear-claude`. Clear Partner (`clear-partner`) does not depend on it, and
+installing either never installs the other. Design:
 [docs/ui-architecture.md](../../docs/ui-architecture.md); plan:
 [docs/roadmap-v2.md](../../docs/roadmap-v2.md).
 

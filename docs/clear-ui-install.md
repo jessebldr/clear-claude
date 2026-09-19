@@ -1,7 +1,8 @@
 # Installing Clear UI
 
-Clear UI is the optional status bar. `clear-claude` does not depend on it, and installing one
-never installs the other. It needs **Node 18 or newer** on the PATH of the shell Claude Code
+Clear UI is the status bar of Clear Claude: the plugin `clear-ui` in the marketplace
+`clear-claude`. It is independent of Clear Partner — neither needs the other, and installing
+one never installs the other. The [README](../README.md#install) has the quick path for both. It needs **Node 18 or newer** on the PATH of the shell Claude Code
 runs status lines with — Git Bash on Windows when it is installed, PowerShell otherwise.
 
 ## Install
@@ -101,7 +102,22 @@ and says so if it is over budget. The way out is an environment variable for tha
 
 The cost is a slower refresh once per 5-second cache period, and only when git is that slow.
 
+## Update
+
+```text
+claude plugin marketplace update clear-claude
+claude plugin update clear-ui@clear-claude
+```
+
+Catalog first, or `update` does not see the new version. Then restart Claude Code. There is
+no second setup: the first session after an update runs the plugin's `SessionStart` hook,
+which re-copies the renderer to the path `settings.json` already points at
+([seen on a real install](clear-ui-dogfood.md#installed-the-way-a-user-does--windows-11-2026-09-19-v021--pass)).
+`clear ui doctor` reports the version of the copy in its `Runtime files` line.
+
 ## Uninstall
+
+Two steps, in this order — the first needs the plugin still installed:
 
 ```text
 remove clear ui
