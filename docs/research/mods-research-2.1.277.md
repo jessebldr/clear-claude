@@ -1,6 +1,12 @@
 # Platform research — Claude Code 2.1.277
 
 **Target:** Claude Code **2.1.277** (native install). **Platform:** Windows 11, Node 24.18.
+> **Note, 2026-09-20.** For function hooks and `ui.render`, read
+> [mods-research-2.1.278.md](mods-research-2.1.278.md) first: it re-checked this page on the next
+> release, found what it missed (the `Markdown` and `Code` leaves, `$.ui.invalidate`, the published
+> type file, the tree bounds), and answers the `AssistantMessage` question this page left open.
+> Sections 2 and 3 below, on the statusline and classic hooks, are still current.
+
 **Date:** 2026-09-19. Supersedes the Mods sections of
 [phase0-research.md](phase0-research.md) and
 [experimental/mods/README.md](../../experimental/mods/README.md), which describe 2.1.274.
