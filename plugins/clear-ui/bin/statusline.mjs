@@ -72,7 +72,7 @@ function themeOf(dataDir) {
 }
 
 async function main() {
-  const [{ readStdin }, { stateFromStatusline }, { render }, { readGit }, { loadConfig, LOOKS, CAPS }, { readRecord }, { verificationOf }, { activityOf }] = await Promise.all([
+  const [{ readStdin }, { stateFromStatusline }, { render }, { readGit, gitTimeoutOf }, { loadConfig, LOOKS, CAPS }, { readRecord }, { verificationOf }, { activityOf }] = await Promise.all([
     import('../src/stdin.mjs'),
     import('../src/state.mjs'),
     import('../src/render.mjs'),
@@ -87,7 +87,7 @@ async function main() {
   const dataDir = dataDirOf(process.env, import.meta.url)
   const config = loadConfig(dataDir ? join(dataDir, 'config.json') : undefined)
   if (state && config.show.git) {
-    state.git = await readGit(state.gitDir, { cacheDir: dataDir ? join(dataDir, 'cache') : undefined })
+    state.git = await readGit(state.gitDir, { cacheDir: dataDir ? join(dataDir, 'cache') : undefined, timeoutMs: gitTimeoutOf(process.env) })
   }
   const now = Date.now()
   if (state && dataDir && config.show.activity) {

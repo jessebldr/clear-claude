@@ -477,6 +477,26 @@ code runs. Targets:
 | End to end, git cache miss | ≤ 130 ms | ≤ 60 ms |
 | Hard ceiling (then print without git) | 250 ms | 250 ms |
 
+**The git budget, measured (2026-09-19, `bench/git-latency.mjs`, 40 fresh processes each).** On
+the development machine `git status` takes 24–29 ms median (max 36) in three working
+repositories of 400–1,300 files, and 89 ms median, 102 ms p95, 154 ms max in a 52,000-file
+clone of nodejs/node: one sample in forty over the 150 ms budget. So the budget holds with room
+on a developer machine even in a very large repository. Shared CI runners, idle, agree: 4 ms
+on Linux, 13 ms on macOS, 43 ms median and 60 ms max on `windows-latest`. What breaks the
+budget is load, not the platform: in the first CI run a `git status` on the Windows runner
+missed 150 ms once, while the test runner had a dozen files spawning processes in parallel, and
+the bar drew the branch without a dirty mark — by design, and silently. A machine under a
+virus scanner or sustained load would see that often. Raising the default would break the
+250 ms ceiling above for everyone to help the few, so the default stays, the doctor's
+`Git speed` line reports a machine that is over budget, and `CLEAR_UI_GIT_TIMEOUT_MS` (50–2000)
+lets that machine choose a slower tick. CI prints the same measurement for each runner.
+
+A listing that is cut short is never an answer. The timer is the renderer's own, not
+`execFile`'s — whose handler cuts stdout off before it kills, and reports success with whatever
+was read if git had already exited 0 — and a listing with no branch header is treated as slow
+however git exited: the last real answer stands, or the branch from HEAD, and nothing is cached
+as if git had said "nothing here".
+
 No network and no transcript read on the render path. Git: one call, 150 ms timeout,
 5 s TTL, last-known value on timeout. Explicit `process.exit(0)` so no process can
 linger. Measurement: `test/bench.mjs` spawns the real entry with a fixture on stdin,

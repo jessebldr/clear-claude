@@ -1,0 +1,17 @@
+# Files whose exact bytes matter must not change with the platform that checks them out.
+# With core.autocrlf=true, the Windows default, git would otherwise hand them over with CRLF.
+
+# The product. clear-audit compares its SHA-256 with a recorded value; a CRLF checkout hashes
+# differently and would be reported as a modified prompt (found by running the audit on Windows).
+plugins/clear-claude/output-styles/*.md text eol=lf
+source/clear-partner.md text eol=lf
+
+# Golden renders are compared byte for byte.
+plugins/clear-ui/test/golden/*.txt text eol=lf
+
+*.png binary
+*.gif binary
+
+# Bash and VHS read these; bash refuses a script with CRLF line endings.
+*.sh text eol=lf
+*.tape text eol=lf

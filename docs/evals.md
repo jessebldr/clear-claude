@@ -1,6 +1,42 @@
 # Behavioral evals — Clear Partner output style
 
-**Date:** 2026-09-17 · **Claude Code:** 2.1.274 · **Runner:** `claude plugin eval`
+Two recorded runs. The latest is first; the original is kept below it unchanged.
+
+## Re-run on Claude Code 2.1.278 — 2026-09-19
+
+**Runner:** `claude plugin eval`, the command under "Reproduce", unchanged · **Plugin:**
+`clear-claude` 0.1.0, the same prompt as the first run (no edit since) · **Cost:** $1.54 ·
+**Time:** 342 s · **Judge:** default, three votes per judged grader · **Platform:** Windows 11
+
+| Case | With plugin | Baseline | Δ |
+| --- | --- | --- | --- |
+| a-correctness-preserved | pass (1.0) | pass (1.0) | 0 |
+| b-concise-by-default | pass (1.0) | pass (1.0) | 0 |
+| c-depth-when-asked | pass (1.0) | pass (1.0) | 0 |
+| d-no-style-leak | pass (1.0) | pass (1.0) | 0 |
+| e-workflow-multi-step | pass (1.0) | pass (1.0) | 0 |
+| f-ambiguous-request | pass (1.0) | **fail (0.0)** | +1.0 |
+
+**6/6 pass with the plugin, as on 2.1.274. No regression from four Claude Code releases.**
+
+How to read the one non-zero delta: it is not evidence that the plugin is better. The baseline
+arm of case F did not answer badly — it ran out of turns (`Reached maximum number of turns
+(3)`), having started to work on the ambiguous request instead of asking about it or stating
+an assumption, so there was no final message to grade. The plugin arm asked. One run per arm
+cannot tell a tendency from chance, so this is recorded as "baseline errored once", and the
+claim stays what it was: the style does not break anything.
+
+Two notes from the log, neither affecting a score: case E's `allowed_tools` names `Edit`, which
+the run-level grant does not include (`--allow-tools Write`), and the CLI says so before
+launching; both arms passed with `Write` alone. In the baseline arm of case E one judge vote
+of three was a FAIL on "proceeds and reports concisely"; the grader passes on majority.
+
+`/clear-claude:clear-audit` was also run for real against the shipped plugin on 2.1.278; its
+result is recorded in [clear-partner-port.md](clear-partner-port.md#audit-runs).
+
+## First run on Claude Code 2.1.274 — 2026-09-17
+
+**Runner:** `claude plugin eval`
 **Total cost:** $1.84 (full suite $1.60 + case E re-run $0.24) · **Judge model:** haiku (default)
 
 ## What this suite checks

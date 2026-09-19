@@ -96,3 +96,8 @@ jobs:
       # themselves to gate a merge, but the numbers are in the log for every run.
       - name: Bench
         run: node bench/bench.mjs
+
+      # Never fails: it records how long `git status` takes on this runner against the 150 ms
+      # the status line allows, which is what decides whether a dirty mark is drawn at all.
+      - name: Git latency
+        run: node bench/git-latency.mjs .

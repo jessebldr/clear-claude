@@ -88,6 +88,19 @@ dry render. Two things it cannot check: whether the folder is trusted (a status 
 in a trusted folder), and whether `node` resolves in the shell Claude Code itself spawns —
 worth suspecting with a version manager such as nvm or Volta.
 
+**The branch shows but the orange dot never does.** The bar gives `git status` 150 ms and then
+draws the branch without a dirty mark rather than wait. On a developer machine git answers in
+25–100 ms; where every process start is slow (a virus scanner, a shared or throttled machine)
+it may not. Run the doctor from inside the repository: its `Git speed` line times git there
+and says so if it is over budget. The way out is an environment variable for that machine,
+`CLEAR_UI_GIT_TIMEOUT_MS` (50–2000), for example in the `env` block of `settings.json`:
+
+```json
+{ "env": { "CLEAR_UI_GIT_TIMEOUT_MS": "400" } }
+```
+
+The cost is a slower refresh once per 5-second cache period, and only when git is that slow.
+
 ## Uninstall
 
 ```text

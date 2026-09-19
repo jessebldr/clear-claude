@@ -207,7 +207,10 @@ test('the branch of the payload directory is drawn, with its dirty mark', async 
   }
   writeFileSync(join(repo, 'a.txt'), 'a\n')
 
-  const result = await run({ input: payloadIn(repo), env: { ...PLAIN, COLUMNS: '140' } })
+  // This is about what is drawn once git has answered, not about how fast git is: on a CI
+  // runner busy with a dozen test files, git can miss the default 150 ms, and the bar would
+  // then rightly draw the branch without the mark.
+  const result = await run({ input: payloadIn(repo), env: { ...PLAIN, COLUMNS: '140', CLEAR_UI_GIT_TIMEOUT_MS: '2000' } })
   assert.equal(result.code, 0)
   assert.equal(result.stderr, '')
   assert.match(result.stdout, / on trunk  ● /)

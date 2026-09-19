@@ -158,7 +158,7 @@ groups fit side by side and as two when they do not.
 | `src/jsonedit.mjs` | Pure: surgical edit of one top-level key in raw JSON text. |
 | `src/install.mjs` | Pure: what an install or uninstall would do, as a plan. |
 | `src/paths.mjs` | Node: where things live; atomic write; runtime copy. |
-| `src/git.mjs` | Node: one `git status`, 150 ms timeout, 5 s cache, last value when slow. |
+| `src/git.mjs` | Node: one `git status`, 150 ms timeout (`CLEAR_UI_GIT_TIMEOUT_MS` for a slow machine), 5 s cache, last value when slow or cut short. |
 | `src/config.mjs` | Presets and validation (pure), and the one file read. |
 | `src/verify.mjs` | Pure: which commands count as verification, and what the records mean. |
 | `src/session-state.mjs` | Node: per-session records, one writer per file, atomic. |
@@ -171,6 +171,7 @@ groups fit side by side and as two when they do not.
 | `bin/observe.mjs` | The hook behind verification state and the background count. Records, never renders, prints nothing. |
 | `bin/agents.mjs` | The `subagentStatusLine` data feed. Prints nothing; stores type, status and start time only. |
 | `bench/bench.mjs` | Fresh-process timing against the budgets; fails only past 250 ms. |
+| `bench/git-latency.mjs` | How long `git status` takes here, run the way the status line runs it, against the 150 ms budget. |
 | `bench/optical.mjs` | Pixel measurements of the real output with real fonts: baseline of every mark, air around rules and inside pills. Windows only. |
 
 The pure files use no Node API on purpose, so a function-hooks module can host the same
