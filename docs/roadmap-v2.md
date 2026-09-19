@@ -139,13 +139,16 @@ source of Codex CLI, Oh My Pi, OpenCode and T3 Code; `anything-to-html` could no
   Windows, strict validation) since 2026-09-19. The bench lives outside `test/` because
   `node --test` runs every file under a test directory and a timing is not a test; it fails a
   build only past the 250 ms ceiling.
-- **What the first run found:** two tests raced a real git against a real clock (Windows: a
-  git spawn costs 150–200 ms on the runner; Node 18 on Linux: git beat a 1 ms timer), and the
+- **What the first run found:** two tests raced a real git against a real clock (Windows:
+  under the test runner's parallel load one `git status` missed 150 ms, though the same runner
+  idle measures 43 ms; Node 18 on Linux: git beat a 1 ms timer), and the
   demo-render step used `<`, which PowerShell lacks. All fixed in tests and CI. It also
   exposed two product edges, both fixed in `clear-ui` 0.1.1: a truncated git listing taken for
   an answer (#4), and a dirty mark that goes missing silently on a slow machine (#3).
-- **Bench on shared runners, first run:** Linux 40 / 53 ms (budget 40 / 60), Windows 73 / 123
-  (90 / 130), macOS 101 / 164 (40 / 60, **over**). The macOS budget was a guess and a shared
+- **Bench on shared runners:** first run Linux 40 / 53 ms (budget 40 / 60), Windows 73 / 123
+  (90 / 130), macOS 101 / 164 (40 / 60, **over**); a later run read Linux 58 / 64, Windows
+  106 / 154, macOS 82 / 88 — every platform over. The same runner swings by 50 % between runs,
+  so these numbers cannot gate or set a budget. The macOS budget was a guess and a shared
   runner is not a Mac; it is settled by the Mac checklist in
   [clear-ui-dogfood.md](clear-ui-dogfood.md), not by CI (#2).
 - **Not done, and cannot be done from one machine:** a measurement on a real Mac, and the two

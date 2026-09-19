@@ -13,8 +13,8 @@ import { writeFileAtomic } from './atomic.mjs'
 export const GIT_TIMEOUT_MS = 150
 export const GIT_TTL_MS = 5000
 
-// 150 ms keeps a cache miss inside the 250 ms ceiling, and measured git is 25-100 ms on a
-// developer machine. Where a git spawn alone costs more than that -- a shared CI runner, a
+// 150 ms keeps a cache miss inside the 250 ms ceiling, and measured git is 4-100 ms, idle, on
+// every machine tried. Where it costs more than that -- a machine under sustained load, a
 // virus scanner on every process -- the bar degrades to the branch without a dirty mark, and
 // says nothing. CLEAR_UI_GIT_TIMEOUT_MS is the way out for that machine: a slower tick once per
 // cache period, chosen by the person who pays for it. The doctor reports when it is needed.
