@@ -62,8 +62,22 @@ function makeRepo() {
 }
 // readGit answers "slow" the moment its timer fires and does not wait for the killed process to
 // be gone. On Windows that process still holds the repository as its working directory for a
-// moment, and removing the directory fails with EBUSY until it has exited -- so be patient.
-const cleanup = dir => rmSync(dir, { recursive: true, force: true, maxRetries: 30, retryDelay: 100 })
+// moment -- measured, about 30 ms after the kill -- and removing the directory fails until then.
+//
+// rmSync's own `maxRetries` does not cover this, which is why this test stayed flaky with 30 of
+// them: measured, a directory held by a process fails at once (EPERM here, EBUSY on the CI
+// runner, 0 ms), because Node retries only after it has started emptying a directory, and the
+// refusal comes before that. So the patience is a loop of our own.
+function cleanup(dir) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return rmSync(dir, { recursive: true, force: true })
+    } catch (error) {
+      if (attempt >= 100 || !['EBUSY', 'EPERM', 'EACCES', 'ENOTEMPTY'].includes(error.code)) throw error
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50)
+    }
+  }
+}
 
 // Neither side of the timeout may be a race against a real clock. On a Windows CI runner a git
 // spawn takes longer than the 150 ms the status line allows, so a test about what git *answers*
