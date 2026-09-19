@@ -4,7 +4,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
+import { appendFileSync, mkdirSync, mkdtempSync, readdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { findGit, parseStatus, readGit, readHead } from '../src/git.mjs'
@@ -53,13 +53,27 @@ function makeRepo() {
 }
 const cleanup = dir => rmSync(dir, { recursive: true, force: true, maxRetries: 3 })
 
+// Neither side of the timeout may be a race against a real clock. On a Windows CI runner a git
+// spawn takes longer than the 150 ms the status line allows, so a test about what git *answers*
+// gives it all the time it wants. And a real git handed a 1 ms budget finishes first on a fast
+// Linux runner, so "too slow" is a stand-in that never finishes: with node as the executable,
+// `node status --porcelain=v2 --branch` runs the file below from the repository until the
+// timeout kills it. The file is excluded, so the tree is exactly as dirty as it was.
+const PATIENT = { timeoutMs: 30_000 }
+function tooSlow(repo) {
+  writeFileSync(join(repo, 'status'), 'setTimeout(() => {}, 600000)\n')
+  mkdirSync(join(repo, '.git', 'info'), { recursive: true })
+  appendFileSync(join(repo, '.git', 'info', 'exclude'), 'status\n')
+  return { git: process.execPath, timeoutMs: 100 }
+}
+
 test('readGit: branch and dirty state of a real repository', { skip: !hasGit }, async () => {
   const repo = makeRepo()
-  assert.deepEqual(await readGit(repo), { branch: 'trunk', dirty: false, ahead: 0, behind: 0 })
+  assert.deepEqual(await readGit(repo, PATIENT), { branch: 'trunk', dirty: false, ahead: 0, behind: 0 })
   writeFileSync(join(repo, 'b.txt'), 'b\n')
-  assert.equal((await readGit(repo)).dirty, true)
+  assert.equal((await readGit(repo, PATIENT)).dirty, true)
   git(repo, 'checkout', '-q', '--detach')
-  assert.match((await readGit(repo)).branch, /^[0-9a-f]{7}$/)
+  assert.match((await readGit(repo, PATIENT)).branch, /^[0-9a-f]{7}$/)
   cleanup(repo)
 })
 
@@ -76,10 +90,10 @@ test('readGit: answers from the cache inside the TTL and asks again after it', {
   const repo = makeRepo()
   const cacheDir = mkdtempSync(join(tmpdir(), 'clear-ui-cache-'))
   const now = 1_000_000
-  assert.equal((await readGit(repo, { cacheDir, now })).dirty, false)
+  assert.equal((await readGit(repo, { ...PATIENT, cacheDir, now })).dirty, false)
   writeFileSync(join(repo, 'b.txt'), 'b\n')
-  assert.equal((await readGit(repo, { cacheDir, now: now + 4000 })).dirty, false, 'still inside the TTL')
-  assert.equal((await readGit(repo, { cacheDir, now: now + 6000 })).dirty, true)
+  assert.equal((await readGit(repo, { ...PATIENT, cacheDir, now: now + 4000 })).dirty, false, 'still inside the TTL')
+  assert.equal((await readGit(repo, { ...PATIENT, cacheDir, now: now + 6000 })).dirty, true)
   assert.equal(readdirSync(cacheDir).filter(name => name.endsWith('.tmp')).length, 0)
   cleanup(repo)
   cleanup(cacheDir)
@@ -88,12 +102,13 @@ test('readGit: answers from the cache inside the TTL and asks again after it', {
 test('readGit: a repository too slow to answer keeps its last value, or falls back to HEAD', { skip: !hasGit }, async () => {
   const repo = makeRepo()
   const cacheDir = mkdtempSync(join(tmpdir(), 'clear-ui-cache-'))
-  // A 1 ms budget is one no real git can meet, which is what a huge repository looks like.
-  assert.deepEqual(await readGit(repo, { timeoutMs: 1 }), { branch: 'trunk', dirty: null, ahead: 0, behind: 0 })
+  // A git that never answers inside its budget, which is what a huge repository looks like.
+  const slow = tooSlow(repo)
+  assert.deepEqual(await readGit(repo, slow), { branch: 'trunk', dirty: null, ahead: 0, behind: 0 })
 
   writeFileSync(join(repo, 'b.txt'), 'b\n')
-  assert.equal((await readGit(repo, { cacheDir, now: 1000 })).dirty, true)
-  assert.equal((await readGit(repo, { cacheDir, now: 9000, timeoutMs: 1 })).dirty, true, 'the last real answer')
+  assert.equal((await readGit(repo, { ...PATIENT, cacheDir, now: 1000 })).dirty, true)
+  assert.equal((await readGit(repo, { ...slow, cacheDir, now: 9000 })).dirty, true, 'the last real answer')
   cleanup(repo)
   cleanup(cacheDir)
 })
@@ -101,12 +116,12 @@ test('readGit: a repository too slow to answer keeps its last value, or falls ba
 test('readGit: a corrupt cache file is ignored, not trusted and not fatal', { skip: !hasGit }, async () => {
   const repo = makeRepo()
   const cacheDir = mkdtempSync(join(tmpdir(), 'clear-ui-cache-'))
-  await readGit(repo, { cacheDir, now: 1000 })
+  await readGit(repo, { ...PATIENT, cacheDir, now: 1000 })
   const [name] = readdirSync(cacheDir)
   // Not JSON at all; then valid JSON that is about some other directory, or has no usable time.
   for (const text of ['{"cwd": 1, "at": ', JSON.stringify({ cwd: 'C:/elsewhere', at: 1400, value: { branch: 'evil' } }), JSON.stringify({ cwd: repo, at: 'soon', value: { branch: 'evil' } })]) {
     writeFileSync(join(cacheDir, name), text)
-    assert.equal((await readGit(repo, { cacheDir, now: 1500 })).branch, 'trunk', text)
+    assert.equal((await readGit(repo, { ...PATIENT, cacheDir, now: 1500 })).branch, 'trunk', text)
   }
   cleanup(repo)
   cleanup(cacheDir)
@@ -115,11 +130,12 @@ test('readGit: a corrupt cache file is ignored, not trusted and not fatal', { sk
 test('readGit: a slow repository still follows a checkout, and forgets a dirty mark that was about another branch', { skip: !hasGit }, async () => {
   const repo = makeRepo()
   const cacheDir = mkdtempSync(join(tmpdir(), 'clear-ui-cache-'))
+  const slow = tooSlow(repo)
   writeFileSync(join(repo, 'b.txt'), 'b\n')
-  assert.deepEqual(await readGit(repo, { cacheDir, now: 1000 }), { branch: 'trunk', dirty: true, ahead: 0, behind: 0 })
+  assert.deepEqual(await readGit(repo, { ...PATIENT, cacheDir, now: 1000 }), { branch: 'trunk', dirty: true, ahead: 0, behind: 0 })
   git(repo, 'checkout', '-q', '-b', 'feature-x')
   for (const now of [7000, 3_600_000]) {
-    assert.deepEqual(await readGit(repo, { cacheDir, now, timeoutMs: 1 }), { branch: 'feature-x', dirty: null, ahead: 0, behind: 0 })
+    assert.deepEqual(await readGit(repo, { ...slow, cacheDir, now }), { branch: 'feature-x', dirty: null, ahead: 0, behind: 0 })
   }
   cleanup(repo)
   cleanup(cacheDir)
@@ -156,7 +172,7 @@ test('readGit: the cache directory does not grow without limit', { skip: !hasGit
     writeFileSync(file, '{}')
     utimesSync(file, old, old)
   }
-  await readGit(repo, { cacheDir })
+  await readGit(repo, { ...PATIENT, cacheDir })
   assert.equal(readdirSync(cacheDir).length, 1)
   cleanup(repo)
   cleanup(cacheDir)
