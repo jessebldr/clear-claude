@@ -252,7 +252,8 @@ unfinished feature in either; what they need from here is upkeep, and it is chea
 itself is drawn: a finished group of tool calls names its files and commands and shows which of
 them failed, where stock Claude Code draws `Read 3 files, ran 2 shell commands`; section titles in
 a long answer are underlined, where stock draws every heading level the same. Nothing the model
-wrote is removed or added, and ctrl+o always shows Claude Code's own drawing. It stands on
+wrote is removed or added, nothing is folded, and ctrl+o or `/clear-transcript off` gives Claude
+Code's own drawing back. It stands on
 function hooks ("Claude Mods",
 [anthropics/claude-code#91870](https://github.com/anthropics/claude-code/issues/91870)), which
 Anthropic has not documented or switched on yet, so **it is not in the marketplace and cannot be

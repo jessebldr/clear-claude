@@ -28,8 +28,10 @@ gate.
   - **Section titles (`#`, `##`) in an answer are underlined.** Stock draws every heading level as
     the same plain bold. Nothing else in an answer is touched — code, tables, lists and
     sub-headings are Claude Code's own drawing — and an answer stays exactly as tall as before.
-  - **ctrl+o shows every row as Claude Code draws it**, and `/clear-transcript off` does the same
-    in place. No word the model wrote is removed, reordered or added; nothing is folded or hidden.
+  - **ctrl+o shows rows as Claude Code draws them**, and `/clear-transcript off` does the same in
+    place, unconditionally. No word the model wrote is removed, reordered or added; nothing is
+    folded or hidden. (For answers the ctrl+o rule has one stated edge, in the design page; the
+    command has none.)
   - Two `/config` switches, one per behaviour. It hooks `ui.render` only: no tool calls, no
     prompts, no files, no network — `claude plugin validate experimental/clear-transcript` prints
     the list, without the gate.

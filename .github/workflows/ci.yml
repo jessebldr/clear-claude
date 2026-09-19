@@ -72,13 +72,18 @@ jobs:
           claude plugin validate plugins/clear-ui/skills --strict
 
       # Needs no gate: the validator reads the hooks module's source and prints every event it
-      # hooks and every $ call it makes. The grep holds the promise docs/clear-transcript.md makes:
-      # ui.render, one command, and no file, network, process or tool.call access.
+      # hooks and every $ call it makes. Both lists are compared whole, so the promise in
+      # docs/clear-transcript.md is an allowlist: ui.render on three rows, one command, and no
+      # file, network, process, prompt or tool.call access. A new hook or call fails here until
+      # this list, and that page, say so.
       - name: Validate clear-transcript, and what it may touch
         run: |
           claude plugin validate experimental/clear-transcript --strict | tee validate.txt
-          grep -q 'calls: \$.command.register, \$.ui.invalidate, \$.ui.resolve$' validate.txt
-          if grep -E 'hooks:.*(tool\.call|turn\.step|classic\.)' validate.txt; then exit 1; fi
+          hooks="$(sed -n 's/^.*register\.js hooks: //p' validate.txt)"
+          calls="$(sed -n 's/^.*register\.js calls: //p' validate.txt)"
+          echo "hooks: $hooks"; echo "calls: $calls"
+          [ "$hooks" = 'session.start, command.run{command=clear-transcript}, ui.render{component=UserMessage, surface=terminal}, ui.render{component=AssistantMessage, surface=terminal}, ui.render{component=ToolGroup, surface=terminal}' ]
+          [ "$calls" = '$.command.register, $.ui.invalidate, $.ui.resolve' ]
 
       # The plugin loaded by the engine's own host, every tree through the terminal surface's
       # real validator. No credential and no model: the tests seat their own stand-in for core.

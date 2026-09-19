@@ -26,11 +26,25 @@ const REMEMBERED = 64
 // so a reply is exactly as tall as stock's and nothing a person is reading moves when this tree takes the row.
 const SECTION = { bold: true, underline: true }
 
+// State of ONE session: session.start puts all of it back, so "off for this session" ends with the session.
 let isOn = true
-// AssistantMessage carries no isExpanded. UserMessage does, and a prompt is raised before the reply under
-// it, so the last value seen says which view is being drawn (measured on 2.1.278, both terminal layouts).
+// Which view is being drawn. A ToolGroup says so itself (isExpanded) and is never drawn expanded, whatever
+// this holds. An AssistantMessage carries no such prop, so for answers the view is LEARNT from UserMessage,
+// whose isExpanded means exactly "the view draws rows in full". When the value flips, every row is asked for
+// again, so the order in which rows arrive does not matter. (A ToolGroup's flag is not used for this: an
+// outer hook may unfold one group by policy, and two sources that disagree would redraw for ever.) What this
+// cannot cover is an expanded view in which no UserMessage is raised at all: there an answer keeps its
+// underlined titles - same words, same rows - and /clear-transcript off is the way back that depends on
+// nothing.
 let isExpandedView = false
 const plans = new Map()
+
+function learnView($, props) {
+  if (typeof props?.isExpanded !== 'boolean' || props.isExpanded === isExpandedView) return
+  isExpandedView = props.isExpanded
+  // A cached answer is reused for a row whose props did not change, so ask for the rows again.
+  $.ui.invalidate('ui.render')
+}
 
 // A reply is raised again on every scroll and view change, with the same text. Keys are whole replies, so a
 // reply too long to be planned is not remembered: plan() turns it away in one comparison anyway.
@@ -48,6 +62,9 @@ export function register(on, options) {
   const drawsToolGroups = options?.toolGroups !== false
 
   on('session.start', async ($, e, next) => {
+    isOn = true
+    isExpandedView = false
+    plans.clear()
     await $.command.register({ name: COMMAND, description: 'Clear Transcript: draw the transcript as stock Claude Code does, or not', argumentHint: 'on | off' })
     return next(e)
   })
@@ -64,11 +81,7 @@ export function register(on, options) {
   })
 
   on('ui.render', { component: 'UserMessage', surface: 'terminal' }, ($, e, next) => {
-    if (typeof e.props.isExpanded === 'boolean' && e.props.isExpanded !== isExpandedView) {
-      isExpandedView = e.props.isExpanded
-      // A cached answer is reused for a row whose props did not change, so ask for the rows again.
-      $.ui.invalidate('ui.render')
-    }
+    learnView($, e.props)
     return next(e)
   })
 

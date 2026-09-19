@@ -28,12 +28,13 @@ frames; nothing inside a pane is drawn.
 | --- | --- |
 | A simple factual answer | No section title, so the hook returned `next(e)`: the reply is Claude Code's own drawing, and sits under a Clear Transcript reply with the same bullet, gutter and spacing. |
 | A long structured answer | `##` titles underlined; `###` sub-headings, list, table and code block are the engine's. |
-| A code-heavy answer; lists and tables | Untouched by design. The fence and its highlighting, the bordered table and the hanging list indents are the engine's `Markdown` leaf. |
+| A code-heavy answer | Two Python blocks of about 45 and 25 lines and a two-level nested list, under three `##` titles. In Clear Transcript's view and in the ctrl+o view the highlighting, the indentation, the blank lines inside the code and the list are the same, and every line sits 51 px lower in ctrl+o — that view's own extra rows — from the first line to `✻ Cooked`. Only the titles differ. |
+| Lists and tables | Untouched by design: the bordered table and the hanging list indents are the engine's `Markdown` leaf. |
 | Debugging with several tool calls | `Read sum.mjs, format.mjs, parse.mjs · ran node --test 2>&1 \| tail -40`, where stock draws `Read 3 files, ran 2 shell commands`. |
 | A tool failure | `failed  node missing-file.js · Exit code 1` on its own line, `failed` in the theme's error colour. Stock, fullscreen: nothing on screen. |
 | Implementation with an edit and verification | The edit's diff is the engine's, untouched. The verifying run reads `Ran node --test 2>&1 \| grep -E "^ℹ (tests\|pass\|fail)"` instead of `Ran 1 shell command`. |
 | Sub-agent activity | `Explore(…)`, `Backgrounded agent` and the `Agent "…" finished` notice are the engine's. |
-| A narrow terminal (72 columns) | Answers only: titles, wrapping and hanging indents hold, and the engine's stacked-table fallback is inherited. The group line was not recorded narrow; that names give way to `+N more` and the line fits the row from 60 columns is held by unit tests. |
+| A narrow terminal (72 columns) | Answers only: titles, wrapping and hanging indents hold, and the engine's stacked-table fallback is inherited. The group line was not recorded narrow; that names give way to `+N more`, that the line fits the row at every width from 40 columns, and that no call drops out of the count are held by unit tests. |
 | A streaming response | Nothing to see, with or without the plugin: see the first point below. |
 | Expand and recover the original | ctrl+o: every row is the engine's, then Clear Transcript's again after Esc. `/clear-transcript off`: every row on screen is redrawn by the engine at once; `on` brings the drawing back. |
 | The main-screen layout | Same behaviour. Stock there draws each shell command as its own row with an output preview, failures in red, so only the folded read line changes. |

@@ -122,6 +122,33 @@ describe('register', () => {
     for (const mounted of [seen, ui, group]) await mounted.unmount()
   })
 
+  test('found in review: an answer raised BEFORE its prompt in the expanded view still ends up the engine\'s', async ($, on) => {
+    stock(on)
+    // The answer first, while nothing has said which view this is: it is drawn.
+    const ui = await mount($, 'AssistantMessage', answer(REPLY))
+    expect(await ui.find({ text: 'CORE' })).toBeUndefined()
+    // Then the prompt arrives and says "expanded". The flip asks for every row again, the answer included.
+    const seen = await mount($, 'UserMessage', prompt(true))
+    expect((await ui.find({ text: 'CORE' }))?.type).toBe('Text')
+    for (const mounted of [ui, seen]) await mounted.unmount()
+  })
+
+  test('found in review: a new session starts on, in the normal view, whatever the last one was left in', async ($, on) => {
+    stock(on)
+    on('session.start', ($: any, e: any) => ({ cwd: e.cwd }))
+    on('command.register', ($: any, e: any) => ({ value: { command: e.name } }))
+    await $.session.start({ surface: 'terminal', isInteractive: true, cwd: '/work' })
+    await $.command.run({ command: PLUGIN, args: 'off', origin: { kind: 'composer' } })
+    const seen = await mount($, 'UserMessage', prompt(true))
+    await seen.unmount()
+
+    await $.session.start({ surface: 'terminal', isInteractive: true, cwd: '/work' })
+    const ui = await mount($, 'AssistantMessage', answer(REPLY), { requestId: 'second-session' })
+    expect(await ui.find({ text: 'CORE' })).toBeUndefined()
+    expect(await ui.find({ type: 'Text', text: 'How a B-tree index works' })).toBeDefined()
+    await ui.unmount()
+  })
+
   test('a settled group names its targets and lets a failure out', async ($, on) => {
     stock(on)
     const ui = await mount($, 'ToolGroup', GROUP)

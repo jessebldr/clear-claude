@@ -39,12 +39,32 @@ test('the engine keeps the row while the group is live, running or expanded', ()
   assert.equal(groupPlan(group([read('a.md'), bash('npm test', { isRunning: true })]), 120), null)
 })
 
+test('settled means the engine said so: a flag that is missing or not a boolean is doubt', () => {
+  const { isActive, isExpanded, ...flagless } = RECORDED
+  assert.equal(groupPlan(flagless, 120), null)
+  assert.equal(groupPlan({ ...RECORDED, isActive: undefined }, 120), null)
+  assert.equal(groupPlan({ ...RECORDED, isExpanded: 0 }, 120), null)
+  const { isRunning, ...callWithoutFlag } = read('a.md')
+  assert.equal(groupPlan(group([callWithoutFlag]), 120), null)
+  assert.equal(groupPlan(group([{ ...read('a.md'), isRunning: 'no' }]), 120), null)
+})
+
 test('anything that is not a group of calls is left alone', () => {
   for (const props of [null, undefined, {}, { calls: [] }, { calls: 'x' }, group([null])]) {
     assert.equal(groupPlan(props, 120), null)
   }
-  assert.equal(groupPlan(RECORDED, undefined), null)
-  assert.equal(groupPlan(RECORDED, 20), null)
+  for (const columns of [undefined, null, '120', 20, 0, -80, NaN, Infinity, -Infinity]) {
+    assert.equal(groupPlan(RECORDED, columns), null, String(columns))
+  }
+  assert.notEqual(groupPlan(RECORDED, 120.5), null)
+})
+
+test('props that throw when they are read give the row to the engine, not an exception', () => {
+  const throwing = { get input() { throw new Error('boom') } }
+  assert.equal(groupPlan(group([{ ...read('a.md'), ...{} }, Object.defineProperties({ tool: 'Read', isRunning: false, isErrored: false, isInterrupted: false }, Object.getOwnPropertyDescriptors(throwing))]), 120), null)
+  const proxy = new Proxy({}, { get() { throw new Error('boom') } })
+  assert.equal(groupPlan(proxy, 120), null)
+  assert.equal(groupPlan(group([bash('make', { isErrored: true, output: new Proxy({}, { get() { throw new Error('boom') } }) })]), 120), null)
 })
 
 test('kinds are phrased in the order they first ran, the same kind merged only while adjacent', () => {
@@ -57,8 +77,52 @@ test('kinds are phrased in the order they first ran, the same kind merged only w
   assert.equal(plan.summary, 'Read a.md · searched "TODO", "**/*.ts" · read b.md')
 })
 
-test('a target read twice is named once', () => {
-  assert.equal(groupPlan(group([read('src/a.md'), read('src/a.md'), read('lib/b.md')]), 100).summary, 'Read a.md, b.md')
+test('a target used more than once is named once, with how often', () => {
+  assert.equal(groupPlan(group([read('src/a.md'), read('src/a.md'), read('lib/b.md')]), 100).summary, 'Read a.md (2x), b.md')
+  // Three runs of one command are three runs, and say so.
+  assert.equal(groupPlan(group([bash('npm test'), bash('npm test'), bash('npm test')]), 100).summary, 'Ran npm test (3x)')
+})
+
+// Every call of a group is on the row exactly once: named, inside an "(Nx)", or inside a "+N more".
+function accountedFor(summary) {
+  if (summary === '') return 0
+  let calls = 0
+  for (const part of summary.split(' · ')) {
+    const counted = /^\+(\d+) more$/.exec(part) ?? /^\S+(?: \S+)*? (\d+) calls?$/.exec(part)
+    if (counted !== null) {
+      calls += Number(counted[1])
+      continue
+    }
+    const tail = / \+(\d+) more$/.exec(part)
+    const names = (tail === null ? part : part.slice(0, tail.index)).replace(/^(?:read|searched the web for|searched|listed|ran|fetched|called) /i, '').split(', ')
+    calls += names.reduce((sum, name) => sum + Number(/ \((\d+)x\)$/.exec(name)?.[1] ?? 1), 0) + Number(tail?.[1] ?? 0)
+  }
+  return calls
+}
+
+test('found in review: many kinds in turn never outgrow the row, and no call drops out of the count', () => {
+  const alternating = group([0, 1, 2].flatMap((i) => [read(`src/some-rather-long-module-name-${i}.ts`), call('Grep', { pattern: `a fairly long search pattern number ${i}` })]))
+  for (const columns of [40, 60, 80, 142, 250]) {
+    const { summary } = groupPlan(alternating, columns)
+    assert.ok(4 + cells(summary) <= columns, `${columns}: ${4 + cells(summary)} cells: ${summary}`)
+    assert.equal(accountedFor(summary), 6, summary)
+  }
+  assert.equal(groupPlan(alternating, 60).summary, 'Read some-rather-l… · searched "a fairly long… · +4 more')
+})
+
+test('no width from 40 to 260 columns and no mix of calls makes a row wider than the terminal', () => {
+  const tools = ['Read', 'Grep', 'Bash', 'WebFetch', 'mcp__x__y']
+  for (let n = 0; n < 3000; n += 1) {
+    const calls = Array.from({ length: 1 + (n % 9) }, (_, j) => {
+      const tool = tools[(n * 7 + j * 3) % 5]
+      const name = `${'n'.repeat(1 + ((n * 13 + j * 17) % 90))}${j % 3}`
+      return call(tool, { file_path: `d/${name}`, pattern: name, command: name, url: `https://${name}.example` })
+    })
+    const columns = 40 + ((n * 11) % 221)
+    const { summary } = groupPlan(group(calls), columns)
+    assert.ok(4 + cells(summary) <= columns, `${columns}: ${summary}`)
+    assert.equal(accountedFor(summary), calls.length, `${columns}: ${summary}`)
+  }
 })
 
 test('what does not fit is counted as "more", never in place of every name', () => {
@@ -108,6 +172,30 @@ test('text a model or a tool wrote is cleaned before it is drawn', () => {
   for (const value of [plan.failures[0].target, plan.failures[0].reason]) assert.doesNotMatch(value, /[\x00-\x1f\x7f-\x9f\u202e]/)
 })
 
+test('an escape sequence goes whole: its parameters do not stay behind as text', () => {
+  const cases = [
+    ['a\x1b[31mred\x1b[0mb', 'aredb', 'CSI, 7-bit'],
+    ['a\x9b31mred\x9b0mb', 'aredb', 'CSI, 8-bit (found in review: "31m" stayed)'],
+    ['a\x1b(0qq\x1b(Bb', 'aqqb', 'charset selection (found in review: "(0" stayed)'],
+    ['a\x1b]8;;https://evil.example\x07link\x1b]8;;\x07b', 'alinkb', 'OSC 8 hyperlink, BEL-terminated'],
+    ['a\x1b]0;title\x1b\\b', 'ab', 'OSC, ST-terminated'],
+    ['a\x9d0;title\x9cb', 'ab', 'OSC, 8-bit'],
+    ['a\x1bPpayload\x1b\\b', 'ab', 'DCS'],
+    ['a\x90payload\x9cb', 'ab', 'DCS, 8-bit'],
+    ['a\x1b_apc\x1b\\b', 'ab', 'APC'],
+    ['a\x1b#8b', 'ab', 'ESC with an intermediate'],
+    ['a\x1bcb', 'ab', 'ESC with a final only (RIS)'],
+    ['a\x1b', 'a', 'a lone ESC at the end'],
+    // Unterminated: the rest is the sequence's payload, as it would be for a terminal, and goes with it.
+    ['keep\x1b]0;never closed', 'keep', 'OSC, unterminated'],
+    ['keep\x1bPnever closed', 'keep', 'DCS, unterminated'],
+  ]
+  for (const [hostile, expected, name] of cases) {
+    assert.equal(clean(hostile), expected, name)
+    assert.doesNotMatch(clean(hostile), /[\x00-\x1f\x7f-\x9f]/, name)
+  }
+})
+
 test('only the head of a huge command or error text is ever read', () => {
   const huge = `node run.js ${'x'.repeat(5_000_000)}`
   const started = performance.now()
@@ -152,12 +240,11 @@ test('the row is shared in order: a short first kind leaves its room to the next
   ])
   // Both commands are named; the second is over the 48 cells a name among others may take, so it is clipped.
   assert.equal(groupPlan(recorded, 142).summary, 'Read sum.mjs, format.mjs, parse.mjs · ran node --test 2>&1 | tail -40, node missing-file.js 2>&1 | tail -5; echo "exit…')
-  // From 60 columns the line fits the row. Under that, each kind still keeps its first name and the engine
-  // cuts the row's end (wrap: truncate-end), which is the last guard and not the plan.
-  for (const columns of [60, 80, 100, 142]) assert.ok(4 + cells(groupPlan(recorded, columns).summary) <= columns, `${columns}: ${groupPlan(recorded, columns).summary}`)
-  // Narrow: names give way to "+N more", kind by kind, and every kind is still there.
+  // The line fits the row at every width. Narrower, names give way to "+N more", and a kind the row cannot
+  // hold at all is counted at the end: five calls are five calls at any width.
+  for (const columns of [40, 60, 80, 100, 142]) assert.ok(4 + cells(groupPlan(recorded, columns).summary) <= columns, `${columns}: ${groupPlan(recorded, columns).summary}`)
   assert.equal(groupPlan(recorded, 60).summary, 'Read sum.mjs +2 more · ran node --test 2>&1 | t… +1 more')
-  assert.match(groupPlan(recorded, 40).summary, /^Read sum\.mjs \+2 more · ran node/)
+  assert.equal(groupPlan(recorded, 40).summary, 'Read sum.mjs +2 more · +2 more')
 })
 
 test('a name alone in its phrase may use the row; among others it is held back', () => {

@@ -16,8 +16,9 @@ What it does, and all it does:
 - **Section titles in an answer (`#`, `##`) are underlined.** Stock draws every heading level as the
   same plain bold. Attributes only: every row stays where stock puts it.
 - Every other row, and these two whenever there is doubt, is drawn by Claude Code. No word the
-  model wrote is removed, reordered or added. **ctrl+o shows every row as Claude Code draws it**, and
-  `/clear-transcript off` does the same in place.
+  model wrote is removed, reordered or added. **ctrl+o shows rows as Claude Code draws them** (for
+  answers, with one stated edge: see the design page), and `/clear-transcript off` does the same in
+  place, unconditionally.
 
 ## Load it
 

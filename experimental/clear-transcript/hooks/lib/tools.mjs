@@ -9,8 +9,14 @@
 //
 // Every string here was written by a model or a tool and is untrusted: it is cleaned before it is drawn.
 
-// ESC sequences first, so that their payload goes with them; then every control and bidi character.
-const ESCAPES = /\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)?|\x1b[PX^_][^\x1b]*(?:\x1b\\)?|\x1b\[[0-?]*[ -/]*[@-~]?|\x1b[@-_]?/g
+// Whole sequences first, so that their payload goes with them and does not stay behind as text ("31m",
+// "(0"); then every control and bidi character that is left. ECMA-48, most specific first:
+//   OSC              ESC ] … (BEL | ESC \)       and its 8-bit form  9D … (BEL | 9C)
+//   DCS SOS PM APC   ESC P|X|^|_ … ESC \         and their 8-bit forms 90|98|9E|9F … 9C
+//   CSI              ESC [ params intermediates final, and 9B …
+//   any other        ESC intermediates final     (charset selection "ESC ( 0" is one)
+const ESCAPES =
+  /\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)?|\x9d[^\x07\x9c]*[\x07\x9c]?|\x1b[PX^_][^\x1b]*(?:\x1b\\)?|[\x90\x98\x9e\x9f][^\x9c]*\x9c?|(?:\x1b\[|\x9b)[0-?]*[ -/]*[@-~]?|\x1b[ -/]*[0-~]?/g
 const CONTROLS = /[\x00-\x08\x0b-\x1f\x7f-\x9f\u061c\u200b\u200e\u200f\u2028-\u202e\u2060-\u2069\ufeff]/g
 const WIDE = /[\u1100-\u115f\u2e80-\u303e\u3041-\u33ff\u3400-\u4dbf\u4e00-\u9fff\ua000-\ua4cf\uac00-\ud7a3\uf900-\ufaff\ufe30-\ufe4f\uff00-\uff60\uffe0-\uffe6]|\p{Extended_Pictographic}/u
 
@@ -106,35 +112,77 @@ function reasonOf(call) {
   return reason.replace(/^Error:\s*/i, '')
 }
 
-// As many names as fit, then "+N more": the count of what is left, never a count instead of names.
+// Every call is accounted for exactly once: named (a name used three times reads "a.md (3x)"), counted in a
+// "+N more", or on a failure line. `calls` is how many calls a phrase stands for, shown or not.
 function phrase(verb, targets, room) {
-  const named = targets.filter((t) => t !== '')
-  const unnamed = targets.length - named.length
-  const unique = [...new Set(named)]
-  const shown = []
-  let used = cells(verb) + 1
-  const widest = unique.length === 1 ? room : TARGET_CELLS
-  for (const target of unique) {
-    const rest = unique.length - shown.length - 1
-    const reserve = rest > 0 ? cells(` +${rest} more`) : 0
-    const lead = shown.length > 0 ? 2 : 0
-    const free = room - used - lead - reserve
-    // The first name is always shown, cut to the room it has; a later one only if it fits.
-    const clipped = clip(target, Math.min(widest, shown.length === 0 ? Math.max(MIN_NAME, free) : widest))
-    if (shown.length > 0 && cells(clipped) > free) break
-    shown.push(clipped)
-    used += cells(clipped) + lead
+  const counts = new Map()
+  let unnamed = 0
+  for (const target of targets) {
+    if (target === '') unnamed += 1
+    else counts.set(target, (counts.get(target) ?? 0) + 1)
   }
-  const hidden = unique.length - shown.length + unnamed
-  if (shown.length === 0) return `${verb} ${hidden} ${hidden === 1 ? 'call' : 'calls'}`
-  return `${verb} ${shown.join(', ')}${hidden > 0 ? ` +${hidden} more` : ''}`
+  const names = [...counts.keys()]
+  const shown = []
+  let shownCalls = 0
+  let used = cells(verb) + 1
+  for (const name of names) {
+    const times = counts.get(name)
+    const suffix = times > 1 ? ` (${times}x)` : ''
+    const restCalls = targets.length - shownCalls - times
+    const reserve = restCalls > 0 ? cells(` +${restCalls} more`) : 0
+    const lead = shown.length > 0 ? 2 : 0
+    const free = room - used - lead - reserve - cells(suffix)
+    // The first name is always shown, cut to the room it has; a later one only if it fits whole.
+    const widest = names.length === 1 && unnamed === 0 ? free : Math.min(TARGET_CELLS, shown.length === 0 ? free : TARGET_CELLS)
+    const clipped = clip(name, Math.max(MIN_NAME, widest))
+    if (shown.length > 0 && cells(clipped) > free) break
+    shown.push(`${clipped}${suffix}`)
+    shownCalls += times
+    used += cells(clipped) + cells(suffix) + lead
+  }
+  const hidden = targets.length - shownCalls
+  if (shown.length === 0) return { text: `${verb} ${hidden} ${hidden === 1 ? 'call' : 'calls'}`, calls: targets.length }
+  return { text: `${verb} ${shown.join(', ')}${hidden > 0 ? ` +${hidden} more` : ''}`, calls: targets.length }
 }
 
-export function groupPlan(props, columns) {
+const more = (calls) => (calls > 0 ? `+${calls} more` : '')
+const joined = (phrases, hidden) => [...phrases.map((p) => p.text), more(hidden)].filter((t) => t !== '').join(SEPARATOR)
+
+// One row, one budget. It is given out in the order the kinds ran. Before a kind takes its share, MIN_PHRASE
+// cells are set aside for each later kind the row can still hold, so a second kind is named rather than
+// counted where there is room for both; the kinds the row cannot hold are counted in one last "+N more".
+// Whatever is built is then checked against the row, and kinds are folded into that count until it fits.
+function summarise(groups, budget) {
+  const phrases = []
+  let hidden = 0
+  let left = budget
+  const share = MIN_PHRASE + cells(SEPARATOR)
+  groups.forEach((group, i) => {
+    const later = groups.slice(i + 1)
+    const held = Math.max(0, Math.min(later.length, Math.floor((left - MIN_PHRASE) / share)))
+    const beyond = later.slice(held).reduce((sum, g) => sum + g.targets.length, 0)
+    const reserve = held * share + (beyond > 0 ? cells(SEPARATOR) + cells(more(beyond)) : 0)
+    const room = left - reserve
+    if (hidden > 0 || (i > 0 && room < MIN_PHRASE)) {
+      hidden += group.targets.length
+      return
+    }
+    const made = phrase(group.verb, group.targets, room)
+    phrases.push(made)
+    left -= cells(made.text) + cells(SEPARATOR)
+  })
+  while (phrases.length > 1 && cells(joined(phrases, hidden)) > budget) hidden += phrases.pop().calls
+  const summary = joined(phrases, hidden)
+  return cells(summary) > budget ? clip(summary, budget) : summary
+}
+
+function planOf(props, columns) {
   if (props === null || typeof props !== 'object' || !Array.isArray(props.calls) || props.calls.length === 0) return null
-  if (props.isExpanded === true || props.isActive === true) return null
-  if (props.calls.some((call) => call === null || typeof call !== 'object' || call.isRunning === true)) return null
-  if (typeof columns !== 'number' || columns < MIN_COLUMNS) return null
+  // Settled means the engine said so, in so many words. A flag that is missing or is not a boolean is doubt.
+  if (props.isExpanded !== false || props.isActive !== false) return null
+  if (props.calls.some((call) => call === null || typeof call !== 'object' || call.isRunning !== false)) return null
+  if (!Number.isFinite(columns) || columns < MIN_COLUMNS) return null
+  const budget = Math.floor(columns) - GUTTERS
 
   const groups = []
   const failures = []
@@ -142,8 +190,8 @@ export function groupPlan(props, columns) {
     const { verb, target } = describe(call)
     if (call.isErrored === true || call.isInterrupted === true) {
       const label = call.isInterrupted === true ? 'interrupted' : 'failed'
-      const named = clip(target === '' ? clean(call.tool) : target, Math.min(FAILED_TARGET_CELLS, columns - GUTTERS - cells(label) - 2))
-      const room = columns - GUTTERS - cells(label) - 2 - cells(named) - cells(SEPARATOR)
+      const named = clip(target === '' ? clean(call.tool) : target, Math.max(MIN_NAME, Math.min(FAILED_TARGET_CELLS, budget - cells(label) - 2)))
+      const room = budget - cells(label) - 2 - cells(named) - cells(SEPARATOR)
       failures.push({ label, target: named, reason: room < MIN_REASON ? '' : clip(reasonOf(call), room) })
       continue
     }
@@ -152,16 +200,17 @@ export function groupPlan(props, columns) {
     else groups.push({ verb, targets: [target] })
   }
 
-  // The row is given out in order, so the kinds that ran first keep their names; each later kind is
-  // promised MIN_PHRASE cells, and whatever an earlier one leaves unused goes to the next.
-  let left = columns - GUTTERS
-  const phrases = groups.map((group, i) => {
-    const later = groups.length - i - 1
-    const text = phrase(group.verb, group.targets, Math.max(MIN_PHRASE, left - later * (MIN_PHRASE + cells(SEPARATOR))))
-    left -= cells(text) + cells(SEPARATOR)
-    return text
-  })
-  let summary = phrases.join(SEPARATOR)
+  let summary = summarise(groups, budget)
   if (summary !== '') summary = summary[0].toUpperCase() + summary.slice(1)
   return { summary, failures }
+}
+
+// The props are the engine's plain data. Should they ever not be - a getter that throws, a proxy - the row
+// is the engine's, like everything else that is in doubt.
+export function groupPlan(props, columns) {
+  try {
+    return planOf(props, columns)
+  } catch {
+    return null
+  }
 }

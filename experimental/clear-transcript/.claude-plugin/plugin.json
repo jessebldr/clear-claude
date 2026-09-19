@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "clear-transcript",
   "displayName": "Clear Transcript",
-  "description": "Experimental. How the conversation is drawn inside stock Claude Code: headings in an answer get a hierarchy, and a settled tool group names its files and commands and shows which of them failed, instead of a bare count. Presentation only: no word the model wrote is removed, reordered or added, ctrl+o shows every row as Claude Code draws it, and /clear-transcript off does the same in place. Built on function hooks (Claude Mods), which are early access: it loads only where they are enabled and may break on any Claude Code release. The transcript layer of Clear Claude; independent of Clear Partner and Clear UI.",
+  "description": "Experimental. How the conversation is drawn inside stock Claude Code: a settled tool group names its files and commands and shows which of them failed, instead of a bare count, and section titles in an answer are underlined, where every heading level is otherwise the same bold. Presentation only: no word the model wrote is removed, reordered or added, nothing is folded, and ctrl+o or /clear-transcript off gives Claude Code's own drawing back. Built on function hooks (Claude Mods), which are early access: it loads only where they are enabled and may break on any Claude Code release. The transcript layer of Clear Claude; independent of Clear Partner and Clear UI.",
   "version": "0.1.0",
   "author": {
     "name": "jessebldr"
@@ -18,8 +18,8 @@
   "userConfig": {
     "headings": {
       "type": "boolean",
-      "title": "Heading hierarchy in answers",
-      "description": "Draw the headings of an answer as a hierarchy. Off: every answer is drawn by Claude Code.",
+      "title": "Underlined section titles in answers",
+      "description": "Underline the # and ## titles of an answer, so sections stand apart from sub-headings. Off: every answer is drawn by Claude Code.",
       "required": false,
       "default": true
     },

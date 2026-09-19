@@ -32,7 +32,7 @@ which is the only way a plugin can draw it.
 | Commentary vs the final answer | none: a block carries no phase | nothing | Knowable only at `turn.complete`, which would redraw text already being read; stock marks the turn's end (`✻ Worked for …`) and that is the pattern that works. |
 | Streaming text | none | nothing | The hook sees completed blocks only. |
 | Thinking, todos, the diff body, live agent progress, the permission dialog | **none** | cannot | No render site. Must not be imitated either. |
-| Anything in the expanded view (ctrl+o, `--verbose`) | all of the above | engine, always | It is the audit path. |
+| Anything in the expanded view (ctrl+o, `--verbose`) | all of the above | engine — unconditionally for tool groups, and for answers with one stated edge ([Interaction model](#interaction-model)) | It is the audit path. |
 
 So: two rows, redrawn conservatively, and a rule for everything else. That is the honest size of
 "today". The platform could carry more — folds, labels, a reader pane, a final-answer badge, accent
@@ -40,21 +40,28 @@ colours — and each was refused on evidence, below.
 
 ## Interaction model
 
-One sentence: **the normal view is Clear Transcript's; ctrl+o is always Claude Code's; any doubt is
-Claude Code's.**
+One sentence: **the normal view is Clear Transcript's; the expanded view (ctrl+o) is Claude
+Code's; any doubt is Claude Code's.**
 
 - **Nothing sits behind a control.** A transcript row has no keyboard focus, and a click needs the
   fullscreen layout *and* mouse capture. So nothing is folded, capped or hidden: the way back is
   never needed to *read*, only to *audit*.
-- **ctrl+o (and `--verbose`) shows every row as the engine draws it.** A `ToolGroup` says
-  `isExpanded` and the hook passes. An `AssistantMessage` has no such prop, and the engine reuses a
-  hook's cached answer in that view, so the mod does this itself: it watches `UserMessage.isExpanded`
-  (a prompt is raised before the reply under it), invalidates when it flips, and passes while it is
-  true. Recorded in both terminal layouts.
+- **ctrl+o (and `--verbose`) shows rows as the engine draws them.** For a tool group that is
+  unconditional: the row carries `isExpanded` itself, and the hook passes. An `AssistantMessage`
+  has no such prop, and the engine reuses a hook's cached answer in that view, so for answers the
+  view is *learnt*: the mod watches `UserMessage.isExpanded`, asks for every row again when it
+  flips, and passes while it is true. Because a flip redraws everything, the order in which rows
+  arrive does not matter (tested both ways; recorded in both terminal layouts). **The edge:** an
+  expanded view in which no prompt row is raised at all would leave an answer's titles underlined
+  there — the same words in the same rows, one attribute different. It was not met in any
+  recording, including one whose prompt had scrolled off screen, and it cannot be ruled out from
+  the types. Found in review; the API has no positive signal for this row, and if it gains one
+  this rule should be replaced by it.
 - **`/clear-transcript off`** does the same for the normal view, at once and for every row on
-  screen, until `/clear-transcript on` or the end of the session. It answers with text only and no
-  `context`, so the model never hears of it.
-- **`/config` has one row per behaviour** — *Heading hierarchy in answers*, *Named tool groups* —
+  screen, until `/clear-transcript on` or the end of the session (a new session starts on). It
+  depends on nothing but the command, which makes it the way back to use when in doubt. It answers
+  with text only and no `context`, so the model never hears of it.
+- **`/config` has one row per behaviour** — *Underlined section titles in answers*, *Named tool groups* —
   from the manifest's `userConfig`. Off means the hook returns `next(e)` for that row: not similar
   to stock, stock.
 - **The stored message is never touched.** `/copy`, `v`, `[` and export read what the model wrote.
@@ -80,11 +87,17 @@ nothing on screen saying so; in another take of the same prompt both had. Rules,
 
 - One dim line, past tense, names instead of counts: file base names, search patterns in quotes,
   the first line of a command, a host for a fetch, `server tool` for an MCP call. Adjacent calls of
-  one kind merge, a name appears once, kinds keep the order they ran in.
-- What does not fit is `+N more`: a count of what is left, never a count instead of names. The row
-  is given out in the order the kinds ran, each kind keeping a minimum, and a name alone in its
-  phrase may use the row, so a long command is cut late. From 60 columns the line fits the row;
-  under that the engine cuts its end.
+  one kind merge, kinds keep the order they ran in, and a name used more than once appears once
+  with how often: `npm test (3x)`.
+- **Every call is on the row exactly once**: named, inside an `(Nx)`, or inside a `+N more` — a
+  count of what is left, never a count instead of names. The row is one budget, given out in the
+  order the kinds ran, with room set aside for each later kind the row can still hold; a kind it
+  cannot hold is counted in one last `+N more`. A name alone in its phrase may use the row, so a
+  long command is cut late. The line fits the row at every width: held by a test over 3,000 mixes
+  of calls from 40 to 260 columns, which also counts the calls back. Under 40 columns the row is
+  the engine's.
+- A group is redrawn only when the engine says it is settled, in so many words: `isActive`,
+  `isExpanded` and every call's `isRunning` must each be `false`. A flag that is missing is doubt.
 - A call with `isErrored` is never inside the line. It gets its own row: `failed` in the theme's
   error colour — the only colour Clear Transcript uses — the command at full strength, the first
   line of the error dim. An interrupted call reads `interrupted`, uncoloured: the person did that.
@@ -198,9 +211,10 @@ recordings are for. CI runs both, and sets the gate for the second command only.
 ## Limits
 
 - **Windows only, so far.** Every recording is Windows 11; the tests run on the three CI platforms.
-- **The expanded-view rule is an observation, not a contract**: that a prompt is raised before the
-  reply under it. If that order ever changes, ctrl+o shows Clear Transcript's drawing until the next
-  prompt is drawn; `/clear-transcript off` does not depend on it.
+- **For answers, the expanded view is learnt, not given.** It needs a prompt row to be raised in
+  that view; raise order does not matter, but a view that raises no prompt row at all would keep an
+  answer's titles underlined in ctrl+o. Nothing is lost in that case — the drawing is lossless by
+  construction — and `/clear-transcript off` does not depend on it. Tool groups are not affected.
 - **On the main screen, a row that has scrolled into the terminal's own scrollback stays as it was
   drawn**; the off-switch and ctrl+o reach the rows the engine still owns.
 - **Row parity with stock is by construction and by eye**, not by a test: the kit cannot count rows.
