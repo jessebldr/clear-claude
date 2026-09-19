@@ -1,0 +1,30 @@
+`df` is the main one:
+
+```bash
+df -h          # all mounted filesystems, human-readable sizes
+df -h /        # just the root filesystem
+df -hT         # also show filesystem type (ext4, xfs, tmpfs…)
+df -i          # inode usage — useful when df says space is free but writes fail
+```
+
+Typical output:
+
+```
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1        50G   32G   16G  68% /
+tmpfs           3.9G     0  3.9G   0% /dev/shm
+```
+
+**Finding what's using the space** — `du`:
+
+```bash
+du -sh /var/*                 # size of each item under /var
+du -h --max-depth=1 / | sort -h   # top-level dirs, sorted smallest→largest
+du -sh ~/.cache
+```
+
+`du` on large trees is slow and needs `sudo` for system dirs you don't own; add `2>/dev/null` to silence permission errors.
+
+**Interactive alternative:** `ncdu` (usually needs installing) gives a browsable, sorted view — much faster to hunt down the culprit than repeated `du` calls.
+
+Two common gotchas: deleted-but-still-open files keep consuming space until the holding process exits (`lsof +L1` finds them), and `df` counts reserved blocks (~5% on ext4) as unavailable to non-root users.

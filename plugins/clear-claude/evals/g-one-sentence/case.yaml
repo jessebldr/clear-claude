@@ -1,0 +1,52 @@
+schema_version: "1.0"
+name: g-one-sentence
+description: >
+  An explicit response-shape constraint outranks the style's default reporting
+  habits. Asked for one sentence, the answer is one sentence: no second sentence
+  of nuance, no source note, no caveat, no offer. Found in the demo recordings,
+  where "in one sentence" came back as a sentence plus a provenance paragraph.
+tags: [constraints, concision]
+
+execution:
+  prompt: |
+    In one sentence: what does `git stash` do?
+  allowed_tools: []
+  max_turns: 3
+  timeout_seconds: 240
+
+graders:
+  # A single paragraph: no blank line anywhere in the reply.
+  - name: single-paragraph
+    type: regex
+    pattern: '^(?![\s\S]*\n\s*\n\s*\S)'
+    arm: both
+    weight: 1
+
+  # No sentence boundary followed by another sentence. A period inside a code
+  # span or a version number is not followed by whitespace and a capital.
+  - name: no-second-sentence
+    type: regex
+    pattern: '^(?![\s\S]*[.!?]["”)]?\s+[A-Z(])'
+    arm: both
+    weight: 1
+
+  - name: under-400-chars
+    type: regex
+    pattern: '^(?![\s\S]{400,})'
+    arm: both
+    weight: 1
+
+  - name: exactly-one-sentence-and-correct
+    type: llm
+    focus: last_message
+    criteria: |
+      PASS only if the whole response is exactly ONE sentence that correctly says
+      what `git stash` does (it shelves uncommitted changes and restores a clean
+      working tree, so they can be reapplied later).
+
+      FAIL if there is anything besides that one sentence: a second sentence, a
+      follow-up tip, a caveat, a note about sources or about what was not
+      checked, an offer of more help, a heading, a list, or a code block on its
+      own line. A long sentence with clauses is fine; two sentences are not.
+    arm: both
+    weight: 1

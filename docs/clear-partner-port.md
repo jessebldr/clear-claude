@@ -56,6 +56,16 @@ Specifically preserved:
 - The full instruction body: goal, core communication, adapt-to-task, depth,
   formatting, deliverables, interaction, uncertainty, and the final quality check.
 
+## Revisions of the prompt
+
+The relation above holds for every revision: the shipped file is `source/clear-partner.md`
+plus the one frontmatter line. What changes is the text both carry.
+
+| `clear-claude` | Date | Change | Evidence |
+| --- | --- | --- | --- |
+| 0.1.0 | 2026-09-17 | The original, as tested. 4620 bytes, SHA-256 `3584870b…04b1c`. | [evals.md](evals.md), first run |
+| 0.1.1 | 2026-09-19 | New section **Explicit constraints**: a reply shape the user fixes ("one sentence", "just the command", "nothing else") outranks the style's defaults, except one short safety-critical warning. **Formatting**: a table only for a real comparison; a short set of commands is a list. | [evals.md](evals.md), cases g–l: each change was made only after a case failed on 0.1.0 |
+
 ## Recorded checksum of the shipped file
 
 This is the authoritative record of what a correct
@@ -64,9 +74,9 @@ compares the installed file against these values, so they are part of the produc
 convenience note.
 
 ```text
-SHA-256: 3584870b3fcb58774d669f935018ebb1a0d044c73d26494911115d0bc9504b1c
-Size:    4620 bytes
-Lines:   144, LF endings, final newline present
+SHA-256: a8eb2048bfff6e140a1bcc107a9dfcd340e5e8df1ab1c4f442bbf4c2a307f3e0
+Size:    5294 bytes
+Lines:   157, LF endings, final newline present
 ```
 
 The same SHA-256 is written into

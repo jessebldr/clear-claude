@@ -1,0 +1,13 @@
+```bash
+sudo lsof -i :3000
+```
+
+Or, if `lsof` isn't installed:
+
+```bash
+sudo ss -ltnp 'sport = :3000'
+```
+
+Both print the PID and process name. `sudo` matters — without it you only see your own processes, so a port held by another user looks free.
+
+To kill it once you know the PID: `kill <PID>`, then `kill -9 <PID>` if it ignores that.

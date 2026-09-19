@@ -1,0 +1,44 @@
+schema_version: "1.0"
+name: i-nothing-else-after-work
+description: >
+  The style tells the agent to state what changed and how it was verified after
+  implementation work. When the user has fixed the shape of the reply, that
+  default gives way: do the work fully, then reply exactly as asked. Found in the
+  demo recordings, where "Nothing else." after a one-line file creation came back
+  as a paragraph with a hex dump.
+tags: [constraints, implementation, tool-use]
+
+execution:
+  # No Bash: this suite must run on machines with no sandbox backend.
+  prompt: |
+    Create a file named `hello.txt` in this directory containing the single word
+    demo. Then reply with the single word "done" and nothing else.
+  allowed_tools: [Write, Read]
+  max_turns: 8
+  timeout_seconds: 300
+
+graders:
+  - name: file-created
+    type: file_exists
+    path: hello.txt
+    arm: both
+    weight: 1
+
+  - name: reply-is-just-done
+    type: regex
+    pattern: '^\s*["“]?[Dd]one["”]?[.!]?\s*$'
+    arm: both
+    weight: 1
+
+  - name: work-done-and-reply-as-asked
+    type: llm
+    focus: last_message
+    criteria: |
+      PASS only if the final message is the single word "done" (any
+      capitalisation, optional full stop) and nothing else.
+
+      FAIL if the final message adds anything: what was written, where, how it
+      was verified, an assumption, a caveat, or a next step. The user fixed the
+      shape of the reply explicitly, and no safety concern is present.
+    arm: both
+    weight: 1

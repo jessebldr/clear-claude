@@ -1,0 +1,9 @@
+`chmod 755` sets a file's permissions to **rwxr-xr-x**:
+
+- **Owner (7 = rwx):** read, write, execute
+- **Group (5 = r-x):** read and execute, no write
+- **Others (5 = r-x):** read and execute, no write
+
+Each digit is a sum of read (4), write (2), execute (1). So 7 = 4+2+1, 5 = 4+0+1.
+
+It's the standard mode for things everyone should be able to run or traverse but only the owner should modify — executables, scripts, and directories. On a directory, "execute" means permission to enter it and access files inside, so 755 lets anyone list and traverse it while only the owner can add or delete entries.

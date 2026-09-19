@@ -1,0 +1,8 @@
+`df -h` — shows every mounted filesystem with sizes in human-readable units (G, M).
+
+Useful variants:
+
+- `df -h /path` — just the filesystem holding that path
+- `df -i` — inode usage, for when `df -h` says there's space free but writes still fail
+- `du -sh *` — size of each item in the current directory, to find what's eating the space
+- `du -h --max-depth=1 / | sort -h` — drill down from the root to find the big directory

@@ -1,0 +1,8 @@
+`df -h` — shows every mounted filesystem with used, available, and percentage full, in human-readable units (G, M).
+
+Useful companions:
+
+- `df -h /path` — just the filesystem holding that path
+- `du -sh *` — size of each item in the current directory (what's eating the space)
+- `du -h --max-depth=1 / 2>/dev/null | sort -h` — drill down from the root, biggest last
+- `ncdu` — interactive browser, if installed

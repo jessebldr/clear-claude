@@ -1,0 +1,24 @@
+Use `ss` (or `lsof`):
+
+```bash
+sudo ss -ltnp 'sport = :3000'
+```
+
+Shows the listening socket with `users:(("node",pid=12345,fd=23))`. The `sudo` matters — without it you'll see the socket but not the process name/PID for processes you don't own.
+
+Alternatives:
+
+```bash
+sudo lsof -i :3000              # includes established connections, not just listeners
+sudo lsof -nP -iTCP:3000 -sTCP:LISTEN   # listeners only, no DNS/port-name lookups
+sudo fuser 3000/tcp             # just the PID
+```
+
+Then kill it:
+
+```bash
+kill <pid>          # SIGTERM first
+kill -9 <pid>       # only if it ignores that
+```
+
+Note `ss`/`lsof` only show the process if it's in your network namespace — if the port is bound inside a Docker container, you'll see `docker-proxy` instead, and want `docker ps --filter publish=3000`.

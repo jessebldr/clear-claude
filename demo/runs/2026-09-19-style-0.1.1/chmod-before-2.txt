@@ -1,0 +1,18 @@
+`chmod 755` sets a file's Unix permissions to `rwxr-xr-x`:
+
+| Who | Digit | Permissions |
+|---|---|---|
+| Owner | 7 | read + write + execute (`rwx`) |
+| Group | 5 | read + execute (`r-x`) |
+| Others | 5 | read + execute (`r-x`) |
+
+Each digit is the sum of read (4), write (2), and execute (1). So 7 = 4+2+1, and 5 = 4+0+1.
+
+In practice this means: the owner can modify the file, everyone else can read and run it but not change it. It's the standard mode for executables and scripts you want others to run, and for directories you want others to enter and list (on a directory, execute means "can traverse into it").
+
+Common relatives:
+- `chmod 644` — `rw-r--r--`, the usual default for non-executable files
+- `chmod 700` — `rwx------`, owner-only, typical for `~/.ssh`
+- `chmod +x file` — adds execute for everyone without touching other bits
+
+Note that you're on Windows — `chmod` isn't meaningful on NTFS. If you're working in Git Bash or WSL, git does track one bit of this: the executable flag. You can set it portably with `git update-index --chmod=+x path/to/file`.
