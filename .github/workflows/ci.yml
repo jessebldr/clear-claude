@@ -24,6 +24,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Both jobs only read the repository.
+permissions:
+  contents: read
+
 jobs:
   validate:
     name: claude plugin validate --strict

@@ -108,7 +108,7 @@ marketplace being pointed at `main` and `claude plugin marketplace update clear-
 the same fetch a user's update performs.
 
 The three platforms were GitHub's runners, in the `Measure plugin loading` workflow
-([run 35459152005](https://github.com/jessebldr/clear-claude/actions/runs/35459152005); its
+([run 35461128151](https://github.com/jessebldr/clear-claude/actions/runs/35461128151); its
 log expires, which is why the results are copied here), and the same script on a Windows 11
 machine. **Every row below read the same on all of them.**
 

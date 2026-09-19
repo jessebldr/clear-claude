@@ -81,7 +81,7 @@ The same loader reads a third directory, with `source: "policySettings"`, applie
 
 The paths were read from the 2.1.278 code and then **measured**, on GitHub's Linux, macOS and
 Windows runners — disposable machines where the job is an administrator
-(`MEASURE_POLICY=1`, [run 35459152005](https://github.com/jessebldr/clear-claude/actions/runs/35459152005)). The same on all three:
+(`MEASURE_POLICY=1`, [run 35461128151](https://github.com/jessebldr/clear-claude/actions/runs/35461128151)). The same on all three:
 
 ```text
   policy file, name: Clear Partner:               Using forced plugin output style: clear-partner:Clear Partner
@@ -92,8 +92,8 @@ Windows runners — disposable machines where the job is an administrator
 So the policy level follows the same rule, and a file written to those paths is read, which
 confirms the paths. This closes the gap a review of marketplace 0.4.0 found: the skills' own
 description of style resolution named a policy level that neither skill looked at. They now
-read it, and report a policy directory they cannot read as UNKNOWN / INDETERMINATE rather
-than guess.
+read it, and a policy directory they cannot read is a WARN (`clear-doctor`) or
+INDETERMINATE (`clear-audit`) rather than a guess or a clean pass.
 
 ## What this corrects in the record
 

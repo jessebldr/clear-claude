@@ -26,6 +26,10 @@ on:
       - scripts/measure-plugin-loading.sh
       - .github/workflows/measure.yml
 
+# The job only reads the repository; it needs nothing else from the token.
+permissions:
+  contents: read
+
 jobs:
   measure:
     name: measure (${{ matrix.os }})

@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Measures two things about how Claude Code loads this marketplace's plugins, in throwaway
-# config directories, without a credential and without touching any real setting:
+# Measures how the installed Claude Code loads this marketplace's plugins, in throwaway config
+# directories and without touching any real setting:
 #
-#   1. rename     what `renames` in marketplace.json does to an install made under a former
-#                 plugin name, at user, project and local scope, and how many sessions pass
-#                 before the renamed plugin is loaded again.
-#   2. shadowing  whether an output-style file outside the plugin can take the place of the
-#                 plugin's forced style, and under which `name:` it has to be written to do so.
+#   rename     what `renames` in marketplace.json does to an install made under a former plugin
+#              name — at user, project and local scope, enabled and disabled — and what it takes
+#              before the renamed plugin is loaded again.
+#   managed    the same for a plugin enabled only from administrator-managed settings.
+#   shadowing  whether an output-style file outside the plugin can take the place of the
+#              plugin's forced style, and under which `name:` it has to be written to do so.
 #
 #   bash scripts/measure-plugin-loading.sh [rename|managed|shadowing|all]      default: all
 #
@@ -14,19 +15,25 @@
 #   NEW_REF   a ref that lists the current name and the renames map       default: main
 #   REPO      owner/repo on GitHub                                        default: jessebldr/clear-claude
 #   OLD_ID / NEW_ID   the plugin ids under test    default: clear-claude@clear-claude / clear-partner@clear-claude
-#   CLAUDE    the claude executable to measure                             default: claude
+#   CLAUDE    the claude executable to measure                            default: claude
 #   MEASURE_POLICY=1   also measure the administrator-managed level. This WRITES to the
 #             machine-wide managed directory (/etc/claude-code, /Library/Application
-#             Support/ClaudeCode, C:\Program Files\ClaudeCode) and removes what it wrote. It
-#             needs root or sudo, refuses if that directory already exists, and is meant for
-#             a disposable machine such as a CI runner — never a machine someone uses.
+#             Support/ClaudeCode, C:\Program Files\ClaudeCode). It needs root, sudo or an
+#             elevated shell; it only proceeds if it can create that directory itself, and it
+#             removes exactly what it created, also when interrupted. It is meant for a
+#             disposable machine such as a CI runner — never a machine someone uses.
 #
-# A session here is `claude -p hi`. With no credential it stops at "Not logged in", which is
-# after the plugins have loaded, and what it loaded is read from its --debug-file log. Nothing
-# is sent to a model and nothing is billed. Needs: claude, node, bash. Results are recorded by
-# hand in docs/migration.md and docs/research/style-shadowing.md, with the version they were
-# measured on; this script is how to take them again after a Claude Code release or a rename.
-set -u
+# Nothing is sent to a model and nothing is billed, and the script checks that rather than
+# assume it: it refuses to start if a credential is in the environment, and asks
+# `claude auth status` in each throwaway configuration before the first session there (a
+# config directory alone does not prove that on macOS, where the sign-in lives in the
+# Keychain). A session is `claude -p hi`; signed out, it stops at "Not logged in", which is
+# after the plugins have loaded, and what it loaded is read from its --debug-file log.
+#
+# A step that fails stops the run: a missing log must never be printed as "no forced style".
+# Results are copied by hand into docs/migration.md and docs/research/style-shadowing.md, with
+# the Claude Code version. Needs: claude, node, bash (3.2 is enough).
+set -euo pipefail
 
 WHAT="${1:-all}"
 REPO="${REPO:-jessebldr/clear-claude}"
@@ -38,44 +45,86 @@ MARKETPLACE="${NEW_ID#*@}"
 CLAUDE="${CLAUDE:-claude}"
 export DISABLE_AUTOUPDATER=1
 
+say() { printf '%s\n' "$*"; }
+rule() { say; say "== $*"; }
+die() { say "measure: $*" >&2; exit 1; }
+
+for name in ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN CLAUDE_CODE_OAUTH_TOKEN CLAUDE_CODE_USE_BEDROCK CLAUDE_CODE_USE_VERTEX; do
+  if [ -n "${!name:-}" ]; then die "$name is set; a session could reach a model. Unset it and run again."; fi
+done
+
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
-WORK="$(mktemp -d 2>/dev/null || mktemp -d -t clearclaude)"
-trap 'rm -rf "$WORK"' EXIT
+WORK="$(mktemp -d 2>/dev/null || mktemp -d -t clearclaude)" || die "could not create a temporary directory"
+case "$WORK" in /*) [ -d "$WORK" ] || die "temporary directory $WORK does not exist" ;; *) die "temporary directory is not an absolute path: '$WORK'" ;; esac
+
+as_root() { if [ "$(id -u)" = 0 ] || ! command -v sudo >/dev/null 2>&1; then "$@"; else sudo "$@"; fi; }
+
+# What this run created in the machine-wide managed directory, newest first, with spaces kept
+# as "|" so the lists stay word-split. Removed on any exit: files by name, directories with
+# rmdir — never a recursive delete of anything under a machine-wide path.
+POLICY_FILES=""
+POLICY_DIRS=""
+release_policy_dir() {
+  local path left=""
+  for path in $POLICY_FILES; do as_root rm -f "${path//|/ }" 2>/dev/null || true; done
+  for path in $POLICY_DIRS; do as_root rmdir "${path//|/ }" 2>/dev/null || left="$left ${path//|/ }"; done
+  POLICY_FILES=""; POLICY_DIRS=""
+  # Never silent: something this run did not create is in there, or a removal was refused.
+  if [ -n "$left" ]; then say "measure: could not remove$left — look at it by hand" >&2; return 1; fi
+}
+cleanup() { release_policy_dir || true; rm -rf "$WORK"; }
+trap cleanup EXIT
+trap 'exit 130' INT TERM
 
 # Claude Code on Windows wants a Windows path in CLAUDE_CONFIG_DIR and on its command line.
 native() { if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"; else printf '%s' "$1"; fi; }
 
-say() { printf '%s\n' "$*"; }
-rule() { say; say "== $*"; }
+# Run a claude command that has to succeed; print its last line, indented.
+must() {
+  local out
+  out="$("$@" 2>&1)" || die "failed: $* — ${out##*$'\n'}"
+  say "  ${out##*$'\n'}"
+}
 
-new_config() { # name -> exports CLAUDE_CONFIG_DIR, echoes nothing
+new_config() { # name
   CFG="$WORK/$1"; mkdir -p "$CFG"
   CLAUDE_CONFIG_DIR="$(native "$CFG")"; export CLAUDE_CONFIG_DIR
+  # A throwaway config directory is signed out only where the sign-in is stored inside it.
+  local status
+  status="$("$CLAUDE" auth status 2>&1 || true)"
+  case "$status" in
+    *'"loggedIn": false'*|*'"loggedIn":false'*) ;;
+    *) die "claude is not signed out in a throwaway config directory; a session here could be billed. Not measuring. ($(printf '%s' "$status" | tr -d '\n' | cut -c1-120))" ;;
+  esac
 }
 
 # One session in directory $1; prints what the loader did with the plugin, from the debug log.
 session() { # dir label
-  local log="$WORK/debug-$RANDOM.log"
-  ( cd "$1" && "$CLAUDE" --debug-file "$(native "$log")" -p hi >/dev/null 2>&1 )
-  local forced miss
-  forced="$(grep -o 'Using forced plugin output style: .*' "$log" 2>/dev/null | sort -u | head -1)"
-  miss="$(grep -c 'error type: plugin-cache-miss' "$log" 2>/dev/null)"
-  [ "${miss:-0}" -gt 0 ] 2>/dev/null && miss="  (plugin-cache-miss)" || miss=""
+  local log="$WORK/debug-$RANDOM.log" out forced miss
+  out="$( (cd "$1" && "$CLAUDE" --debug-file "$(native "$log")" -p hi 2>&1) || true )"
+  case "$out" in *"Not logged in"*) ;; *) die "a session did not stop at \"Not logged in\": ${out%%$'\n'*}" ;; esac
+  [ -s "$log" ] || die "the session wrote no debug log, so there is nothing to read a result from"
+  grep -q -E 'Found [0-9]+ plugins' "$log" || die "the debug log never reached plugin loading; not reporting a result from it"
+  forced="$(grep -o 'Using forced plugin output style: .*' "$log" | sort -u | head -1 || true)"
+  miss=""; if grep -q 'error type: plugin-cache-miss' "$log"; then miss="  (plugin-cache-miss)"; fi
   say "  $2: ${forced:-no forced style}$miss"
   rm -f "$log"
 }
 
 # Point the registered marketplace at another ref, the way `main` moving would, and refresh it.
-move_marketplace() { # config-dir extra-settings-file...
+move_marketplace() { # settings files that may name the marketplace
   node -e '
     const fs = require("fs"); const [ref, name, ...files] = process.argv.slice(1)
+    let moved = 0
     for (const file of files) {
       if (!fs.existsSync(file)) continue
       const json = JSON.parse(fs.readFileSync(file, "utf8"))
       const entry = file.endsWith("known_marketplaces.json") ? json[name] : json.extraKnownMarketplaces && json.extraKnownMarketplaces[name]
-      if (entry && entry.source) { entry.source.ref = ref; fs.writeFileSync(file, JSON.stringify(json, null, 2)) }
-    }' "$NEW_REF" "$MARKETPLACE" "$@"
-  "$CLAUDE" plugin marketplace update "$MARKETPLACE" 2>&1 | tail -1 | sed 's/^/  /'
+      if (entry && entry.source) { entry.source.ref = ref; fs.writeFileSync(file, JSON.stringify(json, null, 2)); moved++ }
+    }
+    if (moved === 0) { console.error("no registered marketplace named " + name + " to move"); process.exit(1) }' \
+    "$NEW_REF" "$MARKETPLACE" "$@" || die "could not point the marketplace at $NEW_REF"
+  must "$CLAUDE" plugin marketplace update "$MARKETPLACE"
 }
 
 enabled() { # settings-file label
@@ -87,13 +136,21 @@ enabled() { # settings-file label
     console.log(`  ${label}: ${JSON.stringify(ours)}`)' "$1" "$2" "$MARKETPLACE"
 }
 
-listed() { "$CLAUDE" plugin list 2>&1 | awk -v m="@$MARKETPLACE" 'index($0, m) { on = 1; print "  " $2; next } /^ *$/ { on = 0 } on && /Version|Status|Note/ { sub(/^ */, "    "); print }'; }
+listed() {
+  local out
+  out="$("$CLAUDE" plugin list 2>&1)" || die "claude plugin list failed"
+  printf '%s\n' "$out" | awk -v m="@$MARKETPLACE" 'index($0, m) { on = 1; print "  " $2; next } /^ *$/ { on = 0 } on && /Version|Status|Note/ { sub(/^ */, "    "); print }'
+}
+
+install_old() { # [--scope s], run in the current directory
+  "$CLAUDE" plugin marketplace add "$REPO#$OLD_REF" >/dev/null 2>&1 || die "could not add $REPO#$OLD_REF"
+  must "$CLAUDE" plugin install "$OLD_ID" "$@"
+}
 
 measure_rename() {
   rule "rename · user scope · marketplace update only"
   new_config rename-user; mkdir -p "$WORK/p-user"
-  "$CLAUDE" plugin marketplace add "$REPO#$OLD_REF" 2>&1 | tail -1 | sed 's/^/  /'
-  "$CLAUDE" plugin install "$OLD_ID" 2>&1 | tail -1 | sed 's/^/  /'
+  install_old
   move_marketplace "$CFG/plugins/known_marketplaces.json" "$CFG/settings.json"
   for n in 1 2 3; do session "$WORK/p-user" "session $n"; done
   listed; enabled "$CFG/settings.json" "user settings"
@@ -103,19 +160,18 @@ measure_rename() {
 
   rule "rename · user scope · marketplace update, then install under the new name"
   new_config rename-two; mkdir -p "$WORK/p-two"
-  "$CLAUDE" plugin marketplace add "$REPO#$OLD_REF" >/dev/null 2>&1
-  "$CLAUDE" plugin install "$OLD_ID" >/dev/null 2>&1
+  install_old
   move_marketplace "$CFG/plugins/known_marketplaces.json" "$CFG/settings.json"
-  "$CLAUDE" plugin install "$NEW_ID" 2>&1 | tail -1 | sed 's/^/  /'
+  must "$CLAUDE" plugin install "$NEW_ID"
   session "$WORK/p-two" "session 1"
   listed; enabled "$CFG/settings.json" "user settings"
 
+  local scope proj file
   for scope in project local; do
     rule "rename · $scope scope · marketplace update only"
-    new_config "rename-$scope"; local proj="$WORK/p-$scope"; mkdir -p "$proj"
-    "$CLAUDE" plugin marketplace add "$REPO#$OLD_REF" >/dev/null 2>&1
-    ( cd "$proj" && "$CLAUDE" plugin install "$OLD_ID" --scope "$scope" 2>&1 | tail -1 | sed 's/^/  /' )
-    local file="$proj/.claude/settings.json"; [ "$scope" = local ] && file="$proj/.claude/settings.local.json"
+    new_config "rename-$scope"; proj="$WORK/p-$scope"; mkdir -p "$proj"
+    ( cd "$proj" && install_old --scope "$scope" )
+    file="$proj/.claude/settings.json"; if [ "$scope" = local ]; then file="$proj/.claude/settings.local.json"; fi
     enabled "$file" "before, $scope settings"
     move_marketplace "$CFG/plugins/known_marketplaces.json" "$CFG/settings.json" "$proj/.claude/settings.json" "$proj/.claude/settings.local.json"
     for n in 1 2 3; do session "$proj" "session $n"; done
@@ -125,15 +181,15 @@ measure_rename() {
 
   rule "rename · user scope · the old install was disabled"
   new_config rename-disabled; mkdir -p "$WORK/p-disabled"
-  "$CLAUDE" plugin marketplace add "$REPO#$OLD_REF" >/dev/null 2>&1
-  "$CLAUDE" plugin install "$OLD_ID" >/dev/null 2>&1
-  "$CLAUDE" plugin disable "$OLD_ID" 2>&1 | tail -1 | sed 's/^/  /'
+  install_old
+  must "$CLAUDE" plugin disable "$OLD_ID"
   move_marketplace "$CFG/plugins/known_marketplaces.json" "$CFG/settings.json"
   session "$WORK/p-disabled" "session 1"
   listed; enabled "$CFG/settings.json" "user settings"
 }
 
-# The machine-wide directory an administrator manages; fixed per platform in Claude Code.
+# ---- the machine-wide managed directory (MEASURE_POLICY=1 only)
+
 policy_dir() {
   case "$(uname -s)" in
     Darwin) printf '%s' "/Library/Application Support/ClaudeCode" ;;
@@ -141,79 +197,88 @@ policy_dir() {
     *) printf '%s' "/etc/claude-code" ;;
   esac
 }
-as_root() { if [ "$(id -u)" = 0 ] || command -v cygpath >/dev/null 2>&1; then "$@"; else sudo "$@"; fi; }
-root_write() { as_root mkdir -p "$(dirname "$1")" && as_root tee "$1" >/dev/null; } # path; content on stdin
 
-style_file() { # path name
-  mkdir -p "$(dirname "$1")"
-  printf -- '---\nname: %s\ndescription: shadowing measurement\n---\n\nA style used only to measure shadowing.\n' "$2" > "$1"
+# Take the managed directory only if this run can create it: `mkdir` without -p fails when it
+# already exists, so a directory someone else made — before or during the run — is never ours
+# to write into or to remove. It also fails without administrator rights, which is the test.
+claim_policy_dir() { # -> POLICY
+  POLICY="$(policy_dir)"
+  as_root mkdir "$POLICY" 2>/dev/null || { say "  $POLICY exists or cannot be created (not an administrator?); not measured"; return 1; }
+  POLICY_DIRS="${POLICY// /|} $POLICY_DIRS"
+}
+policy_mkdir() { as_root mkdir "$1" || die "could not create $1"; POLICY_DIRS="${1// /|} $POLICY_DIRS"; }
+# Content is an argument, not stdin: on the right of a pipe this function would run in a
+# subshell and the file would never be remembered for removal.
+policy_write() { # path content
+  case " $POLICY_FILES " in *" ${1// /|} "*) ;; *) POLICY_FILES="${1// /|} $POLICY_FILES" ;; esac
+  printf '%s' "$2" | as_root tee "$1" >/dev/null || die "could not write $1"
 }
 
-measure_shadowing() {
-  local plugin="${NEW_ID%@*}" style qualified
-  style="$(sed -n 's/^name: *//p' "$HERE/plugins/$plugin/output-styles/"*.md | head -1)"
-  qualified="$plugin:$style"
-  rule "shadowing · plugin $NEW_ID from this checkout · style \"$style\""
-  new_config shadow; local proj="$WORK/p-shadow"; mkdir -p "$proj"
-  "$CLAUDE" plugin marketplace add "$(native "$HERE")" 2>&1 | tail -1 | sed 's/^/  /'
-  "$CLAUDE" plugin install "$NEW_ID" 2>&1 | tail -1 | sed 's/^/  /'
-  session "$proj" "no other style file"
-  for level in user project; do
-    local file="$CFG/output-styles/measure.md"; [ "$level" = project ] && file="$proj/.claude/output-styles/measure.md"
-    style_file "$file" "$style";     session "$proj" "$level file, name: $style"
-    style_file "$file" "$qualified"; session "$proj" "$level file, name: $qualified"
-    rm -f "$file"
-  done
-  session "$proj" "files removed again"
-
-  if [ "${MEASURE_POLICY:-0}" != 1 ]; then
-    say "  policy level: not measured here (set MEASURE_POLICY=1 on a disposable machine)"
-    return
-  fi
-  local policy; policy="$(policy_dir)"
-  if [ -e "$policy" ]; then say "  policy level: $policy already exists; left alone, not measured"; return; fi
-  local pfile="$policy/.claude/output-styles/measure.md"
-  printf -- '---\nname: %s\ndescription: shadowing measurement\n---\n\nMeasurement only.\n' "$style" | root_write "$pfile"
-  session "$proj" "policy file, name: $style"
-  printf -- '---\nname: %s\ndescription: shadowing measurement\n---\n\nMeasurement only.\n' "$qualified" | root_write "$pfile"
-  session "$proj" "policy file, name: $qualified"
-  as_root rm -rf "$policy"
-  session "$proj" "policy directory removed again"
-}
-
-# A plugin enabled from managed settings, which Claude Code cannot rewrite.
 measure_managed_rename() {
   rule "rename · enabled from managed settings · marketplace update only"
-  if [ "${MEASURE_POLICY:-0}" != 1 ]; then say "  not measured here (set MEASURE_POLICY=1 on a disposable machine)"; return; fi
-  local policy; policy="$(policy_dir)"
-  if [ -e "$policy" ]; then say "  $policy already exists; left alone, not measured"; return; fi
+  if [ "${MEASURE_POLICY:-0}" != 1 ]; then say "  not measured here (MEASURE_POLICY=1, on a disposable machine only)"; return; fi
+  claim_policy_dir || return 0
   new_config rename-managed; local proj="$WORK/p-managed"; mkdir -p "$proj"
-  "$CLAUDE" plugin marketplace add "$REPO#$OLD_REF" >/dev/null 2>&1
-  "$CLAUDE" plugin install "$OLD_ID" >/dev/null 2>&1
+  install_old
   # Move the enabling key out of user settings and into the managed file.
   node -e '
     const fs = require("fs"); const [file, id] = process.argv.slice(1)
     const json = JSON.parse(fs.readFileSync(file, "utf8")); delete json.enabledPlugins[id]
     fs.writeFileSync(file, JSON.stringify(json, null, 2))' "$CFG/settings.json" "$OLD_ID"
-  printf '{ "enabledPlugins": { "%s": true } }\n' "$OLD_ID" | root_write "$policy/managed-settings.json"
+  policy_write "$POLICY/managed-settings.json" "$(printf '{ "enabledPlugins": { "%s": true } }' "$OLD_ID")"
   session "$proj" "before the rename, enabled only from managed settings"
   move_marketplace "$CFG/plugins/known_marketplaces.json" "$CFG/settings.json"
   for n in 1 2; do session "$proj" "session $n"; done
   listed
   session "$proj" "session 3, after claude plugin list"
-  say "  managed settings afterwards: $(as_root cat "$policy/managed-settings.json" | tr -d '\n ')"
+  say "  managed settings afterwards: $(as_root cat "$POLICY/managed-settings.json" | tr -d '\n ')"
   enabled "$CFG/settings.json" "user settings afterwards"
-  "$CLAUDE" plugin install "$NEW_ID" 2>&1 | tail -1 | sed 's/^/  /'
+  must "$CLAUDE" plugin install "$NEW_ID"
   session "$proj" "session 4, after installing the new name"
-  as_root rm -rf "$policy"
+  release_policy_dir || die "the managed directory was not left as it was found"
+}
+
+style_text() { printf -- '---\nname: %s\ndescription: shadowing measurement\n---\n\nA style used only to measure shadowing.\n' "$1"; }
+
+measure_shadowing() {
+  local plugin="${NEW_ID%@*}" style qualified level file
+  style="$(sed -n 's/^name: *//p' "$HERE/plugins/$plugin/output-styles/"*.md | head -1)"
+  [ -n "$style" ] || die "could not read the style name from plugins/$plugin/output-styles"
+  qualified="$plugin:$style"
+  rule "shadowing · plugin $NEW_ID from this checkout · style \"$style\""
+  new_config shadow; local proj="$WORK/p-shadow"; mkdir -p "$proj"
+  must "$CLAUDE" plugin marketplace add "$(native "$HERE")"
+  must "$CLAUDE" plugin install "$NEW_ID"
+  session "$proj" "no other style file"
+  for level in user project; do
+    file="$CFG/output-styles/measure.md"; if [ "$level" = project ]; then file="$proj/.claude/output-styles/measure.md"; fi
+    mkdir -p "$(dirname "$file")"
+    style_text "$style" > "$file";     session "$proj" "$level file, name: $style"
+    style_text "$qualified" > "$file"; session "$proj" "$level file, name: $qualified"
+    rm -f "$file"
+  done
+  session "$proj" "files removed again"
+
+  if [ "${MEASURE_POLICY:-0}" != 1 ]; then
+    say "  policy level: not measured here (MEASURE_POLICY=1, on a disposable machine only)"
+    return
+  fi
+  claim_policy_dir || return 0
+  policy_mkdir "$POLICY/.claude"; policy_mkdir "$POLICY/.claude/output-styles"
+  policy_write "$POLICY/.claude/output-styles/measure.md" "$(style_text "$style")"
+  session "$proj" "policy file, name: $style"
+  policy_write "$POLICY/.claude/output-styles/measure.md" "$(style_text "$qualified")"
+  session "$proj" "policy file, name: $qualified"
+  release_policy_dir || die "the managed directory was not left as it was found"
+  session "$proj" "policy directory removed again"
 }
 
 say "claude: $("$CLAUDE" --version 2>&1 | head -1) · $(uname -s) $(uname -m) · node $(node --version)"
 say "repo $REPO · old ref $OLD_REF ($OLD_ID) · new ref $NEW_REF ($NEW_ID)"
 case "$WHAT" in
   rename) measure_rename ;;
-  shadowing) measure_shadowing ;;
   managed) measure_managed_rename ;;
+  shadowing) measure_shadowing ;;
   all) measure_rename; measure_managed_rename; measure_shadowing ;;
   *) say "usage: $0 [rename|managed|shadowing|all]"; exit 2 ;;
 esac
