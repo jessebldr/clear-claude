@@ -8,9 +8,35 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Because the product is a prompt, any edit to `clear-partner.md` is a behaviour change
 and gets its own entry here and its own version bump.
 
-## [Unreleased]
+## [0.2.1] - 2026-09-19
 
-No change to either plugin.
+Not yet published. Marketplace 0.2.1: `clear-ui` 0.1.1. `clear-claude` stays at 0.1.0, with no
+change to Clear Partner. No new features: two fixes found by the first cross-platform CI run,
+the first end-to-end use of the opt-in features with real hook payloads, and real recordings
+in place of drawn images.
+
+### Fixed
+
+- `clear-ui`: a `git status` listing that is cut short is never taken for an answer. The
+  timer is now the renderer's own instead of `execFile`'s, whose handler could report success
+  with a truncated listing, and a listing with no branch header is treated as slow however git
+  exited. Before, the git segment could vanish for one 5-second cache period. (#4)
+- `clear-ui`: the missing dirty mark on a slow machine is no longer silent. The 150 ms git
+  budget is unchanged — measured at 24–29 ms in ordinary repositories and 89 ms in a
+  52,000-file one on a developer machine — but where a process start alone costs more than
+  that, `clear-ui-doctor` now reports it on a `Git speed` line, and
+  `CLEAR_UI_GIT_TIMEOUT_MS` (50–2000) lets that machine choose a slower tick. (#3)
+- Tests no longer race a real git against a real clock, which failed the first CI run on
+  `windows-latest` and on Node 18; the CI demo-render step runs under bash on every runner.
+
+### Added
+
+- `bench/git-latency.mjs`: how long `git status` takes on this machine, run the way the status
+  line runs it. CI prints it for every runner.
+- `docs/clear-ui-dogfood.md`: what the first end-to-end run of verification state and the
+  activity row with real hook payloads showed on Windows, and the same checklist for a Mac.
+- Behavioural evals and `clear-audit` re-run on Claude Code 2.1.278: 6/6 with the plugin, as
+  on 2.1.274. See `docs/evals.md`.
 
 ### Changed
 
@@ -33,7 +59,7 @@ No change to either plugin.
 
 ## [0.2.0] - 2026-09-19
 
-Not yet published. Marketplace 0.2.0: `clear-ui` debuts at 0.1.0. `clear-claude` stays at
+Published as tag `v0.2.0`. Marketplace 0.2.0: `clear-ui` debuts at 0.1.0. `clear-claude` stays at
 0.1.0, with no change to Clear Partner.
 
 ### Added

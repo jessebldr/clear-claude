@@ -23,7 +23,8 @@ Each plugin carries its own version; the marketplace version tracks the newest c
 | --- | --- |
 | 0.1.x | Harden `clear-claude`. No behaviour change to Clear Partner. |
 | 0.2.0 | `clear-ui` 0.1.0 appears as a second, optional marketplace plugin (Phases A–C). Because Phases D and F were built on the same branch, it also carries the activity line and `verification-state` on **documented** classic hooks — both opt-in, off by default. |
-| 0.2.x | Windows + macOS dogfooding; first green cross-platform CI run (Phase E); the opt-in features exercised against real hook payloads. |
+| 0.2.1 | `clear-ui` 0.1.1. First green cross-platform CI run (Phase E) and the two fixes it led to; the opt-in features exercised end to end against real hook payloads on Windows; real recordings replace drawn images. |
+| 0.2.x | macOS dogfooding on real hardware, which also settles the macOS timing budget; two weeks of daily use. |
 | 0.3.0 | Unassigned. Was `verification-state` (Phase F), which shipped inside 0.2.0. |
 | 0.4.0-exp | First function-hooks mod, outside the marketplace, `--plugin-dir` only (Phase G1). G2 is a research spike and carries no version. |
 | 1.0 | Only after function hooks are documented, on by default, and the layer boundaries have survived real use. |
@@ -103,7 +104,7 @@ source of Codex CLI, Oh My Pi, OpenCode and T3 Code; `anything-to-html` could no
   after this page exists. Their current sketches in
   [ui-architecture.md](ui-architecture.md) are placeholders.
 
-### Phase D — activity line  ✔ built, opt-in, agents half dogfooded
+### Phase D — activity line  ✔ built, opt-in, dogfooded on Windows
 
 - **Prerequisite:** the UX distillation above.
 
@@ -123,24 +124,36 @@ source of Codex CLI, Oh My Pi, OpenCode and T3 Code; `anything-to-html` could no
   `type` is `local_agent`; `status` was seen as `running` and `completed`; `startTime` is
   epoch milliseconds; a completed task stays in `tasks[]` for a few ticks and then leaves.
   The row therefore counts `running` only and stops believing a record older than 15 s.
+- **Dogfooded with real payloads, Windows, 2026-09-19:** a real `Stop` hook's
+  `background_tasks[]` wrote `running: 1` and the bar drew `1 background`; with sub-agents
+  running it drew `1 agent  │  1 background`. See [clear-ui-dogfood.md](clear-ui-dogfood.md).
 - **Not verified:** a `failed` status has never been observed (the row reads it, and costs
-  nothing if it never arrives); the `Stop` payload's `background_tasks[]` has only been
-  exercised with fixtures, because the plugin's hooks are not loaded in the session that
-  built it; ids shared between the two feeds are handled by type, not by id.
+  nothing if it never arrives); ids shared between the two feeds are handled by type, not by
+  id; macOS, until the checklist in the dogfood page has been run there.
 
 ### Phase E — cross-platform dogfood
 
 - **Create:** CI matrix (`windows-latest`, `macos-latest`, `ubuntu-latest`) running tests
   and `bench/bench.mjs`; `docs/clear-ui-install.md`; recorded results.
-- **State:** the matrix and the bench step exist. The bench lives outside `test/` because
+- **State:** the matrix runs and is green on all five jobs (Linux on Node 18 and 22, macOS,
+  Windows, strict validation) since 2026-09-19. The bench lives outside `test/` because
   `node --test` runs every file under a test directory and a timing is not a test; it fails a
-  build only past the 250 ms ceiling. **Not done, and cannot be done from one machine:** a
-  green run on macOS and Linux (CI triggers on pull requests and on `main`, so it first runs
-  when the pull request opens), and the two weeks of daily use.
+  build only past the 250 ms ceiling.
+- **What the first run found:** two tests raced a real git against a real clock (Windows: a
+  git spawn costs 150–200 ms on the runner; Node 18 on Linux: git beat a 1 ms timer), and the
+  demo-render step used `<`, which PowerShell lacks. All fixed in tests and CI. It also
+  exposed two product edges, both fixed in `clear-ui` 0.1.1: a truncated git listing taken for
+  an answer (#4), and a dirty mark that goes missing silently on a slow machine (#3).
+- **Bench on shared runners, first run:** Linux 40 / 53 ms (budget 40 / 60), Windows 73 / 123
+  (90 / 130), macOS 101 / 164 (40 / 60, **over**). The macOS budget was a guess and a shared
+  runner is not a Mac; it is settled by the Mac checklist in
+  [clear-ui-dogfood.md](clear-ui-dogfood.md), not by CI (#2).
+- **Not done, and cannot be done from one machine:** a measurement on a real Mac, and the two
+  weeks of daily use.
 - **Done when:** byte-identical goldens and budgets met on all three; two weeks of daily
   use on Windows and macOS with no settings damage.
 
-### Phase F — verification-state on documented hooks  ✔ built, not yet dogfooded
+### Phase F — verification-state on documented hooks  ✔ built, dogfooded on Windows
 
 - **Create:** `PostToolUse` / `PostToolUseFailure` / edit-tool hooks (exec form,
   `async`) appending to the session state file: classification, command hash, failed or
@@ -148,6 +161,12 @@ source of Codex CLI, Oh My Pi, OpenCode and T3 Code; `anything-to-html` could no
   `✓ verified 10:42` / `⚠ edited since` / nothing.
 - **Rule:** a command counts as verification **only if the project lists it** in config.
   Observed facts are shown; file coverage is never inferred.
+- **Dogfooded with real payloads, Windows, 2026-09-19:** a real `PostToolUse` recorded a pass
+  (`verified 21:20` on the bar), an `Edit` turned it to `edited since`, and a real
+  `PostToolUseFailure` recorded a failure (`verify failed 21:23`). Two by-design behaviours are
+  easy to trip over: a model that appends `; echo $?` to the command makes the run uncounted,
+  and an edit made through the shell is not seen as an edit. Both are written up in
+  [clear-ui-dogfood.md](clear-ui-dogfood.md).
 - **Risks:** a Node spawn per tool call (~70 ms on Windows, asynchronous).
 - **Built differently from the plan:** the segment is words — `verified 10:42`,
   `verify failed 10:42`, `edited since` — because `✓` and `⚠` are double-width in the measured

@@ -165,7 +165,12 @@ eval`, judge: Haiku):
 | workflow-multi-step | ✓ 1.0 | ✓ 1.0 |
 | ambiguous-request | ✓ 1.0 | ✓ 1.0 |
 
-**6/6 both ways. $1.84 total. Delta: zero.**
+**6/6 both ways. $1.84 total. Delta: zero.** (Claude Code 2.1.274.)
+
+Re-run on Claude Code 2.1.278, same prompt, $1.54: **6/6 with the style again.** The
+baseline arm went 5/6 — on the ambiguous request it ran out of turns working instead of
+asking, so there was nothing to grade. That is one errored run, not proof the style is
+better, and it is recorded that way.
 
 The claim was never "this makes Claude smarter." It's "it doesn't make it dumber."
 One run per case is smoke-test evidence, not a benchmark — the suite, the raw
@@ -176,11 +181,15 @@ results, and the honest limits are in [docs/evals.md](docs/evals.md).
 ## Roadmap
 
 - [ ] Submit to the official Claude Code marketplace so install is one command
-- [ ] Re-run evals against new Claude Code versions (the suite is cheap: ~$2)
+- [x] Re-run evals against a new Claude Code version: 6/6 again on 2.1.278. Repeat per
+  release; the suite is cheap (~$2)
 - [ ] `clear-doctor` auto-fix mode (currently read-only by design)
-- [x] Clear UI: an optional status bar as a second plugin (`clear-ui` 0.1.0)
-- [ ] Clear UI: a green CI run on macOS and Linux, and its opt-in features
-  (verification state, activity row) exercised against real hook payloads
+- [x] Clear UI: an optional status bar as a second plugin (`clear-ui`, now 0.1.1)
+- [x] Clear UI: CI green on Linux, macOS and Windows; its opt-in features (verification
+  state, activity row) exercised end to end against real hook payloads on Windows
+  ([what that showed](docs/clear-ui-dogfood.md))
+- [ ] Clear UI: the same run on a real Mac, which also settles the macOS timing budget
+  ([checklist](docs/clear-ui-dogfood.md#checklist-for-a-mac))
 - [ ] Claude Mods: Anthropic is shipping function hooks ("Claude Mods",
   [anthropics/claude-code#91870](https://github.com/anthropics/claude-code/issues/91870)).
   When the API is documented and on by default, build the transcript renderer as a
@@ -219,6 +228,8 @@ Clear UI (`clear-ui`):
 
 - [docs/clear-ui-install.md](docs/clear-ui-install.md) — install, what gets written
   and where, configure, uninstall
+- [docs/clear-ui-dogfood.md](docs/clear-ui-dogfood.md) — the first end-to-end run with
+  real hook payloads, and the same run as a checklist for a Mac
 - [plugins/clear-ui/README.md](plugins/clear-ui/README.md) — scripts, looks, file
   layout, tests
 - [docs/ui-architecture.md](docs/ui-architecture.md) — every design decision, with the

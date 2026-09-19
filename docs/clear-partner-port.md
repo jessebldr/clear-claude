@@ -101,3 +101,18 @@ Expected output — one added line, nothing more:
 ```
 
 Any other output means the port has drifted and this document is stale.
+
+## Audit runs
+
+`/clear-claude:clear-audit` run for real, against the plugin loaded with `--plugin-dir`.
+
+| Date | Claude Code | Platform | Active | Conforming |
+| --- | --- | --- | --- | --- |
+| 2026-09-19 | 2.1.278 | Windows 11 | ACTIVE (derived) | YES, once line endings were normalised |
+
+That run found a real defect. The repository stores the style with LF, and
+`core.autocrlf=true` — the Windows default — checked it out with CRLF: 4764 bytes instead of
+4620, and a different SHA-256, so a byte-for-byte audit on any Windows checkout would report a
+modified prompt that nobody modified. A root `.gitattributes` now pins the style, its source
+and the golden renders to LF. After a fresh checkout on Windows the file is 4620 bytes and
+hashes to the recorded value above.

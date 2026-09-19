@@ -479,7 +479,7 @@ code runs. Targets:
 
 **The git budget, measured (2026-09-19, `bench/git-latency.mjs`, 40 fresh processes each).** On
 the development machine `git status` takes 24–29 ms median (max 36) in three working
-repositories of 400–1,300 files, and 89 ms median, 102 ms p95, 154 ms max in a 45,000-file
+repositories of 400–1,300 files, and 89 ms median, 102 ms p95, 154 ms max in a 52,000-file
 clone of nodejs/node: one sample in forty over the 150 ms budget. So the budget holds with room
 on a developer machine even in a very large repository. It does not hold where a process start
 is itself slow: on a `windows-latest` CI runner a single git spawn cost 150–200 ms, and the bar
