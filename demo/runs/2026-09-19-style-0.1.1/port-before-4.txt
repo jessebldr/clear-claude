@@ -1,0 +1,31 @@
+Use `lsof` or `ss`:
+
+```bash
+# Most common
+sudo lsof -i :3000
+
+# Shorter output — just the PID
+sudo lsof -t -i :3000
+
+# ss (modern, preinstalled on most distros)
+sudo ss -ltnp 'sport = :3000'
+
+# netstat (older systems)
+sudo netstat -tlnp | grep :3000
+
+# fuser
+sudo fuser 3000/tcp
+```
+
+`sudo` matters — without it you only see processes owned by you, so a port held by another user's process looks unused.
+
+To kill whatever's holding it:
+
+```bash
+sudo kill $(sudo lsof -t -i:3000)     # graceful
+sudo kill -9 $(sudo lsof -t -i:3000)  # if it ignores SIGTERM
+```
+
+Note `lsof -i :3000` matches both TCP and UDP, and both listeners and established connections. If you only care about the listener, use `sudo lsof -i tcp:3000 -sTCP:LISTEN`.
+
+Since you're on Windows here, the local equivalent is `netstat -ano | findstr :3000` then `tasklist /fi "pid eq <PID>"`, or `Get-NetTCPConnection -LocalPort 3000 | Select-Object OwningProcess`.

@@ -1,0 +1,17 @@
+```bash
+sudo lsof -i :3000
+```
+
+Or with `ss` (preinstalled on most modern distros, no sudo needed to list, but you need root to see process names for other users' processes):
+
+```bash
+sudo ss -ltnp 'sport = :3000'
+```
+
+Both give you the PID. To kill it:
+
+```bash
+sudo fuser -k 3000/tcp
+```
+
+`lsof -i :3000` shows both TCP and UDP and both listening and established connections — useful if the port is held by a lingering client connection rather than a server.

@@ -1,0 +1,49 @@
+schema_version: "1.0"
+name: l-one-sentence-after-tool-use
+description: >
+  The same constraint as case g, after real work and about a subject with several
+  parts. In a recorded session the style answered "in one sentence, what does this
+  plugin do?" with two and three sentences once it had read files first: the
+  material had four facets and the habit of covering them all took over. The shape
+  the user asked for still wins.
+tags: [constraints, tool-use]
+
+execution:
+  # No Bash: this suite must run on machines with no sandbox backend.
+  prompt: |
+    Write a file `plugin-notes.md` in this directory: about ten lines describing
+    an imaginary status bar plugin for a terminal coding agent — what it shows on
+    the left, what it shows on the right, how it is installed, and how it is
+    removed. Then, in one sentence, tell me what the plugin does.
+  allowed_tools: [Write, Read]
+  max_turns: 8
+  timeout_seconds: 300
+
+graders:
+  - name: file-created
+    type: file_exists
+    path: plugin-notes.md
+    arm: both
+    weight: 1
+
+  - name: single-paragraph
+    type: regex
+    pattern: '^(?![\s\S]*\n\s*\n\s*\S)'
+    arm: both
+    weight: 1
+
+  - name: exactly-one-sentence
+    type: llm
+    focus: last_message
+    criteria: |
+      Count the sentences in the final message. PASS only if there is exactly
+      ONE sentence. A long sentence with several clauses, commas, semicolons or a
+      dash is still one sentence and passes.
+
+      FAIL if there are two or more sentences, or anything besides the sentence:
+      a note about where the file was written, a list, a heading, a caveat, or an
+      offer of further help.
+
+      Do not judge the content or its accuracy, only the count.
+    arm: both
+    weight: 1

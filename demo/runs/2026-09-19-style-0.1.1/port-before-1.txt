@@ -1,0 +1,27 @@
+Three common ways:
+
+**`lsof`** (most common):
+```bash
+sudo lsof -i :3000
+```
+Add `-t` to get just the PID: `lsof -ti :3000`
+
+**`ss`** (modern, usually preinstalled):
+```bash
+sudo ss -ltnp 'sport = :3000'
+```
+The `users:(("node",pid=1234,fd=23))` column gives you the process name and PID. Drop `-l` if you also want established connections on that port.
+
+**`fuser`**:
+```bash
+sudo fuser -v 3000/tcp
+```
+
+Use `sudo` — without it you only see processes owned by your own user, which is the usual reason a port looks "used by nothing."
+
+To kill whatever is on it:
+```bash
+sudo kill $(sudo lsof -ti :3000)      # or -9 if it ignores SIGTERM
+```
+
+Note `netstat -tulpn | grep 3000` still works on older systems, but `netstat` is deprecated in favor of `ss` on most modern distros.

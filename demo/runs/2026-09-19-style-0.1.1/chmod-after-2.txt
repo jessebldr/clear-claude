@@ -1,0 +1,9 @@
+`chmod 755 <path>` sets Unix file permissions to **rwxr-xr-x**: the owner can read, write, and execute; everyone else can read and execute but not modify.
+
+The three digits are owner, group, other. Each is a sum of read (4), write (2), execute (1):
+
+- **7** = 4+2+1 → owner: read, write, execute
+- **5** = 4+0+1 → group: read, execute
+- **5** = 4+0+1 → others: read, execute
+
+Typical uses: scripts and binaries you want anyone to run but only you to edit, and directories you want others to enter and list (on a directory, "execute" means the right to traverse into it).

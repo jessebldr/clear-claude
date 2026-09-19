@@ -54,8 +54,8 @@ The prompt *is* the product, so an edited file is a different product. These che
 **B2 — SHA-256 of the whole file.**
 
 ```text
-Expected SHA-256: 3584870b3fcb58774d669f935018ebb1a0d044c73d26494911115d0bc9504b1c
-Expected size:    4620 bytes
+Expected SHA-256: a8eb2048bfff6e140a1bcc107a9dfcd340e5e8df1ab1c4f442bbf4c2a307f3e0
+Expected size:    5294 bytes
 ```
 
 Hash `<installPath>/output-styles/clear-partner.md` with whatever the machine provides — `sha256sum` (Linux), `shasum -a 256` (macOS), `certutil -hashfile <file> SHA256` (Windows), or `Get-FileHash -Algorithm SHA256 <file>` (PowerShell). Compare case-insensitively. If no hashing tool is available, fall back to the byte size and say explicitly in the report that the hash was **not** verified — a size match alone is weak evidence.

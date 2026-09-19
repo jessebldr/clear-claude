@@ -1,0 +1,10 @@
+`df -h` — shows every mounted filesystem with used, available, and percent full in human-readable units.
+
+A few common follow-ups:
+
+- `df -h /path` — just the filesystem holding that path
+- `du -sh *` — size of each item in the current directory (what's eating the space)
+- `du -h --max-depth=1 / 2>/dev/null | sort -h` — drill down from the root, biggest last
+- `ncdu` — interactive browser, if it's installed
+
+If `df` says the disk is full but `du` doesn't account for it, the usual culprits are deleted files still held open by a process (`lsof +L1`) or exhausted inodes (`df -i`).

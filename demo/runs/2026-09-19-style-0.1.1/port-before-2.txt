@@ -1,0 +1,26 @@
+**`lsof`** (most common):
+```bash
+sudo lsof -i :3000
+```
+Add `-t` to get just the PID: `lsof -ti :3000`
+
+**`ss`** (modern, usually preinstalled):
+```bash
+sudo ss -ltnp 'sport = :3000'
+```
+The `users:(("node",pid=1234,fd=23))` field at the end gives you the process name and PID.
+
+**`fuser`**:
+```bash
+sudo fuser 3000/tcp
+```
+
+**`netstat`** (older systems):
+```bash
+sudo netstat -ltnp | grep :3000
+```
+
+A couple of notes:
+- Use `sudo` — without it you'll only see processes owned by your own user, so a port held by another user's process looks mysteriously empty.
+- `-t`/`-l` restricts to listening TCP sockets. Drop `-l` if you're chasing an outbound connection or a lingering `TIME_WAIT` socket instead of a listener.
+- To kill it once found: `sudo kill $(sudo lsof -ti :3000)`, or `sudo fuser -k 3000/tcp`.

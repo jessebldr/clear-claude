@@ -1,0 +1,25 @@
+`df -h` is the standard one:
+
+```bash
+df -h
+```
+
+Shows filesystem, size, used, available, use%, and mount point in human-readable units (G/M/K).
+
+Useful variants:
+
+| Command | What it does |
+|---|---|
+| `df -h /home` | Space for the filesystem holding a specific path |
+| `df -hT` | Adds the filesystem type column (ext4, xfs, tmpfs…) |
+| `df -i` | Inode usage — when you're "full" but `df -h` shows free space |
+| `df -h -x tmpfs -x devtmpfs` | Hides the noisy virtual filesystems |
+
+**When you need to find *what's* using the space** (`df` tells you the disk is full, `du` tells you why):
+
+```bash
+du -sh /var/*           # size of each item under /var
+du -h --max-depth=1 / | sort -hr | head -20   # top 20 biggest dirs at root
+```
+
+`du` on large trees is slow and needs `sudo` for system paths. Interactive alternative if available: `ncdu /` — browsable, sorted by size.

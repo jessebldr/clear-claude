@@ -1,0 +1,20 @@
+`chmod 755` sets a file's permission bits to `rwxr-xr-x`:
+
+| Who | Digit | Bits | Meaning |
+|---|---|---|---|
+| Owner (user) | 7 | `rwx` | read, write, execute |
+| Group | 5 | `r-x` | read, execute (no write) |
+| Others | 5 | `r-x` | read, execute (no write) |
+
+Each digit is the sum of read (4) + write (2) + execute (1). So 7 = 4+2+1, 5 = 4+0+1.
+
+**In practice:**
+- On a **file** — the owner can edit and run it; everyone else can read and run it but not modify it. This is the standard mode for executable scripts and binaries (`/usr/bin/*` is typically 755).
+- On a **directory** — the execute bit means "can traverse into it." So the owner can create/delete entries inside; everyone else can `cd` into it and list its contents but can't add or remove files. Standard for directories meant to be publicly readable, like a web root.
+
+**Common neighbors:**
+- `644` (`rw-r--r--`) — non-executable files: config, source, HTML.
+- `700` — private to the owner, no access for anyone else.
+- `777` — everyone can write. Almost never correct; it's the classic "fixed" permission that opens a security hole.
+
+Note that Windows (your current platform) doesn't use POSIX permission bits, so `chmod` there is a no-op except inside WSL or when git tracks the executable bit.

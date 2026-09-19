@@ -1,0 +1,8 @@
+`df -h` — shows every mounted filesystem with sizes in human-readable units (G/M).
+
+Common follow-ups:
+
+- `df -h /path` — just the filesystem holding that path
+- `du -sh *` — size of each item in the current directory
+- `du -h --max-depth=1 /var | sort -h` — find what's eating space, largest last
+- `ncdu /` — interactive browser, if installed

@@ -1,0 +1,39 @@
+schema_version: "1.0"
+name: h-just-the-command
+description: >
+  "Just the command" means the reply is the command. The style's Deliverables
+  section says not to bury an artifact under commentary; this checks the stronger
+  case where the user has ruled commentary out altogether.
+tags: [constraints, deliverables]
+
+execution:
+  prompt: |
+    Just the command, nothing else: list the 10 largest files under the current
+    directory on Linux, sizes human-readable.
+  allowed_tools: []
+  max_turns: 3
+  timeout_seconds: 240
+
+graders:
+  # The whole reply is one fenced block holding one line, or one inline code
+  # span, or one bare line. Anything before or after it fails the match.
+  - name: reply-is-only-a-command
+    type: regex
+    pattern: '^\s*(?:```[a-zA-Z]*[ \t]*\r?\n[^\r\n]+\r?\n```|`[^`\r\n]+`|[^\r\n`]+)\s*$'
+    arm: both
+    weight: 1
+
+  - name: command-only-and-plausible
+    type: llm
+    focus: last_message
+    criteria: |
+      PASS only if the response consists of a single shell command and nothing
+      else, and the command would plausibly list the 10 largest files under the
+      current directory with human-readable sizes (for example a `find` or `du`
+      pipeline sorted by size and cut to 10 lines).
+
+      FAIL if the response contains any prose at all: an introduction, an
+      explanation of flags, alternatives, a caveat, or a closing remark. A code
+      fence around the command is fine.
+    arm: both
+    weight: 1

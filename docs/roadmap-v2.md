@@ -24,6 +24,7 @@ Each plugin carries its own version; the marketplace version tracks the newest c
 | 0.1.x | Harden `clear-claude`. No behaviour change to Clear Partner. |
 | 0.2.0 | `clear-ui` 0.1.0 appears as a second, optional marketplace plugin (Phases A–C). Because Phases D and F were built on the same branch, it also carries the activity line and `verification-state` on **documented** classic hooks — both opt-in, off by default. |
 | 0.2.1 | `clear-ui` 0.1.1. First green cross-platform CI run (Phase E) and the two fixes it led to; the opt-in features exercised end to end against real hook payloads on Windows; real recordings replace drawn images. |
+| 0.2.2 | `clear-claude` 0.1.1: explicit response-shape constraints outrank the style's defaults, and a short set of commands is a list, not a table — each change made only after an eval case failed. Demo set cut to 15–17 s and re-recorded. |
 | 0.2.x | macOS dogfooding on real hardware, which also settles the macOS timing budget; two weeks of daily use. |
 | 0.3.0 | Unassigned. Was `verification-state` (Phase F), which shipped inside 0.2.0. |
 | 0.4.0-exp | First function-hooks mod, outside the marketplace, `--plugin-dir` only (Phase G1). G2 is a research spike and carries no version. |

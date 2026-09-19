@@ -1,0 +1,37 @@
+`df` is the main one:
+
+```bash
+df -h              # all mounted filesystems, human-readable sizes
+df -h /home        # just the filesystem holding /home
+df -hT             # same, plus filesystem type (ext4, xfs, tmpfs...)
+df -i              # inode usage — for "no space left" when df -h says there's room
+```
+
+Output looks like:
+
+```
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1       234G  180G   42G  82% /
+```
+
+**Finding what's eating the space** — `du`:
+
+```bash
+du -sh /var/*                      # size of each item under /var
+du -h --max-depth=1 / | sort -hr   # top-level dirs, biggest first
+du -sh . 2>/dev/null               # current dir total, ignoring permission errors
+```
+
+Run `du` on `/` with `sudo` or you'll get noisy permission errors and undercounts.
+
+**Nicer interactive option** — `ncdu` (usually needs installing: `apt install ncdu` / `dnf install ncdu`):
+
+```bash
+sudo ncdu /
+```
+
+It gives you a browsable tree sorted by size, and you can delete from inside it.
+
+A couple of gotchas worth knowing:
+- If `df` shows space used but `du` doesn't account for it, a deleted file is probably still held open by a process — `sudo lsof +L1` will show it, and restarting that process frees the space.
+- `df -h` excludes space reserved for root (usually 5% on ext4), so "0 available" for a normal user may still have room for root processes.

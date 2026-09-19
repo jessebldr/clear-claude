@@ -8,6 +8,37 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Because the product is a prompt, any edit to `clear-partner.md` is a behaviour change
 and gets its own entry here and its own version bump.
 
+## [0.2.2] - 2026-09-19
+
+Published as tag `v0.2.2`. Marketplace 0.2.2: `clear-claude` 0.1.1 — **a prompt change, so a behaviour
+change** — and `clear-ui` unchanged at 0.1.1.
+
+### Changed
+
+- **Clear Partner 0.1.1.** Two edits to the prompt, each made only after an eval case failed on
+  0.1.0 (`docs/evals.md`):
+  - New section **Explicit constraints**: when the user fixes the shape of the reply — "one
+    sentence", "just the command", "nothing else", a word limit — that outranks every default
+    in the style, including the completion report after implementation work. The one exception
+    is a safety-critical warning, kept to a single short line with nothing else added. On 0.1.0,
+    "in one sentence" after tool use came back as two or three sentences in 4 runs of 4.
+  - **Formatting**: a table only for a real comparison; a short set of commands, options or
+    steps is a list. 0.1.0 answered a plain "how do I check disk space" with a table 4 times in
+    4, where stock Claude Code never did, and in a terminal pane its cells wrapped.
+  - Recorded checksum updated in `docs/clear-partner-port.md` and in the `clear-audit` skill:
+    5294 bytes, SHA-256 `a8eb2048…07f3e0`. `source/clear-partner.md` carries the same text.
+- Measured effect, four runs per arm of three questions: 524 → 258 words (−51 %); 0.1.0 measured
+  524 → 372 (−29 %). Cases a–f still pass 6/6 on 0.1.1.
+- Demo set polished and re-recorded for 0.1.1: every GIF is 15–17 s (was 37–77 s) with waiting
+  cut out and nothing inside a frame touched; one width, banner and framing across the set;
+  a cover frame and a PNG of it for each; three primary demos in the README, two secondary.
+  `demo/edit.mjs` does the cutting and documents exactly what it does to time.
+
+### Added
+
+- Six regression eval cases, g–l, for explicit response-shape constraints and for tables in
+  simple terminal answers.
+
 ## [0.2.1] - 2026-09-19
 
 Published as tag `v0.2.1`. Marketplace 0.2.1: `clear-ui` 0.1.1. `clear-claude` stays at 0.1.0, with no

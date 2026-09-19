@@ -41,10 +41,10 @@ Scopes, updates, session-only loading, and the full command reference live in
 
 ![A real Claude Code session with the Clear UI status bar at the bottom: the context chip fills in after the first answer, and an orange dot beside the branch follows the working tree](assets/clear-ui-demo.gif)
 
-*A recording of a real session, not a mock-up: the bar is the bottom row. Watch the context
-chip fill in, and the orange dot beside `main` appear when Claude creates a file and go when
-it is deleted. In a narrow terminal the same bar
-[becomes two rows](assets/clear-ui-narrow.gif). How it was recorded:
+*A recording of a real session, not a mock-up, cut to 17 seconds: the bar is the bottom row.
+Watch the context chip fill in, and the orange dot beside `main` appear when Claude creates a
+file and go when it is deleted. In a narrow terminal the same bar
+[becomes two rows](assets/clear-ui-narrow.gif). How it was recorded and cut:
 [demo/README.md](demo/README.md).*
 
 ```text
@@ -74,17 +74,20 @@ before the answer shows up — if it shows up. Long responses aren't the problem
 answer first, plain English, concise by default. The least text that fully
 communicates the answer — never the shortest possible answer.
 
-![Two real Claude Code sessions answering "How do I check disk space on Linux?" side by side: stock on the left, with the clear-claude plugin on the right](assets/demo-disk-space.gif)
+![Two real Claude Code sessions answering "What does chmod 755 do?" side by side: stock on the left, with the clear-claude plugin on the right](assets/demo-chmod.gif)
 
-*Two real sessions, recorded, not mocked: same question, same model, minutes apart. The
-only difference is `--plugin-dir plugins/clear-claude`. It stops when the question is
-answered. Also recorded: [chmod 755](assets/demo-chmod.gif) and
-[port 3000](assets/demo-port-3000.gif).*
+![Two real Claude Code sessions answering "How do I find which process is using port 3000 on Linux?" side by side: stock on the left, with the clear-claude plugin on the right](assets/demo-port-3000.gif)
+
+*Real sessions, recorded, not mocked: same question, same model, minutes apart. The only
+difference is `--plugin-dir plugins/clear-claude`. It stops when the question is answered.
+The waiting is cut out; nothing inside a frame is touched. A third pair,
+[disk space](assets/demo-disk-space.gif), is recorded the same way.*
 
 One recording is an anecdote, so the number comes from repeated runs instead: four runs
-per arm of three everyday questions averaged **524 → 372 words (−29 %)**, shorter in
-every per-question mean. The raw outputs, the exact flags, and the take where the plugin's
-answer came out *longer* are all in [demo/README.md](demo/README.md).
+per arm of three everyday questions averaged **524 → 258 words (−51 %)**, and no plugin
+answer was as long as the shortest stock answer to the same question. The raw outputs, the
+exact flags, and an earlier take where the plugin's answer came out *longer* are all in
+[demo/README.md](demo/README.md).
 
 ### #2: "Concise" quietly became "shallow"
 
@@ -171,6 +174,12 @@ Re-run on Claude Code 2.1.278, same prompt, $1.54: **6/6 with the style again.**
 baseline arm went 5/6 — on the ambiguous request it ran out of turns working instead of
 asking, so there was nothing to grade. That is one errored run, not proof the style is
 better, and it is recorded that way.
+
+Six more cases, g–l, pin what the demo recordings exposed: when you fix the shape of the
+reply — "one sentence", "just the command", "nothing else" — that outranks the style's own
+habits, except for one short safety-critical warning. On 0.1.0 "in one sentence" after tool
+use came back as two or three sentences, 4 runs in 4; 0.1.1 passes 4 in 4, and the original
+six still pass 6/6. The prompt was edited only where a case failed first.
 
 The claim was never "this makes Claude smarter." It's "it doesn't make it dumber."
 One run per case is smoke-test evidence, not a benchmark — the suite, the raw

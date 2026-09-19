@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Clear Claude — a minimal, opinionated Claude Code setup for clear communication without reduced engineering capability.",
-    "version": "0.2.1"
+    "version": "0.2.2"
   },
   "plugins": [
     {
       "name": "clear-claude",
       "source": "./plugins/clear-claude",
       "description": "Ships the Clear Partner output style: answer-first, plain English, concise by default, deep when asked. Keeps Claude Code's coding instructions intact. Includes the clear-doctor and clear-audit diagnostic skills.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "license": "MIT",
       "keywords": [
         "output-style",

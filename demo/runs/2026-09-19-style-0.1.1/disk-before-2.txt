@@ -1,0 +1,26 @@
+`df -h` is the main one:
+
+```bash
+df -h
+```
+
+Shows filesystem, size, used, available, use%, and mount point — `-h` gives human-readable units (G/M) instead of 1K blocks.
+
+Useful variations:
+
+```bash
+df -h /home          # just the filesystem holding a specific path
+df -hT               # include filesystem type (ext4, xfs, tmpfs…)
+df -h --total        # add a total row
+df -i                # inode usage — for "no space left" when df -h looks fine
+```
+
+To find *what's* using the space:
+
+```bash
+du -sh *             # size of each item in the current directory
+du -h --max-depth=1 /var | sort -h   # drill down, largest last
+ncdu /               # interactive browser, if installed
+```
+
+A common gotcha: if `df` shows a full disk but `du` doesn't account for it, a deleted file is still held open by a process — `lsof +L1` will find it, and restarting that process reclaims the space.

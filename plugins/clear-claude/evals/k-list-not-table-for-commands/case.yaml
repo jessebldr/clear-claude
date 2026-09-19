@@ -1,0 +1,47 @@
+schema_version: "1.0"
+name: k-list-not-table-for-commands
+description: >
+  A short set of commands with a note each is a list, not a comparison. In the
+  recorded demo runs the style answered this exact question with a Markdown
+  table four times out of four where stock Claude Code never did, and in a
+  terminal pane the table's cells wrapped. A table is for comparing several
+  items across several attributes.
+tags: [formatting, terminal]
+
+execution:
+  prompt: |
+    How do I check disk space on Linux?
+  allowed_tools: []
+  max_turns: 3
+  timeout_seconds: 240
+
+graders:
+  # No Markdown table row anywhere: no line that starts with a pipe and has
+  # another pipe later on it.
+  - name: no-markdown-table
+    type: regex
+    pattern: '^(?![\s\S]*(?:^|\n)[ \t]*\|[^\n]*\|)'
+    arm: both
+    weight: 1
+
+  - name: under-1500-chars
+    type: regex
+    pattern: '^(?![\s\S]{1500,})'
+    arm: both
+    weight: 1
+
+  - name: answer-first
+    type: llm
+    focus: last_message
+    criteria: |
+      PASS if the first line or first sentence of the response names `df` (for
+      example `df -h`) as the way to check disk space.
+
+      FAIL only if the response opens with something else: an acknowledgement, a
+      restatement of the question, or an overview of what it is about to cover.
+
+      Judge the opening only. Do not judge the formatting of the rest: commands
+      in a code block with comments, a bulleted list, and short paragraphs are
+      all fine, and the table question is checked by another grader.
+    arm: both
+    weight: 1
