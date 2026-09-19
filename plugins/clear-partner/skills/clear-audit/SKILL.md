@@ -22,7 +22,7 @@ No judgement calls. Do not assess whether recent answers "feel" like Clear Partn
 
 Claude Code resolves the active output style like this, and A1–A5 walk the same path in order:
 
-> Collect every style. Apply plugin styles first, then user-level, then project-level, then policy-level, keyed by the frontmatter `name` — so a later source with the same name **replaces** an earlier one. Then: if any style from an **enabled plugin** has `force-for-plugin: true`, use it (first one wins, with a warning if there are several). Otherwise use the `outputStyle` setting. Otherwise use the default.
+> Collect every style into one table. A plugin's style is keyed by its qualified name, `<plugin name>:<style name>`; every other style by its bare frontmatter `name`. Apply plugin styles first, then user-level, then project-level, then policy-level — so a later source with the same **key** replaces an earlier one. Then: if any style from an **enabled plugin** still has `force-for-plugin: true`, use it (first one wins, with a warning if there are several). Otherwise use the `outputStyle` setting. Otherwise use the default.
 
 **A1 — plugin enabled.** `claude plugin list --json`; find the entry whose `id` starts with `clear-partner@` (an install from before 0.2.0 is listed as `clear-claude@…`; audit that entry and name the former id as a deviation) and confirm `"enabled": true`. Keep its `installPath` and `version`. Not installed or not enabled → **NOT ACTIVE**, stop here and say which.
 
@@ -37,7 +37,15 @@ Claude Code resolves the active output style like this, and A1–A5 walk the sam
 
 `force-for-plugin: true` missing or false → **NOT ACTIVE**: the style is installed but nothing activates it. Nothing in Claude Code validates this file, so a typo here produces no error anywhere else.
 
-**A3 — nothing shadows the name.** Glob `<config home>/output-styles/*.md` (config home = `CLAUDE_CONFIG_DIR` if set, otherwise `.claude` in the home directory) and `.claude/output-styles/*.md` in the project, and read only the `name:` line of each. A file whose name is `Clear Partner` replaces the plugin's entry in the style table, taking the `force-for-plugin` flag with it → **NOT ACTIVE**, and name the exact path. This is the failure mode that leaves everything else looking healthy.
+**A3 — nothing replaces the plugin's entry.** The plugin's key in the style table is its qualified name: the plugin name from A1, a colon, the style name from A2 — `clear-partner:Clear Partner` (`clear-claude:Clear Partner` for an install under the former id). Glob these three levels (config home = `CLAUDE_CONFIG_DIR` if set, otherwise `.claude` in the home directory) and read only the `name:` line of each file:
+
+| Level | Where |
+| --- | --- |
+| user | `<config home>/output-styles/**/*.md` |
+| project | `.claude/output-styles/**/*.md` in the project |
+| policy | `C:\Program Files\ClaudeCode\.claude\output-styles\**\*.md` (Windows), `/Library/Application Support/ClaudeCode/.claude/output-styles/**/*.md` (macOS), `/etc/claude-code/.claude/output-styles/**/*.md` (Linux) |
+
+A file whose `name:` is exactly the qualified name replaces the plugin's entry, and the `force-for-plugin` flag goes with it → **NOT ACTIVE**, and name the exact path. This is the failure mode that leaves everything else looking healthy. A file named with the bare style name, `Clear Partner`, has a different key and replaces nothing: it is not a deviation. A policy directory that exists but cannot be read → **INDETERMINATE**, naming the directory; one that does not exist is normal.
 
 **A4 — no competing forced style.** For each other enabled plugin, Glob `<its installPath>/output-styles/*.md` and read the frontmatter. Another style with `force-for-plugin: true` → **INDETERMINATE**: one of the two wins by discovery order, which cannot be predicted from the filesystem. Name both. Claude Code prints `Multiple plugins have forced output styles: …` at session start when this happens — the user can read the winner there.
 

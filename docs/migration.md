@@ -20,21 +20,22 @@ Check it with `clear doctor`, or `/clear-partner:clear-doctor`.
 
 ### If you only update the marketplace
 
-It still works, a session or two later. Claude Code 2.1.193 or later has a rename mechanism: the
-marketplace's `renames` map says `clear-claude` is now `clear-partner`, so at the next start
-Claude Code shows this once —
+Your settings migrate, but **Clear Partner stays off until a `claude plugin` command has
+run.** Claude Code 2.1.193 or later has a rename mechanism: the marketplace's `renames` map
+says `clear-claude` is now `clear-partner`, so at the next start Claude Code shows this
+once —
 
 ```text
 Renamed to "clear-partner" in the "clear-claude" marketplace
 ```
 
 — and rewrites `clear-claude@clear-claude` to `clear-partner@clear-claude` in
-`enabledPlugins`. That was measured in user settings; Claude Code's documentation says the
-same happens in project and local settings, and for `pluginConfigs`. What it does
-not have yet is the plugin's files under the new name, so **the next session runs without
-Clear Partner** (`plugin-cache-miss` in the debug log) until Claude Code has fetched them by
-itself. In two measured runs that took one session and two. The `install` line above is what
-skips that gap, which is why it is the recommended path and not a fallback.
+`enabledPlugins`, in user, project and local settings alike. What it does not have is the
+plugin's files under the new name, and a session does not fetch them: three sessions in a row
+ran without Clear Partner (`plugin-cache-miss` in the debug log), on Windows, macOS and
+Linux. The first `claude plugin list` after that completed the install, and every session
+from then on had the style. The `install` line above does the same thing on purpose, which
+is why it is the recommended path and not a fallback.
 
 ### Things that look like errors and are not
 
@@ -53,17 +54,19 @@ skips that gap, which is why it is the recommended path and not a fallback.
 - **You had the plugin disabled.** A disabled entry is left exactly as it was, old name
   included. Nothing is broken and nothing loads. `claude plugin install
   clear-partner@clear-claude` when you want it back.
+- **The plugin is enabled from managed (administrator) settings.** Claude Code cannot rewrite
+  that file, and measured, the plugin then **does not load at all**: every session reports
+  `plugin-cache-miss`, `claude plugin list` repeats the rename notice under the old id, and
+  the managed key stays as it was. (Claude Code's documentation says such a plugin keeps
+  loading; on 2.1.278 it did not.) An administrator changes the key to
+  `clear-partner@clear-claude`; until then, `claude plugin install
+  clear-partner@clear-claude` on the machine brings the style back.
+- **A team's checked-in `.claude/settings.json` names the old id.** It is rewritten on the
+  first machine that opens the project with a current Claude Code — measured — so commit that
+  change, or make the same one-line edit by hand, and everyone else gets it.
 - **Claude Code older than 2.1.193** ignores `renames` and reports `plugin-not-found` for
   the old id. Run the `install` line; if the old id is still listed afterwards, uninstall
-  it. (Not measured: Clear Partner needs 2.1.274 or later anyway.)
-- **The plugin is enabled from managed (administrator) settings** or another read-only
-  source. Claude Code cannot rewrite those: per its documentation the plugin still loads,
-  but the notice comes back every session until an administrator changes the key to
-  `clear-partner@clear-claude`. (Not measured here.)
-- **A team's checked-in `.claude/settings.json` names the old id.** Per the documentation it
-  is rewritten on the first machine that opens the project with a current Claude Code;
-  commit that change so everyone else gets it. (Project scope was not measured here — or
-  change the key by hand, which is the same edit.)
+  it. Not measured, and not going to be: Clear Partner needs 2.1.274 or later anyway.
 
 ## What changes for you
 
@@ -95,59 +98,53 @@ folder if you want the few kilobytes back.
 
 ## What was measured
 
-Claude Code 2.1.278, native Windows 11, 2026-09-20. Every run used a throwaway
-`CLAUDE_CONFIG_DIR`, so no real setting was involved, and none had a credential: a session
-there stops at "Not logged in", after the plugins have loaded, which is the part under test.
-What a session loaded is read from its `--debug-file` log. "The published names" means
-`jessebldr/clear-claude` at `main` before this release: `clear-claude@clear-claude` 0.1.1
-and `clear-ui@clear-claude` 0.2.0. Because this was measured before the release reached
-`main`, "the marketplace moves" was done by pointing the registered marketplace at the
-release branch (`ref` in `known_marketplaces.json` and `settings.json`) and running
-`claude plugin marketplace update clear-claude` — the same fetch a user's update performs.
+Claude Code **2.1.278** on **Windows, macOS (arm64) and Linux**, 2026-09-20, by
+[`scripts/measure-plugin-loading.sh`](../scripts/measure-plugin-loading.sh): throwaway
+`CLAUDE_CONFIG_DIR`s, so no real setting is involved, and no credential — a session there
+(`claude -p hi`) stops at "Not logged in", after the plugins have loaded, which is the part
+under test. What a session loaded is read from its `--debug-file` log. The former name is
+installed from this repository at tag `v0.3.0`; "the marketplace moves" is the registered
+marketplace being pointed at `main` and `claude plugin marketplace update clear-claude` —
+the same fetch a user's update performs.
 
-**Fresh install from GitHub.** `marketplace add`, then both `install` lines: listed as
-`clear-partner@clear-claude` 0.2.0 and `clear-ui@clear-claude` 0.2.0, enabled, user scope.
+The three platforms were GitHub's runners, in the `Measure plugin loading` workflow
+([run 35459152005](https://github.com/jessebldr/clear-claude/actions/runs/35459152005); its
+log expires, which is why the results are copied here), and the same script on a Windows 11
+machine. **Every row below read the same on all of them.**
 
-**Upgrade from GitHub, the two commands above.** Published names installed; marketplace
-moved; `claude plugin install clear-partner@clear-claude`. `enabledPlugins` was then exactly
-`{"clear-partner@clear-claude": true}` — the old key was gone — and the first session logged
-`Using forced plugin output style: clear-partner:Clear Partner` with no cache miss.
+| Case | Result |
+| --- | --- |
+| Marketplace update, then `install clear-partner@clear-claude` | First session forces `clear-partner:Clear Partner`; `enabledPlugins` is exactly `{"clear-partner@clear-claude": true}`. |
+| Marketplace update only, user scope | Key rewritten to the new id. Sessions 1, 2 and 3: `plugin-cache-miss`, no forced style. After one `claude plugin list`: sessions 4 and 5 force the style. |
+| Marketplace update only, **project** scope | `.claude/settings.json` rewritten from the old id to the new; user settings untouched. Sessions 1–3: `plugin-cache-miss`. |
+| Marketplace update only, **local** scope | `.claude/settings.local.json` rewritten likewise. Sessions 1–3: `plugin-cache-miss`. |
+| The old install was **disabled** | Not migrated: still listed as `clear-claude@clear-claude`, disabled; `enabledPlugins` still `{"clear-claude@clear-claude": false}`. |
+| Enabled only from **managed settings** | Before the move: forced style `clear-claude:Clear Partner`. After: `managed-settings.json` unchanged; every session `plugin-cache-miss`, also after `claude plugin list`, which shows the rename note under the old id. After `install clear-partner@clear-claude`: the style is forced again. |
 
-**Upgrade from GitHub, marketplace update only.** Published names installed, both plugins;
-marketplace moved.
+The managed row needs an administrator, so it was taken on the runners only, which are
+thrown away after the job.
 
-- The next `claude plugin list` printed `Note: Renamed to "clear-partner" in the
-  "clear-claude" marketplace` under the old id, and `enabledPlugins` became
-  `{"clear-ui@clear-claude": true, "clear-partner@clear-claude": true}`.
-- First session: `plugin-cache-miss` for `clear-partner@clear-claude`, no forced style, and
-  `Added clear-partner@clear-claude with scope user`; afterwards
-  `plugins/cache/clear-claude/clear-partner/` existed and `claude plugin list` showed
-  `clear-partner@clear-claude` 0.2.0. Claude Code's documentation says the user must run
-  `/plugin install` after a cache miss; on 2.1.278 it fetched the plugin by itself.
-- Second session: two skills loaded from `clear-partner`, and `Using forced plugin output
-  style: clear-partner:Clear Partner`.
-- **Run again from scratch, the gap was longer:** sessions one *and* two logged
-  `plugin-cache-miss` and no forced style; sessions three and four forced the style. The
-  sessions here are `claude -p` runs that end at once for want of a credential, so a fetch
-  started by one may simply not have finished before the next; an interactive session
-  that stays open was not measured. Either way the number of sessions is not something to
-  promise.
-- `clear-ui@clear-claude` stayed listed at 0.2.0, enabled, with its key unchanged, in
-  every run.
+Taken by hand on the Windows machine during the rename itself, same version:
 
-**Upgrade from a local clone** (a `directory` marketplace, as used when testing a checkout):
-the same notice and the same settings rewrite, and no gap — the first session loaded the
-plugin and forced the style, because the files are read in place and there is nothing to
-fetch.
+- **Fresh install from GitHub:** `marketplace add`, then both `install` lines → listed as
+  `clear-partner@clear-claude` 0.2.0 and `clear-ui@clear-claude` 0.2.0, enabled, user scope;
+  the first session forces the style.
+- **A `directory` marketplace** (a local clone, as used when testing a checkout): the same
+  notice and the same settings rewrite, and no gap — the files are read in place, so there
+  is nothing to fetch.
+- **The old commands after the rename:** `claude plugin update clear-claude` →
+  `Plugin "clear-claude" not found`. `claude plugin uninstall clear-claude@clear-claude`,
+  once the rename was applied → `not found in installed plugins`. `claude plugin install
+  clear-claude@clear-claude` in a fresh config → `not found in marketplace "clear-claude"`.
+- **A real install:** the maintainer's own machine went from `clear-claude@clear-claude`
+  0.1.1 to `clear-partner@clear-claude` 0.2.0 by the two commands at the top; the old key
+  was gone from `settings.json` and the next session forced the style with no cache miss.
+  `clear-ui@clear-claude` and its status line were untouched.
 
-**The old commands after the rename.** `claude plugin update clear-claude` →
-`Plugin "clear-claude" not found`. `claude plugin uninstall clear-claude@clear-claude`, after
-the rename was applied → `not found in installed plugins`. `claude plugin install
-clear-claude@clear-claude` in a fresh config → `not found in marketplace "clear-claude"`.
+An earlier version of this page said the plugin came back "a session or two later". Those
+two runs each had a `claude plugin` command between their sessions; with nothing in between,
+it did not come back.
 
-**A disabled install.** Installed under the published name, disabled, marketplace moved,
-one session: still listed as `clear-claude@clear-claude`, disabled, and `enabledPlugins`
-still `{"clear-claude@clear-claude": false}`.
-
-Not measured: macOS and Linux, Claude Code older than 2.1.278, managed settings, and the
-project and local scopes (user scope only).
+**Not measured, and not planned:** Claude Code older than 2.1.278; an interactive session
+left open after a marketplace-only update (whether `/plugin` inside it completes the
+install the way the CLI does). Neither changes the advice: run the `install` line.

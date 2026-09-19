@@ -123,13 +123,22 @@ Two different conflicts, both worth checking.
 
 **7a — another plugin forces a style.** For every other enabled plugin from check 1, use Glob on `<its installPath>/output-styles/*.md` and read only the frontmatter of anything found. Any file with `force-for-plugin: true` → **WARN**: only one forced style can win, the winner is whichever is found first, and that order is not something you can predict from here. Name the plugin and the style. Remediation: disable one of the two plugins.
 
-**7b — a same-named style shadows the plugin's copy.** Glob `<config home>/output-styles/*.md` and `.claude/output-styles/*.md` in the project, and read the `name:` line of each. If any of them has `name: Clear Partner` (matching check 4's name), that is a **FAIL**, and it is the single most likely reason for "installed but not behaving".
+**7b — a style file carrying the plugin's qualified name replaces the plugin's copy.** Claude Code keeps every style in one table. A plugin's style is keyed by its **qualified name**, `<plugin name>:<style name>` — the plugin name from check 1 and the style name from check 4, so `clear-partner:Clear Partner` (`clear-claude:Clear Partner` for an install under the former id). Every other style is keyed by its bare frontmatter `name`, and those are applied *after* plugin styles: user, then project, then policy.
 
-Styles are collected into one table keyed by their frontmatter `name`, and user- and project-level files are applied *after* plugin styles. A user-level file named `Clear Partner` therefore replaces the plugin's entry — including its `force-for-plugin` flag — so the forced activation disappears and Claude Code falls back to the `outputStyle` setting. Nothing reports an error; the plugin still lists as installed and enabled.
+So exactly one thing displaces the plugin's style: a file outside the plugin whose `name:` is the qualified name, character for character. It replaces the plugin's entry, and the replacement has no `force-for-plugin` flag (the flag is ignored outside plugins), so the forced activation disappears and Claude Code falls back to the `outputStyle` setting. Nothing reports an error; the plugin still lists as installed and enabled.
 
-This happens most often to people who used Clear Partner as a hand-installed user style before switching to the plugin. Remediation: rename or delete the shadowing file (tell the user the exact path; do not touch it yourself), then restart the session.
+Glob these three levels and read only the `name:` line of each file:
 
-Any other style file that does **not** collide by name is not a conflict. Do not list it.
+| Level | Where |
+| --- | --- |
+| user | `<config home>/output-styles/**/*.md` |
+| project | `.claude/output-styles/**/*.md` in the project |
+| policy | `C:\Program Files\ClaudeCode\.claude\output-styles\**\*.md` (Windows), `/Library/Application Support/ClaudeCode/.claude/output-styles/**/*.md` (macOS), `/etc/claude-code/.claude/output-styles/**/*.md` (Linux) |
+
+- A file whose `name:` is the qualified name → **FAIL**. Remediation: rename or delete that file (tell the user the exact path; do not touch it yourself), then restart the session. At policy level only an administrator can.
+- A file whose `name:` is the bare style name, `Clear Partner` → **not a conflict**, and the check still passes: it has a different key, and the plugin's style stays forced. Name its path in the Detail column, because people who used Clear Partner as a hand-installed style before the plugin existed often have one and wonder about it: it is a separate style, the one an `outputStyle: Clear Partner` setting selects while the plugin is disabled.
+- A level that does not exist is normal. A policy directory that exists but cannot be read → **UNKNOWN** for that level only; say so.
+- Any other style file is not a conflict. Do not list it.
 
 ## Check 8 — installed version vs marketplace version
 

@@ -13,6 +13,8 @@
 //              `renames` chain ends at a listed plugin or null; no recorded rename is lost.
 //   prompt     the Clear Partner style's SHA-256 and size are recorded in two documents, and
 //              source/clear-partner.md carries the same body. Nothing else validates the style.
+//              Both diagnostic skills name the style's qualified key, <plugin>:<style name>,
+//              which is what they search for and which changes if the plugin is renamed.
 //   vocabulary the former plugin id may appear only where history is recorded, plus one
 //              pointer to the migration page in README.md and llms.txt.
 //   links      relative inline and reference-style links in Markdown, and their #anchors,
@@ -51,6 +53,7 @@ const LEGACY_ALLOWED = [
   /^docs\/clear-ui-dogfood\.md$/,
   /^demo\/runs\//,
   /^scripts\/check-repo\.mjs$/,
+  /^scripts\/measure-plugin-loading\.sh$/, // the former id is what it installs and measures
 ]
 // These may name the former id exactly once, to send its owners to the migration page, and
 // may use none of the other legacy forms.
@@ -143,6 +146,15 @@ function checkPrompt() {
   if (!frontmatter) return fail('prompt', `${STYLE} has no frontmatter block`)
   const keys = frontmatter[1].split('\n').filter((line) => /^\S/.test(line)).map((line) => line.split(':')[0])
   if (keys.join() !== STYLE_KEYS.join()) fail('prompt', `${STYLE} frontmatter keys are [${keys.join(', ')}]; expected [${STYLE_KEYS.join(', ')}]`)
+
+  // The skills look for a file that takes the plugin's place in Claude Code's style table. Its
+  // key is built from the plugin's name, so a rename silently points them at the wrong string.
+  const styleName = /^name:\s*(.+)$/m.exec(frontmatter[1])?.[1].trim()
+  const qualified = `${readJson('plugins/clear-partner/.claude-plugin/plugin.json').name}:${styleName}`
+  for (const skill of ['clear-doctor', 'clear-audit']) {
+    const path = `plugins/clear-partner/skills/${skill}/SKILL.md`
+    if (!read(path).includes(`\`${qualified}\``)) fail('prompt', `${path} does not name the style's qualified key \`${qualified}\``)
+  }
 
   // Only inside the frontmatter, and exactly once: the body must match line for line.
   const flagLines = frontmatter[1].split('\n').filter((line) => line === 'force-for-plugin: true')

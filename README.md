@@ -150,8 +150,8 @@ default when you ask for it — concision governs the telling, not the doing.
 ### #3: Nobody can tell if their setup actually works
 
 **The problem.** Claude Code doesn't validate output styles at all. A typo in a
-frontmatter field fails silently; a same-named user style shadows the plugin's copy
-without a word. `claude plugin validate --strict` passes green on a plugin that
+frontmatter field fails silently; a style file that takes the plugin's qualified name
+replaces its copy without a word. `claude plugin validate --strict` passes green on a plugin that
 installs, enables, and does nothing.
 
 **The fix** is two read-only diagnostic skills that answer with facts, not impressions:

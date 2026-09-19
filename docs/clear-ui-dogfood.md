@@ -78,6 +78,12 @@ shadows the plugin's copy exactly as the Windows section below describes, so the
 in sessions here is that file and not the shipped one; the installed plugin's copy is intact
 (5294 bytes, the recorded SHA-256). It was left in place: it is the user's file.
 
+> **Note, 2026-09-20.** That inference was wrong, and so is the matching sentence in the
+> Windows section below. A style file named with the bare name `Clear Partner` does not
+> shadow the plugin: the plugin's style is keyed `<plugin>:Clear Partner`, so it stayed the
+> forced, active style in these sessions. Measured in
+> [research/style-shadowing.md](research/style-shadowing.md). The report is left as written.
+
 **Not done — these need a person at the screen:** the look of the bar in Terminal.app, iTerm2
 or Ghostty and a screenshot of each; the resize to two rows and back; the untracked-file dot
 appearing within about 7 s; single-width glyphs; and the third row with a running background

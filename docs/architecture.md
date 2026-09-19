@@ -186,16 +186,22 @@ else is in the file*.
 
 ### The failure mode worth naming
 
-The highest-value check in either skill is the one for a **user-level output style
-named `Clear Partner`**. Styles are collected into a single table keyed by their
-frontmatter `name`, and plugin styles are applied *before* user- and project-level ones,
-so a same-named file at user level replaces the plugin's entry along with its
-`force-for-plugin` flag. The plugin then lists as installed and enabled while doing
-nothing, and nothing anywhere reports an error.
+The check that no other tool can make is the one for a **style file carrying the plugin's
+qualified name**. Styles are collected into a single table; a plugin's style is keyed
+`<plugin>:<style name>` (`clear-partner:Clear Partner`), every other style by its bare
+frontmatter `name`, and plugin styles are applied *before* user-, project- and policy-level
+ones. A file outside the plugin with that exact qualified name replaces the plugin's entry
+along with its `force-for-plugin` flag. The plugin then lists as installed and enabled
+while doing nothing, and nothing anywhere reports an error.
 
-This is not hypothetical: it is exactly what happens to someone who ran Clear Partner as
-a hand-installed user style before switching to the plugin — which is the migration path
-this project's own author took.
+**A correction, recorded because this document said otherwise until marketplace 0.4.1.** The
+check used to look for the *bare* name, `Clear Partner`, on the reasoning that a
+hand-installed style from before the plugin would shadow it — the migration path this
+project's own author took. That was never measured, and it is wrong: the two have different
+keys, so such a file replaces nothing and the plugin's style stays forced. The skills
+reported a FAIL that was not one. Measured on three Claude Code versions in
+[research/style-shadowing.md](research/style-shadowing.md); the same page records where the
+policy-level directory is, which the skills now also read.
 
 ## Decision: the skills are declared in the manifest
 
