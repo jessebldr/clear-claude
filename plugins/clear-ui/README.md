@@ -143,6 +143,11 @@ Reasoning: [docs/research/ux-distillation.md](../../docs/research/ux-distillatio
 node bin/configure.mjs usage on          # and `usage off`
 ```
 
+![A real terminal: one command switches the usage provider on, then Claude Code starts and the bottom row ends with a fourth chip, "Fable 68%", after the weekly one](../../assets/clear-ui-scoped-usage.gif)
+
+*A recording of a real session with the recording account's own numbers; how it was made:
+[demo/README.md](../../demo/README.md).*
+
 **Off by default, and by default nothing changes:** the status line draws only from what Claude
 Code pipes to it, and reaches no network.
 
