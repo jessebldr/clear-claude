@@ -1,6 +1,6 @@
 # UX distillation — how other agent UIs present work
 
-**Date:** 2026-09-19. Gate for Phase D and Phase G in [roadmap-v2.md](roadmap-v2.md).
+**Date:** 2026-09-19. Gate for Phase D and Phase G in [roadmap-v2.md](../roadmap-v2.md).
 Mechanisms and platform facts: [mods-research-2.1.277.md](mods-research-2.1.277.md).
 Source was read from shallow clones; **nothing was installed, executed or screenshotted**.
 This page is about presentation only. Features were ignored.

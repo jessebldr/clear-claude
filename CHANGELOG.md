@@ -21,6 +21,15 @@ No change to either plugin.
 - The README's word-count claim is re-measured and no longer rests on one run: four runs per
   arm of three questions average 524 → 372 words (−29 %), replacing 612 → 408 (−33 %) from a
   single run each. Raw outputs are in `demo/runs/2026-09-19/`.
+- Research logs moved to `docs/research/` (`phase0-research`, `mods-research-2.1.277`,
+  `ui-research`, `ux-distillation`, `marketplace-test`), so `docs/` reads as user and
+  maintainer documentation. Every link was rewritten and checked.
+
+### Removed
+
+- `docs/design/`: two reference mock-ups (3.4 MB) the status bar was first drawn from. They
+  showed borders and a corner radius a terminal cannot draw; the rules that still bind are the
+  design-spec table in `docs/ui-architecture.md`, and the real look is the recording.
 
 ## [0.2.0] - 2026-09-19
 
@@ -46,8 +55,8 @@ Not yet published. Marketplace 0.2.0: `clear-ui` debuts at 0.1.0. `clear-claude`
     commands.
   - Context turns amber at 70 % and red at 85 %; quotas at 80 % and 95 %.
 - CI: `clear-ui` tests and a timing bench on Windows, macOS and Linux.
-- Research and design records: `docs/mods-research-2.1.277.md`, `docs/ui-research.md`,
-  `docs/ux-distillation.md`, `docs/roadmap-v2.md`, ADR 0004, and disposable function-hook
+- Research and design records: `docs/research/mods-research-2.1.277.md`, `docs/research/ui-research.md`,
+  `docs/research/ux-distillation.md`, `docs/roadmap-v2.md`, ADR 0004, and disposable function-hook
   spikes under `experimental/spikes/`.
 
 ### Changed
@@ -102,12 +111,12 @@ Initial release.
   that shadows the plugin's copy.
 - `experimental/mods/README.md` — research note on "Mods" / function hooks. No code, no
   dependency from the stable plugin, and a re-check procedure for future versions.
-- `docs/phase0-research.md`, the verified platform reference for Claude Code 2.1.274,
+- `docs/research/phase0-research.md`, the verified platform reference for Claude Code 2.1.274,
   with an evidence tier on every claim.
 
 ### Changed
 
-- `docs/phase0-research.md` §7 amended. The original claim that Mods/function hooks were
+- `docs/research/phase0-research.md` §7 amended. The original claim that Mods/function hooks were
   unsupported on 2.1.274 was too strong: the name "Mods" is absent, but a function-hooks
   mechanism is present — env-gated, off by default, absent from all help text, and
   recognised by `claude plugin validate`. Evidence and re-check steps are in

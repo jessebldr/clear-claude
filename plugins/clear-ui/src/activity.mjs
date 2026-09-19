@@ -2,7 +2,7 @@
 //
 // What is running, as counts. Names, descriptions and commands stay where Claude Code already
 // shows them -- the agent panel and the spinner -- so the row never says the same thing twice and
-// never prints text a model wrote. See docs/ux-distillation.md, "Implications for Phase D".
+// never prints text a model wrote. See docs/research/ux-distillation.md, "Implications for Phase D".
 
 // The agent feed was measured writing every 5 s while the panel has rows. It is not known to be
 // called once more when the last row goes, so a record this old means the panel is gone.

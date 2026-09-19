@@ -1,7 +1,7 @@
 # Roadmap v2 — Clear UI and Clear Mods
 
 Design: [ui-architecture.md](ui-architecture.md). Evidence:
-[mods-research-2.1.277.md](mods-research-2.1.277.md), [ui-research.md](ui-research.md).
+[mods-research-2.1.277.md](research/mods-research-2.1.277.md), [ui-research.md](research/ui-research.md).
 
 ## Scope
 
@@ -86,7 +86,7 @@ mod would observe. Mods are reserved for what only they can do: the transcript r
 
 ### UX distillation — gate before Phase D and Phase G  ✔ done
 
-A short, time-boxed study. Delivered as [ux-distillation.md](ux-distillation.md), from the
+A short, time-boxed study. Delivered as [ux-distillation.md](research/ux-distillation.md), from the
 source of Codex CLI, Oh My Pi, OpenCode and T3 Code; `anything-to-html` could not be found.
 
 - **Look at:** Oh My Pi, anything-to-html, the Codex app, T3Code / OpenCode, and whatever
@@ -96,7 +96,7 @@ source of Codex CLI, Oh My Pi, OpenCode and T3 Code; `anything-to-html` could no
   chose to hide.
 - **Do not look for:** features. Layouts that need a GUI, a canvas, a side window or a
   custom harness are noted and dropped.
-- **Deliver:** one page, `docs/ux-distillation.md` — each pattern worth keeping, mapped to
+- **Deliver:** one page, `docs/research/ux-distillation.md` — each pattern worth keeping, mapped to
   the terminal mechanism that can carry it (statusline line, `subagentStatusLine` row,
   `ui.render` component, `$.ui.status`), or marked "not expressible in a terminal".
 - **Gate:** Phase D's activity line and Phase G's transcript renderer are designed only
@@ -173,7 +173,7 @@ only the first has been designed.
 - **Create:** `experimental/mods/activity-renderer/` — collapses finished, non-expanded
   `ToolGroup` rows to one line; returns `next(e)` whenever `isExpanded`. Tests via
   `claude plugin test`. Collapse rules:
-  [ux-distillation.md](ux-distillation.md), "Implications for Phase G".
+  [ux-distillation.md](research/ux-distillation.md), "Implications for Phase G".
 - **Evidence so far:** Spike C — replacing a finished, non-expanded `ToolGroup` drew, and
   ctrl+o still showed the engine's full row.
 - **Risks:** API churn between releases; hiding something that mattered — error rows are
@@ -208,7 +208,7 @@ answer says; nothing yet shapes how it is laid out on screen.
   5. Whether the unmodified response stays reachable (ctrl+o, transcript view, copy).
 - **Deliver:** a spike under `experimental/spikes/function-hooks/`, recording prop *keys*
   and shapes only, never message content; findings written into
-  [mods-research-2.1.277.md](mods-research-2.1.277.md) or its successor; then a go / no-go.
+  [mods-research-2.1.277.md](research/mods-research-2.1.277.md) or its successor; then a go / no-go.
 - **No-go is an acceptable result.** If the props are an opaque string and the only lever
   is re-implementing Markdown rendering, G2 stops there and is recorded under
   "Not planned" with the evidence.

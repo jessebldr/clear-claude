@@ -15,7 +15,7 @@ prompt. This document records the decisions behind the `clear-claude` plugin and
 repository they share, and what each one costs. Where a decision below says "the
 plugin", it means `clear-claude`.
 
-Every platform claim here traces back to [phase0-research.md](phase0-research.md),
+Every platform claim here traces back to [phase0-research.md](research/phase0-research.md),
 which was verified against Claude Code **2.1.274** and tags each fact with how it was
 obtained. Where this document depends on a researched fact, it names the section.
 

@@ -78,7 +78,7 @@ release are uncommitted (observed on 2.1.278).
 
 Version enforcement is our own job either way. Claude Code performs no semver
 validation — the literal string `"notsemver"` passes `--strict` and would be baked
-straight into a tag name (see [phase0-research.md](phase0-research.md), open question 5).
+straight into a tag name (see [phase0-research.md](research/phase0-research.md), open question 5).
 
 ## Publishing
 

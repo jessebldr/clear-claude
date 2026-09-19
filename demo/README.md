@@ -18,6 +18,11 @@ list of keys that were pressed.
 | `assets/demo-port-3000.gif` | `port-*.tape` | Same, second question. |
 | `assets/demo-disk-space.gif` | `disk-*.tape` | Same, third question. |
 
+Three stills sit beside them for places an animation does not play — a social card, a
+marketplace listing, an email: `assets/clear-ui.png`, `assets/clear-ui-narrow.png` and
+`assets/demo-disk-space.png`. Each is the last frame of the recording of the same name, not a
+separate drawing.
+
 The Clear UI recordings use the recording machine's real account, so the plan name and the
 usage percentages in them are real values from the day of recording, 2026-09-19.
 

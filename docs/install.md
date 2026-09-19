@@ -11,7 +11,7 @@ lifecycle: see [clear-ui-install.md](clear-ui-install.md). Neither needs the oth
 
 Every command here is quoted from `claude plugin --help` on Claude Code **2.1.274** and
 is recorded with its evidence tier in
-[phase0-research.md §3](phase0-research.md#3-exact-command-syntax-help).
+[phase0-research.md §3](research/phase0-research.md#3-exact-command-syntax-help).
 
 ## Before you start
 

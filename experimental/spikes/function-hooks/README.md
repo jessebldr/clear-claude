@@ -5,7 +5,7 @@ stable `clear-claude` plugin does not know this directory exists.**
 
 Four tiny plugins, each answering one question about Claude Code's early-access
 function-hooks ("Mods") runtime. Run against Claude Code **2.1.277**, native Windows 11,
-2026-09-19. Full findings: [docs/mods-research-2.1.277.md](../../../docs/mods-research-2.1.277.md).
+2026-09-19. Full findings: [docs/research/mods-research-2.1.277.md](../../../docs/research/mods-research-2.1.277.md).
 
 ## Rules these spikes follow
 

@@ -11,7 +11,7 @@ registered by a plugin at all — Claude Code honours only `agent` and `subagent
 in a plugin's `settings.json` — so Clear UI must edit the user's `settings.json`.
 Function hooks are undocumented, off by default behind
 `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS`, and can intercept tool calls and rewrite what is
-drawn (verified on 2.1.277, see `docs/mods-research-2.1.277.md`).
+drawn (verified on 2.1.277, see `docs/research/mods-research-2.1.277.md`).
 
 ## Decision
 

@@ -55,8 +55,9 @@ network, no settings edit, no output.
 node bin/configure.mjs look <pills|text>
 ```
 
-`pills` is the default, drawn to the design spec in
-[docs/design/statusline-spec.png](../../docs/design/statusline-spec.png):
+`pills` is the default. Its rules are the design-spec table in
+[docs/ui-architecture.md](../../docs/ui-architecture.md#the-design-spec), and a recording of it in
+a real session is [assets/clear-ui-demo.gif](../../assets/clear-ui-demo.gif):
 
 ```text
 Fable 5.1  high  │  clear-claude on main  ●             ctx 43%   5h 39% · 42m   7d 58% · 13h42m
@@ -132,7 +133,7 @@ model wrote. Agents come from a `subagentStatusLine` command used purely as a da
 prints nothing, so the panel keeps Claude Code's own rows); the elapsed value is the
 longest-running agent, in whole minutes. Background commands come from the `Stop` hook and are
 a snapshot of the last time Claude stopped, because nothing fires when a shell ends.
-Reasoning: [docs/ux-distillation.md](../../docs/ux-distillation.md).
+Reasoning: [docs/research/ux-distillation.md](../../docs/research/ux-distillation.md).
 
 ## Try it without installing
 

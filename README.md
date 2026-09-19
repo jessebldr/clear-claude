@@ -206,13 +206,13 @@ Clear Partner (`clear-claude`):
 - [docs/adr/](docs/adr/) — architecture decision records
 - [docs/evals.md](docs/evals.md) — the behavioural eval suite, what it proves and
   what it does not
-- [docs/marketplace-test.md](docs/marketplace-test.md) — recorded isolated install
+- [docs/research/marketplace-test.md](docs/research/marketplace-test.md) — recorded isolated install
   test: every command, its output, proof the style activates
 - [docs/releasing.md](docs/releasing.md) — how to cut a release; a prompt edit is a
   version bump
 - [docs/clear-partner-port.md](docs/clear-partner-port.md) — exactly how the shipped
   style differs from the original (one line)
-- [docs/phase0-research.md](docs/phase0-research.md) — verified platform behaviour
+- [docs/research/phase0-research.md](docs/research/phase0-research.md) — verified platform behaviour
   for Claude Code 2.1.274
 
 Clear UI (`clear-ui`):
@@ -225,9 +225,9 @@ Clear UI (`clear-ui`):
   measurement behind it
 - [docs/roadmap-v2.md](docs/roadmap-v2.md) — phases, what was built differently from
   plan, what is still unverified
-- [docs/ui-research.md](docs/ui-research.md),
-  [docs/ux-distillation.md](docs/ux-distillation.md),
-  [docs/mods-research-2.1.277.md](docs/mods-research-2.1.277.md) — the evidence
+- [docs/research/ui-research.md](docs/research/ui-research.md),
+  [docs/research/ux-distillation.md](docs/research/ux-distillation.md),
+  [docs/research/mods-research-2.1.277.md](docs/research/mods-research-2.1.277.md) — the evidence
 
 Both:
 

@@ -3,7 +3,7 @@
 **Date:** 2026-09-19. Source code of each project was read from a shallow clone; nothing
 was installed or executed. Project-health numbers come from `gh` on that date.
 Performance figures quoted from a project's own issues or docs are marked *(their
-measurement)*; ours are in [ui-architecture.md](ui-architecture.md#performance-budget).
+measurement)*; ours are in [ui-architecture.md](../ui-architecture.md#performance-budget).
 
 We are not choosing a dependency. The question is which ideas survived real usage.
 
