@@ -6,13 +6,13 @@ the platform surface stabilises. Everything labelled *hypothetical* below is a s
 not a plan and not a promise.
 
 > **Superseded for 2.1.277 (2026-09-19).** Function hooks were re-researched and executed
-> in isolated spikes: see [docs/mods-research-2.1.277.md](../../docs/mods-research-2.1.277.md)
+> in isolated spikes: see [docs/research/mods-research-2.1.277.md](../../docs/research/mods-research-2.1.277.md)
 > and [../spikes/function-hooks](../spikes/function-hooks/README.md). Several "not
 > established" items below are now established — it runs, the product name is "Claude
 > Mods", and a `session.compact` event exists. The standing rules below still apply.
 
 **Verified against:** Claude Code **2.1.274**, Linux, 2026-09-17.
-Evidence tiers follow [phase0-research.md](../../docs/phase0-research.md):
+Evidence tiers follow [phase0-research.md](../../docs/research/phase0-research.md):
 `[HELP]` = quoted from `--help`, `[VALIDATOR]` = observed from `claude plugin validate`,
 `[BINARY]` = read from strings embedded in the shipped binary. `[BINARY]` is the weakest
 tier — strings show that code exists, not that a feature is supported, documented, or

@@ -1,0 +1,27 @@
+`df -h` is the main one — human-readable sizes per mounted filesystem:
+
+```
+df -h
+```
+
+Typical output:
+
+```
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1       457G  312G  122G  72% /
+tmpfs           7.8G  1.2M  7.8G   1% /dev/shm
+```
+
+Useful variants:
+
+- `df -h /path` — just the filesystem holding that path
+- `df -hT` — adds a filesystem type column (handy for filtering out tmpfs/overlay noise)
+- `df -i` — inode usage, for the "no space left" error where `df -h` still shows free space
+
+To find *what's* using the space:
+
+- `du -sh *` — size of each item in the current directory
+- `du -h --max-depth=1 /var | sort -h` — one level down, sorted smallest to largest
+- `ncdu /` — interactive browser, if installed; much nicer for hunting down big directories
+
+`du` on large trees is slow and will spam permission errors as a non-root user — `sudo du -sh /* 2>/dev/null` is the usual quick pass.

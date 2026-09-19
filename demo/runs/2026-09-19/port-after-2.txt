@@ -1,0 +1,15 @@
+```bash
+sudo lsof -i :3000
+```
+
+That gives you PID, command name, and user. To kill it: `sudo kill $(sudo lsof -t -i:3000)`.
+
+**Other options if `lsof` isn't installed:**
+
+```bash
+sudo ss -ltnp 'sport = :3000'     # modern default on most distros
+sudo fuser -v 3000/tcp            # terse, from psmisc
+sudo netstat -tulpn | grep :3000  # older systems
+```
+
+Use `sudo` — without it you'll only see processes you own, and the `PID/Program name` column comes back empty for anything else.

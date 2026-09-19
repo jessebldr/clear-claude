@@ -1,0 +1,22 @@
+`df -h` — shows disk usage per filesystem in human-readable units.
+
+```
+df -h
+```
+
+Typical output:
+
+```
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1       234G  128G   95G  58% /
+tmpfs           7.8G  1.2M  7.8G   1% /run
+```
+
+**Related commands you'll probably want next:**
+
+| Command | What it tells you |
+|---|---|
+| `du -sh /path` | Total size of one directory |
+| `du -h --max-depth=1 /var \| sort -h` | Which subdirectory is eating space |
+| `ncdu /` | Interactive browser to hunt down large files (needs install) |
+| `df -i` | Inode usage — the answer when `df -h` shows free space but writes still fail "No space left on device" |

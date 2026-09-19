@@ -39,7 +39,13 @@ Scopes, updates, session-only loading, and the full command reference live in
 
 ### Optional: Clear UI
 
-![Before/after: a Claude Code session without and with the clear-ui status bar](assets/clear-ui-before-after.png)
+![A real Claude Code session with the Clear UI status bar at the bottom: the context chip fills in after the first answer, and an orange dot beside the branch follows the working tree](assets/clear-ui-demo.gif)
+
+*A recording of a real session, not a mock-up: the bar is the bottom row. Watch the context
+chip fill in, and the orange dot beside `main` appear when Claude creates a file and go when
+it is deleted. In a narrow terminal the same bar
+[becomes two rows](assets/clear-ui-narrow.gif). How it was recorded:
+[demo/README.md](demo/README.md).*
 
 ```text
 claude plugin install clear-ui@clear-claude
@@ -68,10 +74,17 @@ before the answer shows up — if it shows up. Long responses aren't the problem
 answer first, plain English, concise by default. The least text that fully
 communicates the answer — never the shortest possible answer.
 
-![Before/after: three everyday dev questions, default Claude vs clear-claude](assets/demo-all.png)
+![Two real Claude Code sessions answering "How do I check disk space on Linux?" side by side: stock on the left, with the clear-claude plugin on the right](assets/demo-disk-space.gif)
 
-*Same prompt, same model, same day. Real outputs, unedited — 612 → 408 words
-across three everyday dev questions. It stops when the question is answered.*
+*Two real sessions, recorded, not mocked: same question, same model, minutes apart. The
+only difference is `--plugin-dir plugins/clear-claude`. It stops when the question is
+answered. Also recorded: [chmod 755](assets/demo-chmod.gif) and
+[port 3000](assets/demo-port-3000.gif).*
+
+One recording is an anecdote, so the number comes from repeated runs instead: four runs
+per arm of three everyday questions averaged **524 → 372 words (−29 %)**, shorter in
+every per-question mean. The raw outputs, the exact flags, and the take where the plugin's
+answer came out *longer* are all in [demo/README.md](demo/README.md).
 
 ### #2: "Concise" quietly became "shallow"
 
@@ -193,13 +206,13 @@ Clear Partner (`clear-claude`):
 - [docs/adr/](docs/adr/) — architecture decision records
 - [docs/evals.md](docs/evals.md) — the behavioural eval suite, what it proves and
   what it does not
-- [docs/marketplace-test.md](docs/marketplace-test.md) — recorded isolated install
+- [docs/research/marketplace-test.md](docs/research/marketplace-test.md) — recorded isolated install
   test: every command, its output, proof the style activates
 - [docs/releasing.md](docs/releasing.md) — how to cut a release; a prompt edit is a
   version bump
 - [docs/clear-partner-port.md](docs/clear-partner-port.md) — exactly how the shipped
   style differs from the original (one line)
-- [docs/phase0-research.md](docs/phase0-research.md) — verified platform behaviour
+- [docs/research/phase0-research.md](docs/research/phase0-research.md) — verified platform behaviour
   for Claude Code 2.1.274
 
 Clear UI (`clear-ui`):
@@ -212,9 +225,14 @@ Clear UI (`clear-ui`):
   measurement behind it
 - [docs/roadmap-v2.md](docs/roadmap-v2.md) — phases, what was built differently from
   plan, what is still unverified
-- [docs/ui-research.md](docs/ui-research.md),
-  [docs/ux-distillation.md](docs/ux-distillation.md),
-  [docs/mods-research-2.1.277.md](docs/mods-research-2.1.277.md) — the evidence
+- [docs/research/ui-research.md](docs/research/ui-research.md),
+  [docs/research/ux-distillation.md](docs/research/ux-distillation.md),
+  [docs/research/mods-research-2.1.277.md](docs/research/mods-research-2.1.277.md) — the evidence
+
+Both:
+
+- [demo/README.md](demo/README.md) — how every animated image here was recorded from
+  real sessions, what is controlled, the repeated-run numbers and the raw outputs
 
 ## License
 

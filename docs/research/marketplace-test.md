@@ -4,7 +4,7 @@
 
 This is the verification that Clear Claude actually installs from a marketplace and that
 the Clear Partner style actually loads. It matters because
-[architecture.md](architecture.md) establishes that `claude plugin validate` **does not
+[architecture.md](../architecture.md) establishes that `claude plugin validate` **does not
 check output styles at all** — a passing validation is compatible with a plugin that
 installs, enables, and silently does nothing. Only a real install and a real session
 close that gap.
@@ -98,7 +98,7 @@ Per-component (rounded)
 Two things to read carefully here:
 
 - **Both skills are listed, each exactly once.** This is the check
-  [architecture.md](architecture.md) called for when it chose to declare `skills` in the
+  [architecture.md](../architecture.md) called for when it chose to declare `skills` in the
   manifest *and* let the directory scan find them: double-registration does not happen,
   and the pair costs ~286 always-on tokens.
 - **The output style does not appear.** This is expected, not a failure — output styles
@@ -243,7 +243,7 @@ Tag:     clear-claude--v0.1.0
 ```
 
 The two manifests agree on `0.1.0`. No tag was created. See
-[releasing.md](releasing.md).
+[releasing.md](../releasing.md).
 
 ---
 

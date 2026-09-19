@@ -1,0 +1,19 @@
+```bash
+sudo lsof -i :3000
+```
+
+That gives you the PID, command name, and user. To kill it directly:
+
+```bash
+sudo kill -9 $(sudo lsof -t -i:3000)
+```
+
+**Alternatives if `lsof` isn't installed:**
+
+```bash
+sudo ss -lptn 'sport = :3000'     # modern, in iproute2 — usually preinstalled
+sudo netstat -tulpn | grep :3000  # older systems, needs net-tools
+sudo fuser -n tcp 3000            # prints just the PID; add -k to kill it
+```
+
+Use `sudo` — without it you only see processes owned by you, so a port held by another user's process (or root) shows up as nothing and looks like a false "port is free."

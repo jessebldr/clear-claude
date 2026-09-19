@@ -1,0 +1,34 @@
+A few options, in rough order of preference:
+
+**`ss`** (modern, preinstalled on most distros):
+```bash
+ss -ltnp 'sport = :3000'
+# or the quick version
+sudo ss -ltnp | grep :3000
+```
+`-l` listening, `-t` TCP, `-n` numeric ports, `-p` show process. Use `sudo` or you won't see PIDs for processes you don't own.
+
+**`lsof`**:
+```bash
+sudo lsof -i :3000
+# just the PID
+sudo lsof -t -i:3000
+```
+
+**`fuser`**:
+```bash
+sudo fuser 3000/tcp
+```
+
+**`netstat`** (deprecated, but still around):
+```bash
+sudo netstat -ltnp | grep :3000
+```
+
+To kill whatever you find:
+```bash
+kill $(sudo lsof -t -i:3000)      # or: sudo fuser -k 3000/tcp
+```
+Send `kill -9` only if a plain `kill` doesn't work — the default gives the process a chance to shut down cleanly.
+
+Note that `lsof -i :3000` matches both listeners and established connections on that port; add `-sTCP:LISTEN` if you only want the server itself.

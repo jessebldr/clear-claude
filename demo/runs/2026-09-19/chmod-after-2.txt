@@ -1,0 +1,13 @@
+`chmod 755 <file>` sets Unix file permissions to **rwxr-xr-x**:
+
+| Who | Digit | Permissions |
+|---|---|---|
+| Owner | 7 | read + write + execute |
+| Group | 5 | read + execute |
+| Others | 5 | read + execute |
+
+Each digit is the sum of **4 (read) + 2 (write) + 1 (execute)**. So 7 = 4+2+1, 5 = 4+0+1.
+
+In practice: the owner can modify and run the file; everyone else can read and run it but not change it. This is the standard mode for executables, scripts, and directories you want others to browse (on a directory, "execute" means permission to enter it and access files inside).
+
+Note this is a Unix/Linux/macOS concept — on Windows it has no effect outside WSL or a POSIX-emulating shell, though Git tracks a simplified version of the bit (`100755` vs `100644`) in the index.

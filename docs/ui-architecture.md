@@ -1,8 +1,8 @@
 # Clear UI — architecture and v0.1 design
 
 **Status: Phases A–D and F are implemented in `plugins/clear-ui` and installed by its setup script; the activity row is opt-in. Mods are not started.** Platform facts come from
-[mods-research-2.1.277.md](mods-research-2.1.277.md); ecosystem lessons from
-[ui-research.md](ui-research.md).
+[mods-research-2.1.277.md](research/mods-research-2.1.277.md); ecosystem lessons from
+[ui-research.md](research/ui-research.md).
 
 ## The problem
 
@@ -229,12 +229,15 @@ Fable 5.1  high  │  clear-claude on main  ●             ctx 43%   5h 39% · 
 
 ### The design spec
 
-The look is now drawn to a design spec supplied by the user, kept in the repository:
-[design/statusline-spec.png](design/statusline-spec.png) (palette, identity hierarchy, metric
-chips, do / don't, responsive behaviour) and
-[design/statusline-in-terminal.png](design/statusline-in-terminal.png) (the same in a VS Code
-terminal). Where the two disagree the spec sheet wins: the terminal mock fills a warning chip
-with solid amber, and the sheet lists exactly that under "don't".
+The look was drawn to a design spec: a sheet covering palette, identity hierarchy, metric
+chips, do / don't and responsive behaviour, and a mock-up of the same in a VS Code terminal.
+Both were reference drawings, not recordings — they showed borders and a small corner radius a
+terminal cannot draw — so they are no longer kept in the tree (they remain in git history
+under `docs/design/`). What the bar really looks like is the recording in
+[assets/clear-ui-demo.gif](../assets/clear-ui-demo.gif). The table below is the part of the
+spec that still binds: each rule, and what implements it. Where the two drawings disagreed
+the sheet won: the mock-up filled a warning chip with solid amber, and the sheet listed
+exactly that under "don't".
 
 | Spec | Implementation |
 | --- | --- |
@@ -321,7 +324,7 @@ An 18 px mock is what once made U+25AC look right.
 2 agents  │  1 bg                              narrow: elapsed goes first, then the long word
 ```
 
-Counts only, as [ux-distillation.md](ux-distillation.md) concludes from Codex CLI and Oh My Pi,
+Counts only, as [ux-distillation.md](research/ux-distillation.md) concludes from Codex CLI and Oh My Pi,
 which both had richer rows and removed them: the agent panel already lists names, and a name
 here would solve the same problem in two layers with text a model wrote. The one elapsed value
 is the longest-running agent in whole minutes, hidden under one; it answers "is something

@@ -25,7 +25,7 @@ added to the YAML frontmatter.
 
 `force-for-plugin: true` is what makes the style apply automatically while the plugin
 is enabled. It is a verified output-style frontmatter field in Claude Code 2.1.274
-(see [phase0-research.md](phase0-research.md) §6), and it is the **only**
+(see [phase0-research.md](research/phase0-research.md) §6), and it is the **only**
 auto-activation mechanism that exists for plugin output styles — there is no
 alternative field, and no way to achieve the behaviour from the manifest.
 

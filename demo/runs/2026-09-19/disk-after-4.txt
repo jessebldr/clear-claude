@@ -1,0 +1,17 @@
+`df -h` — human-readable free space per mounted filesystem.
+
+```bash
+df -h
+```
+
+Other useful ones:
+
+| Command | What it shows |
+|---|---|
+| `df -h /home` | Space for the filesystem holding a specific path |
+| `df -i` | Inode usage (disk "full" with free bytes = out of inodes) |
+| `du -sh *` | Size of each item in the current directory |
+| `du -h --max-depth=1 / \| sort -h` | Find which top-level dirs are eating space |
+| `ncdu /` | Interactive browser — best for hunting down big files (needs install) |
+
+Quick note on reading `df -h`: ignore `tmpfs` and `udev` lines, they're RAM-backed, not disk.

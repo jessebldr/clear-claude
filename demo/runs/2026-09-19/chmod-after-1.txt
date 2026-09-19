@@ -1,0 +1,13 @@
+`chmod 755` sets a file's permissions to **rwxr-xr-x**:
+
+| Who | Digit | Permissions |
+|---|---|---|
+| Owner | 7 | read + write + execute |
+| Group | 5 | read + execute |
+| Others | 5 | read + execute |
+
+Each digit is a sum of **4 (read) + 2 (write) + 1 (execute)**. So 7 = 4+2+1, 5 = 4+0+1.
+
+In practice: the owner can do anything with the file; everyone else can run it and read it, but not modify it. It's the standard mode for **executable scripts and binaries**, and for **directories** you want others to be able to enter and list (on a directory, "execute" means "can cd into / traverse it").
+
+For non-executable files like config or source, `644` (rw-r--r--) is the usual choice — same thing without the execute bit.

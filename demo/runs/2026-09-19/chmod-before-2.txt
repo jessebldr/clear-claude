@@ -1,0 +1,17 @@
+`chmod 755` sets a file's Unix permission bits to `rwxr-xr-x`:
+
+| Digit | Who | Value | Permissions |
+|---|---|---|---|
+| 7 | owner | 4+2+1 | read, write, execute |
+| 5 | group | 4+0+1 | read, execute (no write) |
+| 5 | others | 4+0+1 | read, execute (no write) |
+
+The digits are octal sums of read=4, write=2, execute=1.
+
+**What it means in practice:**
+- **On a file:** the owner can edit and run it; everyone else can read and run it but not modify it. This is the standard mode for executables and scripts.
+- **On a directory:** execute means "can traverse into it." So the owner can create/delete entries; everyone else can `cd` in and list contents but not add or remove files.
+
+Common companions: `644` (`rw-r--r--`) for non-executable files like configs and documents, and `700` (`rwx------`) for private files such as `~/.ssh`.
+
+Note that this is a POSIX concept — on Windows (your current platform), `chmod` has no effect on the native ACL-based permission system, though it applies normally inside WSL or on remote Linux hosts.

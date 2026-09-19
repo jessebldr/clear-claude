@@ -1,0 +1,21 @@
+`df` is the main one:
+
+```bash
+df -h          # human-readable sizes for all mounted filesystems
+df -h /home    # just the filesystem containing /home
+df -hT         # also show filesystem type (ext4, xfs, tmpfs...)
+df -i          # inodes instead of blocks — for "no space left" with free bytes
+```
+
+For finding *what's* using the space:
+
+```bash
+du -sh *              # size of each entry in the current dir
+du -h --max-depth=1 / | sort -h   # drill down level by level
+ncdu /                # interactive browser, if installed
+```
+
+Handy notes:
+- `df` excludes files deleted but still held open by a process — if `df` and `du` disagree, check `lsof +L1`.
+- Root-reserved blocks (5% by default on ext4) mean `df` can show "full" for normal users while root still has room.
+- `lsblk` shows whole-disk/partition sizes regardless of mounting.

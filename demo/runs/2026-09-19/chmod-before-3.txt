@@ -1,0 +1,20 @@
+`chmod 755` sets a file's permission bits to `rwxr-xr-x`:
+
+| Who | Digit | Bits | Meaning |
+|---|---|---|---|
+| Owner | 7 | `rwx` | read, write, execute |
+| Group | 5 | `r-x` | read, execute (no write) |
+| Others | 5 | `r-x` | read, execute (no write) |
+
+Each digit is the sum of read (4), write (2), and execute (1). So 7 = 4+2+1, 5 = 4+0+1.
+
+**Typical uses:**
+- Executable scripts and binaries that everyone should be able to run, but only the owner can modify — e.g. `chmod 755 deploy.sh`
+- Directories, where the execute bit means "can enter/traverse this directory" rather than "run it". `755` on a directory lets anyone list and enter it, but only the owner can create or delete entries inside.
+
+**Related modes you'll see often:**
+- `644` (`rw-r--r--`) — normal data files; readable by all, not executable
+- `700` (`rwx------`) — private to the owner
+- `600` (`rw-------`) — private data, e.g. SSH keys and config files
+
+One note for your environment: you're on Windows, so `chmod` won't have a real effect on files in `C:\Users\Jesse\demo\clear-claude` outside of WSL. Git does track a limited version of this though — it records only the executable bit, and you can set it cross-platform with `git update-index --chmod=+x path/to/script.sh`.
