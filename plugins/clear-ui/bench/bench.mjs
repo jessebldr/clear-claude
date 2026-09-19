@@ -5,6 +5,10 @@
 //   node bench/bench.mjs            prints a table, exits 1 only past the hard ceiling
 //   node bench/bench.mjs --strict   also exits 1 when a platform budget is missed
 //
+// The budgets are for a developer's machine. On a shared CI runner (`CI` set) they are printed
+// but not judged: the same runner swings by half between runs (docs/roadmap-v2.md, Phase E), so
+// "over budget" in that log says nothing about the code. `--strict` judges them anywhere.
+//
 // Lives outside test/ on purpose: `node --test` runs every file under a test directory, and a
 // timing measurement is not a test -- on a shared CI runner it would fail for reasons that have
 // nothing to do with the code. The hard ceiling is the one number worth failing a build for:
@@ -17,7 +21,8 @@ import { fileURLToPath } from 'node:url'
 
 const SAMPLES = 15
 const HARD_CEILING_MS = 250
-// docs/ui-architecture.md, "Performance budget". macOS and Linux share a column there.
+// docs/ui-architecture.md, "Performance budget". macOS and Linux share a column there; the
+// macOS half was measured on Apple Silicon on 2026-09-20 (#2).
 const BUDGET_MS = process.platform === 'win32' ? { cached: 90, miss: 130 } : { cached: 40, miss: 60 }
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -73,14 +78,16 @@ const rows = [
 for (const dir of made) rmSync(dir, { recursive: true, force: true })
 
 const strict = process.argv.includes('--strict')
+const sharedRunner = Boolean(process.env.CI) && !strict
 let failed = false
 console.log(`clear-ui bench · ${process.platform} · node ${process.versions.node} · ${SAMPLES} fresh processes each\n`)
 for (const [name, { median, p95 }, budget] of rows) {
   const overBudget = median > budget
   const overCeiling = median > HARD_CEILING_MS
   if (overCeiling || (strict && overBudget)) failed = true
-  const verdict = overCeiling ? 'OVER CEILING' : overBudget ? 'over budget' : 'ok'
+  const verdict = overCeiling ? 'OVER CEILING' : sharedRunner ? 'not judged' : overBudget ? 'over budget' : 'ok'
   console.log(`  ${name.padEnd(16)} median ${median.toFixed(0).padStart(4)} ms   p95 ${p95.toFixed(0).padStart(4)} ms   budget ${budget} ms   ${verdict}`)
 }
 console.log(`\n  hard ceiling ${HARD_CEILING_MS} ms (median)`)
+if (sharedRunner) console.log('  shared runner: the budgets are a developer-machine target, shown for reference only')
 process.exitCode = failed ? 1 : 0

@@ -25,7 +25,7 @@ Each plugin carries its own version; the marketplace version tracks the newest c
 | 0.2.0 | `clear-ui` 0.1.0 appears as a second, optional marketplace plugin (Phases A–C). Because Phases D and F were built on the same branch, it also carries the activity line and `verification-state` on **documented** classic hooks — both opt-in, off by default. |
 | 0.2.1 | `clear-ui` 0.1.1. First green cross-platform CI run (Phase E) and the two fixes it led to; the opt-in features exercised end to end against real hook payloads on Windows; real recordings replace drawn images. |
 | 0.2.2 | `clear-claude` 0.1.1: explicit response-shape constraints outrank the style's defaults, and a short set of commands is a list, not a table — each change made only after an eval case failed. Demo set cut to 15–17 s and re-recorded. |
-| 0.2.x | macOS dogfooding on real hardware, which also settles the macOS timing budget; two weeks of daily use. |
+| 0.2.x | macOS dogfooding on real hardware, which also settles the macOS timing budget — measured on Apple Silicon on 2026-09-20, the 40 / 60 ms budget stands (#2); the on-screen checks and two weeks of daily use are still to do. |
 | 0.3.0 | `clear-ui` 0.2.0: the opt-in usage provider — the weekly limit scoped to one model, from Claude Code's own headless `/usage`, behind a cache; off by default, and the default bar unchanged. (The slot was once `verification-state`, Phase F, which shipped inside 0.2.0.) |
 | 0.4.0-exp | First function-hooks mod, outside the marketplace, `--plugin-dir` only (Phase G1). G2 is a research spike and carries no version. |
 | 1.0 | Only after function hooks are documented, on by default, and the layer boundaries have survived real use. |
@@ -130,7 +130,8 @@ source of Codex CLI, Oh My Pi, OpenCode and T3 Code; `anything-to-html` could no
   running it drew `1 agent  │  1 background`. See [clear-ui-dogfood.md](clear-ui-dogfood.md).
 - **Not verified:** a `failed` status has never been observed (the row reads it, and costs
   nothing if it never arrives); ids shared between the two feeds are handled by type, not by
-  id; macOS, until the checklist in the dogfood page has been run there.
+  id; on macOS the hooks and state files are verified (2026-09-20) but the third row has not
+  been seen on screen there.
 
 ### Phase E — cross-platform dogfood
 
@@ -149,11 +150,16 @@ source of Codex CLI, Oh My Pi, OpenCode and T3 Code; `anything-to-html` could no
 - **Bench on shared runners:** first run Linux 40 / 53 ms (budget 40 / 60), Windows 73 / 123
   (90 / 130), macOS 101 / 164 (40 / 60, **over**); a later run read Linux 58 / 64, Windows
   106 / 154, macOS 82 / 88 — every platform over. The same runner swings by 50 % between runs,
-  so these numbers cannot gate or set a budget. The macOS budget was a guess and a shared
-  runner is not a Mac; it is settled by the Mac checklist in
-  [clear-ui-dogfood.md](clear-ui-dogfood.md), not by CI (#2).
-- **Not done, and cannot be done from one machine:** a measurement on a real Mac, and the two
-  weeks of daily use.
+  so these numbers cannot gate or set a budget, and a looser budget for runners would be a
+  second guess: on CI `bench.mjs` now prints the budget rows as `not judged` and only the
+  250 ms ceiling can fail a build.
+- **The macOS budget, settled on a real Mac (2026-09-20, #2):** an M4 Mac mini reads 38 / 46 ms
+  median over three runs against 40 / 60, so the guess was right and stays — with about 2 ms
+  of room on the cached row. Numbers and limits in
+  [ui-architecture.md](ui-architecture.md), "Performance budget"; the run itself in
+  [clear-ui-dogfood.md](clear-ui-dogfood.md).
+- **Not done:** an Intel Mac; the on-screen half of the Mac checklist; the two weeks of daily
+  use.
 - **Done when:** byte-identical goldens and budgets met on all three; two weeks of daily
   use on Windows and macOS with no settings damage.
 

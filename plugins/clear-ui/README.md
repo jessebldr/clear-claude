@@ -242,7 +242,7 @@ groups fit side by side and as two when they do not.
 | `bin/usage-refresh.mjs` | The usage provider's detached worker. Prints nothing, always exits 0; `--report` says whether the run was believed. |
 | `bin/observe.mjs` | The hook behind verification state and the background count. Records, never renders, prints nothing. |
 | `bin/agents.mjs` | The `subagentStatusLine` data feed. Prints nothing; stores type, status and start time only. |
-| `bench/bench.mjs` | Fresh-process timing against the budgets; fails only past 250 ms. |
+| `bench/bench.mjs` | Fresh-process timing against the budgets (printed but not judged when `CI` is set); fails only past 250 ms. |
 | `bench/git-latency.mjs` | How long `git status` takes here, run the way the status line runs it, against the 150 ms budget. |
 | `bench/optical.mjs` | Pixel measurements of the real output with real fonts: baseline of every mark, air around rules and inside pills. Windows only. |
 

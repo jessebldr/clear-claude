@@ -3,7 +3,7 @@
 Clear UI's two opt-in features — verification state and the activity row — were built and
 tested against fixtures shaped from the documentation, because the session that built them
 could not load its own plugin's hooks. This page records the first end-to-end run with real
-hook payloads, on Windows, and gives the same run as a checklist for a Mac.
+hook payloads, on Windows, a second on macOS, and gives the same run as a checklist for a Mac.
 
 ## Windows 11 — 2026-09-19 — pass, with two things worth knowing
 
@@ -41,6 +41,48 @@ a time and a duration. No command text, no output, no agent names.
 
 **Still never observed:** an agent `status` of `failed`. The row reads it and costs nothing if
 it never arrives.
+
+## macOS 26 on Apple Silicon — 2026-09-20 — pass, with the visual checks still open
+
+Mac mini (Mac16,10, Apple M4, 16 GB), macOS 26.6.2, Claude Code 2.1.278, Node 26.7.0 arm64,
+Homebrew git 2.55.0, zsh. Installed the way a user does — the three marketplace commands at
+the end of this page — which gave `clear-ui` 0.2.0 and `clear-claude` 0.1.1 at user scope, then
+`setup.mjs apply --activity` run from the installed copy. The sessions were non-interactive
+(`claude -p`, one session resumed twice), so no bar was drawn on screen: each row below is the
+state file a real hook wrote, then the installed status line rendered for that session's id.
+
+| What | Real event | State file written | Rendered |
+| --- | --- | --- | --- |
+| A listed command passes | `PostToolUse`, tool `Bash` | `verify`: `failed: false`, `durationMs: 969` | `verified 00:00` |
+| A file is edited afterwards | `PostToolUse`, tool `Edit` | `edit`: `{ at }` | `edited since`, and the dirty dot beside the branch |
+| A listed command fails (exit 1) | `PostToolUseFailure`, tool `Bash` | `verify`: `failed: true`, `durationMs: 954` | `verify failed 00:01` |
+| Claude stops with nothing in the background | `Stop` | `background`: `running: 0` | no third row |
+
+- `node --test`: 234 tests, 233 pass, 1 skipped (the Git Bash path-conversion stand-in, which
+  only exists on Windows), 4.2 s.
+- `setup.mjs plan` found no `statusLine`; `apply --activity` backed the settings file up and
+  added `statusLine` and `subagentStatusLine`. A key-by-key comparison with a copy taken before
+  shows no other change from setup (the plugin install added its own marketplace and
+  `enabledPlugins` entries).
+- `clear-ui-doctor` from the installed plugin: PASS on every line it can check — `Dry render`
+  43 ms, `Git speed` 6 ms against the 150 ms budget.
+- No state file holds the command, a file name or any output: a 16-character hash, pass or
+  fail, a time and a duration.
+- **Timing (#2):** `bench/bench.mjs` three times read 38 / 46, 38 / 45 and 38 / 46 ms median
+  against the 40 / 60 ms budget. The budget stands; the numbers, the git latencies and their
+  limits are in [ui-architecture.md](ui-architecture.md), "Performance budget".
+
+**One thing that did not match:** this machine already had a `clear-partner.md` of the same
+name in `~/.claude/output-styles/` (5774 bytes, a different body, no `force-for-plugin`). It
+shadows the plugin's copy exactly as the Windows section below describes, so the style active
+in sessions here is that file and not the shipped one; the installed plugin's copy is intact
+(5294 bytes, the recorded SHA-256). It was left in place: it is the user's file.
+
+**Not done — these need a person at the screen:** the look of the bar in Terminal.app, iTerm2
+or Ghostty and a screenshot of each; the resize to two rows and back; the untracked-file dot
+appearing within about 7 s; single-width glyphs; and the third row with a running background
+command and sub-agents, which is only fed in an interactive session. An Intel Mac has not been
+tried at all.
 
 ## Checklist for a Mac
 
