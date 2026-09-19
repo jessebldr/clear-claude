@@ -102,7 +102,22 @@ and says so if it is over budget. The way out is an environment variable for tha
 
 The cost is a slower refresh once per 5-second cache period, and only when git is that slow.
 
+## Update
+
+```text
+claude plugin marketplace update clear-claude
+claude plugin update clear-ui@clear-claude
+```
+
+Catalog first, or `update` does not see the new version. Then restart Claude Code. There is
+no second setup: the first session after an update runs the plugin's `SessionStart` hook,
+which re-copies the renderer to the path `settings.json` already points at
+([seen on a real install](clear-ui-dogfood.md#installed-the-way-a-user-does--windows-11-2026-09-19-v021--pass)).
+`clear ui doctor` reports the version of the copy in its `Runtime files` line.
+
 ## Uninstall
+
+Two steps, in this order — the first needs the plugin still installed:
 
 ```text
 remove clear ui

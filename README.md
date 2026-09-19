@@ -1,4 +1,4 @@
-![clear-claude](assets/hero.png)
+![Clear Claude](assets/hero.png)
 
 # Clear Claude
 
@@ -18,7 +18,7 @@ Claude fixes both, as two small plugins that never touch each other:
 
 ## Install
 
-The full Clear Claude, identical on Windows, macOS and Linux:
+The full Clear Claude, identical on Windows, macOS and Linux (Claude Code 2.1.274 or later):
 
 ```text
 claude plugin marketplace add jessebldr/clear-claude
@@ -45,19 +45,26 @@ Inside a session the same commands work as `/plugin marketplace add …` and
   elsewhere. While it is enabled its style is the active one; disable it to pick another.
 - **Clear UI: one key in `settings.json`**, and only when you ask. Setup prints its plan
   before it writes, backs the file up, edits the `statusLine` key and no other byte, and
-  asks before replacing a status line you already have. By default the bar reaches no
-  network and reads no credential. [Every path it writes](docs/clear-ui-install.md#what-gets-written-and-where).
+  asks before replacing a status line you already have. Its own files (a copy of the
+  renderer, backups, a small cache) stay in Claude Code's plugin data folder. By default the
+  bar reaches no network and reads no credential.
+  [Every path it writes](docs/clear-ui-install.md#what-gets-written-and-where).
 
 ### Check, update, remove
 
-- Check: say `clear doctor` (Clear Partner) or `clear ui doctor` (Clear UI). Both are
+- **Check:** say `clear doctor` (Clear Partner) or `clear ui doctor` (Clear UI). Both are
   read-only.
-- Update: `claude plugin marketplace update clear-claude`, then
-  `claude plugin update clear-partner@clear-claude` and
-  `claude plugin update clear-ui@clear-claude`, then restart Claude Code.
-- Remove Clear UI: say `remove clear ui` **first** — it puts your previous status line
+- **Update:** the catalog first, then whichever plugins you have, then restart Claude Code:
+
+  ```text
+  claude plugin marketplace update clear-claude
+  claude plugin update clear-partner@clear-claude
+  claude plugin update clear-ui@clear-claude
+  ```
+
+- **Remove Clear UI:** say `remove clear ui` **first** — it puts your previous status line
   back — then `claude plugin uninstall clear-ui@clear-claude`.
-- Remove Clear Partner: `claude plugin uninstall clear-partner@clear-claude`. It leaves
+- **Remove Clear Partner:** `claude plugin uninstall clear-partner@clear-claude`. It leaves
   nothing behind.
 
 **Installed `clear-claude@clear-claude` before?** That plugin is now called
