@@ -166,6 +166,7 @@ test('a cache file is distrusted like any other input', () => {
 const FAKE = `
 import { readFileSync, writeFileSync } from 'node:fs'
 writeFileSync(process.env.FAKE_ARGV_FILE, JSON.stringify(process.argv.slice(2)))
+writeFileSync(process.env.FAKE_ARGV_FILE + '.pid', String(process.pid))
 process.stdout.write(readFileSync(process.env.FAKE_STDOUT_FILE, 'utf8'))
 if (process.env.FAKE_HANG) setInterval(() => {}, 1000)
 else process.exitCode = Number(process.env.FAKE_EXIT ?? 0)
@@ -173,7 +174,9 @@ else process.exitCode = Number(process.env.FAKE_EXIT ?? 0)
 
 function sandbox(t) {
   const dir = mkdtempSync(join(tmpdir(), 'clear-ui-usage-'))
-  t.after(() => rmSync(dir, { recursive: true, force: true, maxRetries: 5 }))
+  // Patient, as test/git.test.mjs is: a process that has just ended can keep its working
+  // directory busy for a moment on Windows, and the detached worker a tick starts is such a one.
+  t.after(() => rmSync(dir, { recursive: true, force: true, maxRetries: 30, retryDelay: 100 }))
   const fake = join(dir, 'fake-claude.mjs')
   writeFileSync(fake, FAKE)
   const cacheDir = join(dir, 'data', 'cache')
@@ -210,6 +213,12 @@ test('a failed run never overwrites the last good cache', async t => {
   for (const [stdout, extraEnv, options, reason] of failures) {
     assert.deepEqual(await box.refresh(stdout, extraEnv, options), { ok: false, reason })
     assert.equal(readFileSync(join(box.cacheDir, 'usage.json'), 'utf8'), good, reason)
+    if (reason === 'timeout') {
+      // A refresh that has returned has left no process behind: the run it stopped is gone, not
+      // merely signalled. (Signal 0 asks whether the process exists without touching it.)
+      const pid = Number(readFileSync(`${box.env.FAKE_ARGV_FILE}.pid`, 'utf8'))
+      assert.throws(() => process.kill(pid, 0), { code: 'ESRCH' }, `the stopped run (pid ${pid}) is still alive`)
+    }
   }
   assert.deepEqual(await refreshUsage({ cacheDir: box.cacheDir, env: { PATH: '' } }), { ok: false, reason: 'no-claude' })
   assert.deepEqual(await refreshUsage({ cacheDir: 'relative/cache' }), { ok: false, reason: 'no-cache-dir' })

@@ -134,21 +134,30 @@ export function startRefresh(worker, cacheDir, env = process.env) {
 }
 
 // The timer is ours, as it is for git: whichever of "finished" and "too slow" comes first decides,
-// once, and nothing that arrives afterwards is looked at.
+// once, and nothing that arrives afterwards changes the verdict.
+//
+// Unlike git, a stopped run is reported only once the process is gone. Nobody is waiting on this
+// worker, so the wait costs nothing, and a refresh that has returned has then left nothing
+// behind: a killed process keeps its working directory -- the cache directory -- busy for a
+// moment on Windows, which is how the first CI run of this on a loaded runner failed (EBUSY,
+// removing the directory). The grace period bounds the wait for a process that will not die.
+const KILL_GRACE_MS = 2000
 const run = (command, args, { cwd, env, timeoutMs }) =>
   new Promise(resolve => {
-    let settled = false
+    let verdict = null
     let stdout = ''
-    const settle = result => {
-      if (settled) return
-      settled = true
+    let grace
+    const finish = () => {
       clearTimeout(timer)
-      resolve(result)
+      clearTimeout(grace)
+      resolve(verdict)
     }
     const stop = reason => {
-      settle({ reason })
+      if (verdict) return
+      verdict = { reason }
       child.stdout?.destroy()
       child.kill()
+      grace = setTimeout(finish, KILL_GRACE_MS)
     }
     // stdin is closed and stderr goes nowhere: the run cannot ask anyone anything, and nothing it
     // says outside the JSON stream is read.
@@ -159,8 +168,14 @@ const run = (command, args, { cwd, env, timeoutMs }) =>
       stdout += chunk
       if (stdout.length > MAX_OUTPUT_BYTES) stop('output-too-large')
     })
-    child.on('error', () => settle({ reason: 'spawn' }))
-    child.on('close', code => settle({ code, stdout }))
+    child.on('error', () => {
+      verdict ??= { reason: 'spawn' }
+      finish()
+    })
+    child.on('close', code => {
+      verdict ??= { code, stdout }
+      finish()
+    })
   })
 
 /**
