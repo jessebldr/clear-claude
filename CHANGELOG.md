@@ -10,7 +10,7 @@ and gets its own entry here and its own version bump.
 
 ## [0.2.1] - 2026-09-19
 
-Not yet published. Marketplace 0.2.1: `clear-ui` 0.1.1. `clear-claude` stays at 0.1.0, with no
+Published as tag `v0.2.1`. Marketplace 0.2.1: `clear-ui` 0.1.1. `clear-claude` stays at 0.1.0, with no
 change to Clear Partner. No new features: two fixes found by the first cross-platform CI run,
 the first end-to-end use of the opt-in features with real hook payloads, and real recordings
 in place of drawn images.
