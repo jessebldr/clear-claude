@@ -71,6 +71,22 @@ test('indented fences and headings are left where they are', () => {
   assert.deepEqual(kinds('> ## quoted heading\n> ```\n> quoted code\n> ```'), ['prose'])
 })
 
+test('an indented fence is still a fence: a "## line" in column 0 inside it is code', () => {
+  // Found in review. CommonMark lets a fence sit behind up to three spaces, a list marker or a quote mark.
+  for (const text of [
+    '  ```md\n## code, not a title\n  ```\n\n## Visible\ntext',
+    '- ```js\n## code, not a title\n  ```\n\n## Visible\ntext',
+    '1. step\n\n   ~~~\n## code, not a title\n   ~~~\n\n## Visible\ntext',
+    '> ```\n## code, not a title\n> ```\n\n## Visible\ntext',
+  ]) {
+    const found = blocks(text)
+    assert.deepEqual(found.filter((b) => b.kind === 'heading').map((b) => b.title), ['Visible'], text)
+    assert.equal(found.map((b) => b.raw).join('\n'), text)
+  }
+  // Never closed: the rest of the reply is prose, the "title" included.
+  assert.deepEqual(kinds('  ```\n## still code\n\n## and this'), ['prose'])
+})
+
 test('what is not an ATX heading stays prose', () => {
   for (const line of ['#hashtag', '#', '## ', '####### seven', 'Setext\n======', '\\## escaped']) {
     assert.deepEqual(kinds(line), ['prose'], line)

@@ -120,10 +120,15 @@ stock                                          Clear Transcript
   a reply is exactly as tall as stock's.
 - Everything between two titles goes to the engine's `Markdown` leaf verbatim: code, fences,
   tables, lists, quotes, links, sub-headings, setext headings, HTML.
-- Anything uncertain is the engine's, whole: no section title (most replies), a title holding
-  inline markdown, a fence that never closes, an indented heading or fence (it may belong to a list
-  or a quote), a run over the leaf's 10,000 characters that cannot be cut at a blank line in column
-  0, a reply over 60,000 characters.
+- Anything uncertain is the engine's. The whole reply, when it has no section title (most
+  replies); when it holds raw HTML outside a fence (a `## line` inside a comment is hidden by stock
+  and must not be drawn as a title — found in review), a link-reference or footnote definition
+  (cut into leaves, a link and its definition could land in different renders), or a control
+  character (the surface would refuse the tree); when a run is over the leaf's 10,000 characters
+  and cannot be cut at a blank line in column 0 outside a fence; when it is over 60,000
+  characters. One title, when it holds inline markdown or is longer than a row of words. And a
+  fence or heading that is indented is never lifted out — it may belong to a list or a quote —
+  though an indented fence still hides the `#` lines inside it from the cutter.
 - A test holds the invariant for ten recorded replies: **no character lost, added or moved.**
 
 ## Decisions, and the variants behind them

@@ -88,6 +88,16 @@ test('markdown too long for one leaf is cut at blank lines in column 0, never in
   assert.equal(drawn(parts), visible(`## Long\n\n${body}`))
 })
 
+test('an indented fence is not cut either, though a blank line and a column-0 line sit inside it', () => {
+  const paragraph = `${'word '.repeat(400).trim()}.`
+  const code = ['  ```text', ...Array.from({ length: 40 }, (_, i) => `line ${i}`), '', 'column zero, after a blank line, inside the fence', '  ```'].join('\n')
+  const body = [paragraph, paragraph, paragraph, code, paragraph, paragraph, paragraph].join('\n\n')
+  assert.ok(body.length > LEAF_LIMIT)
+  const parts = plan(`## Long\n\n${body}`)
+  for (const part of parts.slice(1)) assert.equal((part.text.match(/^ {0,3}```/gm) ?? []).length % 2, 0, 'a fence was cut in two')
+  assert.equal(drawn(parts), visible(`## Long\n\n${body}`))
+})
+
 test('what cannot be cut safely goes to the engine whole', () => {
   const hugeCode = `\`\`\`text\n${'x'.repeat(LEAF_LIMIT + 1)}\n\`\`\``
   assert.equal(plan(`## Title\n\n${hugeCode}`), null)
@@ -103,6 +113,41 @@ test('a reply over the tree bound goes to the engine whole', () => {
 
 test('a reply with carriage returns is left to the engine, not half-understood', () => {
   assert.equal(plan('Lead.\r\n\r\n## Why\r\n\r\nBecause.\r\n'), null)
+})
+
+test('a control character would have the surface refuse the tree, so the reply is the engine\'s from the start', () => {
+  for (const hostile of ['\x1b[31mred\x1b[0m', 'bell\x07', 'nul\x00', 'c1 \x9b31m', 'vertical\x0btab']) {
+    assert.equal(plan(`## Title\n\n${hostile}\n`), null, JSON.stringify(hostile))
+  }
+  // Tab and newline are the two a leaf may hold.
+  assert.notEqual(plan('## Title\n\n\tindented with a tab\n'), null)
+})
+
+test('a link reference or a footnote defined in the reply keeps the reply in one render', () => {
+  // Cut at "## Sources", the use and the definition would be drawn by two renders and the link lost.
+  assert.equal(plan('See [the docs][d].\n\n## Sources\n\n[d]: https://example.com/docs\n'), null)
+  assert.equal(plan('A claim.[^1]\n\n## Notes\n\n[^1]: The footnote.\n'), null)
+  // Brackets that define nothing are ordinary text.
+  assert.notEqual(plan('## Title\n\nAn array `[a]: b` in prose, and [a link](https://example.com).\n'), null)
+})
+
+test('raw HTML outside a fence gives the whole reply back: what is inside a block is not markdown', () => {
+  // Found in review: stock hides this "## hidden"; cut out as a title it would have been drawn.
+  assert.equal(plan('<!--\n## hidden\n-->\n\n## Visible\n\ntext'), null)
+  assert.equal(plan('## Visible\n\n<details>\n<summary>More</summary>\n\n## Inside\n\n</details>'), null)
+  assert.equal(plan('## Title\n\n  <div align="center">\n\ntext'), null)
+  // HTML shown as code is code, and a tag in the middle of a line opens no block.
+  assert.notEqual(plan('## Title\n\n```html\n<!--\n## in a sample\n-->\n```\n\ntext'), null)
+  assert.notEqual(plan('## Title\n\nPress <kbd>ctrl</kbd>+<kbd>o</kbd>, or compare a < b.'), null)
+})
+
+test('a "title" longer than a row of words is left in the markdown', () => {
+  const long = 'word '.repeat(40).trim()
+  assert.equal(plan(`## ${long}\n\nbody`), null)
+  assert.deepEqual(plan(`## Short\n\n## ${long}\n\nbody`), [
+    { kind: 'heading', depth: 2, title: 'Short' },
+    { kind: 'markdown', text: `## ${long}\n\nbody` },
+  ])
 })
 
 test('anything that is not a string is left alone', () => {

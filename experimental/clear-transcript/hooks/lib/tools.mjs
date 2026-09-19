@@ -26,9 +26,13 @@ const GUTTERS = 4
 const SEPARATOR = ' · '
 const MIN_COLUMNS = 40
 
+// A row shows a few dozen cells of any string, so only its head is ever read: a command or an error text
+// can be megabytes long, and this runs on every raise of a group.
+const HEAD = 4096
+
 export function clean(value) {
   if (typeof value !== 'string') return ''
-  return value.replace(ESCAPES, '').replace(CONTROLS, '').replace(/\s+/g, ' ').trim()
+  return value.slice(0, HEAD).replace(ESCAPES, '').replace(CONTROLS, '').replace(/\s+/g, ' ').trim()
 }
 
 export function cells(text) {
@@ -52,7 +56,7 @@ export function clip(text, max) {
 
 function firstLine(value) {
   if (typeof value !== 'string') return ''
-  const line = value.split('\n').find((l) => l.trim() !== '') ?? ''
+  const line = value.slice(0, HEAD).split('\n').find((l) => l.trim() !== '') ?? ''
   return clean(line)
 }
 

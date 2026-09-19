@@ -108,6 +108,20 @@ test('text a model or a tool wrote is cleaned before it is drawn', () => {
   for (const value of [plan.failures[0].target, plan.failures[0].reason]) assert.doesNotMatch(value, /[\x00-\x1f\x7f-\x9f\u202e]/)
 })
 
+test('only the head of a huge command or error text is ever read', () => {
+  const huge = `node run.js ${'x'.repeat(5_000_000)}`
+  const started = performance.now()
+  const plan = groupPlan(group([bash(huge), bash('make', { isErrored: true, output: `Exit code 2\n${'y'.repeat(5_000_000)}` })]), 120)
+  assert.ok(performance.now() - started < 500, 'a row must not cost more than the blink of an eye')
+  assert.match(plan.summary, /^Ran node run\.js x+…$/)
+  assert.equal(plan.failures[0].reason, 'Exit code 2')
+})
+
+test('inputs of the wrong shape are named as calls, never thrown on', () => {
+  const odd = group([call('Read', 7), call('Bash', ['ls']), call('Grep', { pattern: 42 }), call(undefined, {}), call('Bash', { command: { toString: 1 } })])
+  assert.equal(groupPlan(odd, 120).summary, 'Read 1 call · ran 1 call · searched 1 call · called 1 call · ran 1 call')
+})
+
 test('long targets and reasons are clipped to a width, by cells', () => {
   assert.equal(clip('abcdef', 6), 'abcdef')
   assert.equal(clip('abcdefg', 6), 'abcde…')

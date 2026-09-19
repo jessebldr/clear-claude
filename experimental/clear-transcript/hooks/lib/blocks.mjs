@@ -7,13 +7,17 @@
 //     blocks(text).map((b) => b.raw).join('\n') === text          (held by a test, for every fixture)
 //
 // Anything it is not sure about stays prose, because prose is drawn exactly as stock Claude Code draws it:
-// a fence that never closes, a setext heading, raw HTML, and any fence or heading that is indented. An
-// indented one may belong to a list item or a quote, and lifting it out would move it; one that starts in
-// column 0 cannot belong to either.
+// a fence that never closes, a setext heading, and any fence or heading that is indented. An indented one
+// may belong to a list item or a quote, and lifting it out would move it; one that starts in column 0 cannot
+// belong to either. It knows nothing of raw HTML, whose blocks hide what is inside them: answer.mjs gives
+// such a reply back to the engine whole.
 
 // A fence opens with three or more of one fence character. A backtick fence's info string holds no backtick.
 const FENCE_OPEN = /^(`{3,}|~{3,})(.*)$/
 const FENCE_CLOSE = /^ {0,3}(`{3,}|~{3,})[ \t]*$/
+// The same fence behind indentation or quote marks: "  ```", "   - ```js", "> ~~~".
+const INDENTED_FENCE = /^(?:[ \t>]+|[ \t>]*(?:[-*+]|\d+[.)])[ \t]+)[ \t>]*(`{3,}|~{3,})(.*)$/
+const INDENTED_CLOSE = /^[ \t>]*(`{3,}|~{3,})[ \t]*$/
 const ATX_HEADING = /^(#{1,6})[ \t]+(.*?)(?:[ \t]+#+)?[ \t]*$/
 
 function openFence(line) {
@@ -60,6 +64,23 @@ export function blocks(text) {
         language: open.language,
         source: lines.slice(i + 1, end).join('\n'),
       })
+      i = end
+      continue
+    }
+    // An indented fence (in a list item, in a quote, or just indented) is not lifted out, but it is still a
+    // fence: a "## line" in column 0 inside it is code. It and everything up to its close stay prose; with no
+    // close, so does the rest of the reply.
+    const indented = INDENTED_FENCE.exec(line)
+    if (indented !== null && !(indented[1][0] === '`' && indented[2].includes('`'))) {
+      let end = lines.length - 1
+      for (let j = i + 1; j < lines.length; j += 1) {
+        const close = INDENTED_CLOSE.exec(lines[j])
+        if (close !== null && close[1][0] === indented[1][0] && close[1].length >= indented[1].length) {
+          end = j
+          break
+        }
+      }
+      prose.push(...lines.slice(i, end + 1))
       i = end
       continue
     }

@@ -17,9 +17,25 @@ export const LEAF_LIMIT = 10000
 // A drawn tree may hold 100,000 characters of text at most; well under it, a reply is the engine's to draw.
 export const REPLY_LIMIT = 60000
 export const SECTION_DEPTH = 2
+// A title is one row of words. Anything longer is a paragraph someone put a # in front of.
+export const TITLE_LIMIT = 120
+
+// A leaf that holds a control character other than tab and newline is refused by the surface, and the whole
+// tree with it; a carriage return is one. Such a reply is the engine's from the start.
+const CONTROL = /[\x00-\x08\x0b-\x1f\x7f-\x9f]/
+// A link reference or a footnote is defined in one place and used in another. Cut into leaves, the use and
+// the definition can land in different renders, and the link would come out as its brackets.
+const REFERENCE_DEFINITION = /^ {0,3}\[[^\]\n]+\]:[ \t]*\S/m
+// A line that opens with a tag, a comment or a declaration may start a raw HTML block, and what is inside
+// one is not markdown: a "## line" in a comment is hidden by stock and must not be drawn as a title. Telling
+// where such a block ends takes an HTML-aware parser, so outside a fence any such line gives the reply back.
+const HTML_BLOCK = /^ {0,3}<[A-Za-z!?/]/m
 
 const BLANK_EDGES = /^(?:[ \t]*\n)+|(?:\n[ \t]*)+$/g
-const FENCE = /^ {0,3}(`{3,}|~{3,})/
+// A fence wherever it sits: in column 0, indented, behind a list marker or a quote mark. Used only to know
+// where NOT to cut, so reading too many lines as fences costs a place to cut and nothing else.
+const ANY_FENCE = /^(?:[ \t>]*(?:[-*+]|\d+[.)])[ \t]+)?[ \t>]*(`{3,}|~{3,})(.*)$/
+const ANY_FENCE_CLOSE = /^[ \t>]*(`{3,}|~{3,})[ \t]*$/
 
 // Cuts markdown that is too long for one leaf at blank lines, and only where the next line starts in column
 // 0 outside a fence: a place where no list item, quote or table can be continuing. Returns null when some
@@ -44,10 +60,12 @@ function leaves(text) {
       lastBreak = current.length
     }
     if (size + line.length + 1 > LEAF_LIMIT && lastBreak > 0) close(lastBreak)
-    const mark = FENCE.exec(line)
-    if (mark !== null) {
-      if (fence === null) fence = mark[1]
-      else if (mark[1][0] === fence[0] && mark[1].length >= fence.length && line.trim() === mark[1]) fence = null
+    if (fence === null) {
+      const open = ANY_FENCE.exec(line)
+      if (open !== null && !(open[1][0] === '`' && open[2].includes('`'))) fence = open[1]
+    } else {
+      const close = ANY_FENCE_CLOSE.exec(line)
+      if (close !== null && close[1][0] === fence[0] && close[1].length >= fence.length) fence = null
     }
     current.push(line)
     size += line.length + 1
@@ -59,6 +77,7 @@ function leaves(text) {
 
 export function plan(text) {
   if (typeof text !== 'string' || text.length > REPLY_LIMIT) return null
+  if (CONTROL.test(text) || REFERENCE_DEFINITION.test(text)) return null
   const parts = []
   let run = []
   let drawn = 0
@@ -72,12 +91,13 @@ export function plan(text) {
     return true
   }
   for (const block of blocks(text)) {
-    if (block.kind === 'heading' && block.depth <= SECTION_DEPTH && isPlainTitle(block.title)) {
+    if (block.kind === 'heading' && block.depth <= SECTION_DEPTH && block.title.length <= TITLE_LIMIT && isPlainTitle(block.title)) {
       if (!closeRun()) return null
       parts.push({ kind: 'heading', depth: block.depth, title: block.title })
       drawn += 1
       continue
     }
+    if (block.kind === 'prose' && HTML_BLOCK.test(block.raw)) return null
     run.push(block.raw)
   }
   if (!closeRun()) return null

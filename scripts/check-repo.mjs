@@ -19,6 +19,9 @@
 //              pointer to the migration page in README.md and llms.txt.
 //   links      relative inline and reference-style links in Markdown, and their #anchors,
 //              resolve.
+//   experiment Clear Transcript carries its reserved name and one version, and is NOT in the
+//              marketplace: it needs a gated, undocumented API, and a listed plugin that
+//              installs, enables and does nothing is the failure this project exists to avoid.
 
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
@@ -255,11 +258,22 @@ function checkLinks(files) {
   }
 }
 
+function checkExperiment() {
+  const manifest = readJson(`${EXPERIMENT}/.claude-plugin/plugin.json`)
+  if (manifest.name !== EXPERIMENT_NAME) fail('experiment', `${EXPERIMENT} has manifest name "${manifest.name}"; the reserved name is ${EXPERIMENT_NAME} (ADR 0005)`)
+  const pkg = readJson(`${EXPERIMENT}/package.json`)
+  if (pkg.version !== manifest.version) fail('experiment', `${EXPERIMENT}: package.json ${pkg.version} but plugin.json ${manifest.version}`)
+  const marketplace = readJson('.claude-plugin/marketplace.json')
+  const listed = marketplace.plugins.some((entry) => entry.name === EXPERIMENT_NAME || String(entry.source ?? '').includes(EXPERIMENT))
+  if (listed) fail('experiment', `${EXPERIMENT_NAME} is listed in marketplace.json while it lives under experimental/ and needs a gated API (docs/clear-transcript.md, promotion)`)
+}
+
 const files = trackedFiles()
 checkVersionsAndNames()
 checkPrompt()
 checkVocabulary(files)
 checkLinks(files)
+checkExperiment()
 
 if (findings.length > 0) {
   for (const finding of findings) console.error(finding)

@@ -12,7 +12,7 @@
 //
 // The decisions live in ./lib, as pure functions over plain data; this file only turns their plans into
 // elements. The elements come from the surface's table, `h` is the engine's global.
-import { plan } from './lib/answer.mjs'
+import { REPLY_LIMIT, plan } from './lib/answer.mjs'
 import { groupPlan } from './lib/tools.mjs'
 
 const COMMAND = 'clear-transcript'
@@ -32,7 +32,10 @@ let isOn = true
 let isExpandedView = false
 const plans = new Map()
 
+// A reply is raised again on every scroll and view change, with the same text. Keys are whole replies, so a
+// reply too long to be planned is not remembered: plan() turns it away in one comparison anyway.
 function planned(text) {
+  if (typeof text !== 'string' || text.length > REPLY_LIMIT) return null
   if (plans.has(text)) return plans.get(text)
   const parts = plan(text)
   if (plans.size >= REMEMBERED) plans.delete(plans.keys().next().value)
