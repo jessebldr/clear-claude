@@ -1,0 +1,20 @@
+== wide (120 columns)
+Fable 5.1  high  │  プロジェクト-🚀-非常に長い名前…          ctx 31% ███───────  │  5h 9% · 2h10m  │  7d 51% · 4d15h
+
+== medium (60 columns)
+Fable 5.1  high  │  プロジェクト-🚀-非常に長い名前…
+ctx 31% ███───────  │  5h 9% · 2h10m  │  7d 51% · 4d15h
+
+== narrow (40 columns)
+Fable 5.1
+ctx 31% ███───────  │  5h 9% · 2h10m
+
+== unknown width
+Fable 5.1  high  │  プロジェクト-🚀-非常に長い名前…
+ctx 31% ███───────  │  5h 9% · 2h10m  │  7d 51% · 4d15h
+
+== wide, ascii
+Fable 5.1  high  |  プロジェクト-🚀-非常に長い名...            ctx 31% ###-------  |  5h 9%  2h10m  |  7d 51%  4d15h
+
+== wide, color
+␛[1mFable 5.1␛[0m  high␛[2m  │  ␛[0mプロジェクト-🚀-非常に長い名前…          ctx ␛[1m31%␛[0m ␛[32m▬▬▬␛[0m␛[2m▬▬▬▬▬▬▬␛[0m␛[2m  │  ␛[0m5h ␛[1m9%␛[0m␛[2m · ␛[0m2h10m␛[2m  │  ␛[0m7d ␛[1m51%␛[0m␛[2m · ␛[0m4d15h

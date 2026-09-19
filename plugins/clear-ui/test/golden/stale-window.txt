@@ -1,0 +1,20 @@
+== wide (120 columns)
+Fable 5.1  high  │  clear-claude                                               ctx 31% ███───────  │  7d 51% · 4d15h
+
+== medium (60 columns)
+Fable 5.1  high  │  clear-claude
+ctx 31% ███───────  │  7d 51% · 4d15h
+
+== narrow (40 columns)
+Fable 5.1  high  │  clear-claude
+ctx 31% ███───────
+
+== unknown width
+Fable 5.1  high  │  clear-claude
+ctx 31% ███───────  │  7d 51% · 4d15h
+
+== wide, ascii
+Fable 5.1  high  |  clear-claude                                                ctx 31% ###-------  |  7d 51%  4d15h
+
+== wide, color
+␛[1mFable 5.1␛[0m  high␛[2m  │  ␛[0mclear-claude                                               ctx ␛[1m31%␛[0m ␛[32m▬▬▬␛[0m␛[2m▬▬▬▬▬▬▬␛[0m␛[2m  │  ␛[0m7d ␛[1m51%␛[0m␛[2m · ␛[0m4d15h

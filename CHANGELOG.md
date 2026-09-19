@@ -8,6 +8,33 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Because the product is a prompt, any edit to `clear-partner.md` is a behaviour change
 and gets its own entry here and its own version bump.
 
+## [Unreleased]
+
+No change to Clear Partner.
+
+### Added
+
+- **`clear-ui` 0.1.0**, a second, optional marketplace plugin: a status bar for Claude Code.
+  `Fable 5.1  high  │  clear-claude on main  ●` on the left; context, 5-hour and weekly usage
+  as tinted chips on the right, drawn to the design spec in `docs/design/`. Installing it never
+  installs `clear-claude`, and the reverse. See
+  [docs/clear-ui-install.md](docs/clear-ui-install.md) and
+  [docs/ui-architecture.md](docs/ui-architecture.md).
+  - A deterministic setup script is the only thing that edits `settings.json`: it plans before
+    it writes, backs up, never replaces another status line without being told to, and restores
+    the previous one on uninstall. Installs `refreshInterval: 2`, because a terminal resize does
+    not re-run a status line and the bar is padded to the terminal's width.
+  - Git branch and dirty state from one cached `git status`; presets and looks through
+    `clear-ui-configure`; read-only diagnosis through `clear-ui-doctor`.
+  - Opt-in: verification state from documented `PostToolUse` hooks (per project, only for the
+    commands the project lists), and an activity row counting running agents and background
+    commands.
+  - Context turns amber at 70 % and red at 85 %; quotas at 80 % and 95 %.
+- CI: `clear-ui` tests and a timing bench on Windows, macOS and Linux.
+- Research and design records: `docs/mods-research-2.1.277.md`, `docs/ui-research.md`,
+  `docs/ux-distillation.md`, `docs/roadmap-v2.md`, ADR 0004, and disposable function-hook
+  spikes under `experimental/spikes/`.
+
 ## [0.1.0] - 2026-09-17
 
 Initial release.

@@ -1,0 +1,20 @@
+== wide (120 columns)
+Fable 5.1  high  │  clear-claude                                                      ctx 96%!! █████████─  │  $3.40
+
+== medium (60 columns)
+Fable 5.1  high  │  clear-claude
+ctx 96%!! █████████─  │  $3.40
+
+== narrow (40 columns)
+Fable 5.1  high  │  clear-claude
+ctx 96%!! █████████─  │  $3.40
+
+== unknown width
+Fable 5.1  high  │  clear-claude
+ctx 96%!! █████████─  │  $3.40
+
+== wide, ascii
+Fable 5.1  high  |  clear-claude                                                      ctx 96%!! #########-  |  $3.40
+
+== wide, color
+␛[1mFable 5.1␛[0m  high␛[2m  │  ␛[0mclear-claude                                                      ctx ␛[1;31m96%!!␛[0m ␛[31m▬▬▬▬▬▬▬▬▬␛[0m␛[2m▬␛[0m␛[2m  │  ␛[0m␛[1m$3.40␛[0m

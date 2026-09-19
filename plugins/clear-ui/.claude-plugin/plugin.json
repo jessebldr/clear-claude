@@ -1,0 +1,23 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "clear-ui",
+  "displayName": "Clear UI",
+  "description": "Two calm status lines for Claude Code: model, effort and project on one, context and 5-hour and weekly usage on the other. Drawn only from the data Claude Code already provides — no network, no credentials, no transcript parsing. Optional companion to clear-claude.",
+  "version": "0.1.0",
+  "skills": [
+    "./skills/clear-ui-setup",
+    "./skills/clear-ui-configure",
+    "./skills/clear-ui-doctor"
+  ],
+  "author": {
+    "name": "jessebldr"
+  },
+  "license": "MIT",
+  "keywords": [
+    "statusline",
+    "ui",
+    "context",
+    "usage",
+    "developer-experience"
+  ]
+}

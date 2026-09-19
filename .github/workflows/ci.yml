@@ -45,3 +45,48 @@ jobs:
 
       - name: Validate skills
         run: claude plugin validate plugins/clear-claude/skills --strict
+
+      - name: Validate clear-ui manifest and components
+        run: |
+          claude plugin validate plugins/clear-ui --strict
+          claude plugin validate plugins/clear-ui/skills --strict
+
+  # Clear UI is code, so it gets real tests — on all three platforms it claims to support,
+  # because its whole cross-platform story is "one Node file, no shell". Golden renders are
+  # byte-compared, so a platform-dependent difference fails here rather than in someone's
+  # terminal. Node 18 is the floor the plugin advertises; 22 is what CI above uses.
+  clear-ui:
+    name: clear-ui tests (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ['22']
+        include:
+          - os: ubuntu-latest
+            node: '18'
+    defaults:
+      run:
+        working-directory: plugins/clear-ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # No install step: zero production dependencies and no build, by design.
+      - name: Test
+        run: node --test
+
+      - name: Demo render
+        run: node bin/statusline.mjs < test/fixtures/idle.json
+        env:
+          COLUMNS: '120'
+
+      # Reports median and p95 against the per-platform budgets in docs/ui-architecture.md and
+      # fails only past the 250 ms hard ceiling: a shared runner is too noisy for the budgets
+      # themselves to gate a merge, but the numbers are in the log for every run.
+      - name: Bench
+        run: node bench/bench.mjs
