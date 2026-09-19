@@ -65,12 +65,14 @@ as_root() { if [ "$(id -u)" = 0 ] || ! command -v sudo >/dev/null 2>&1; then "$@
 POLICY_FILES=""
 POLICY_DIRS=""
 release_policy_dir() {
-  local path
+  local path left=""
   for path in $POLICY_FILES; do as_root rm -f "${path//|/ }" 2>/dev/null || true; done
-  for path in $POLICY_DIRS; do as_root rmdir "${path//|/ }" 2>/dev/null || true; done
+  for path in $POLICY_DIRS; do as_root rmdir "${path//|/ }" 2>/dev/null || left="$left ${path//|/ }"; done
   POLICY_FILES=""; POLICY_DIRS=""
+  # Never silent: something this run did not create is in there, or a removal was refused.
+  if [ -n "$left" ]; then say "measure: could not remove$left — look at it by hand" >&2; return 1; fi
 }
-cleanup() { release_policy_dir; rm -rf "$WORK"; }
+cleanup() { release_policy_dir || true; rm -rf "$WORK"; }
 trap cleanup EXIT
 trap 'exit 130' INT TERM
 
@@ -205,9 +207,11 @@ claim_policy_dir() { # -> POLICY
   POLICY_DIRS="${POLICY// /|} $POLICY_DIRS"
 }
 policy_mkdir() { as_root mkdir "$1" || die "could not create $1"; POLICY_DIRS="${1// /|} $POLICY_DIRS"; }
-policy_write() { # path; content on stdin
+# Content is an argument, not stdin: on the right of a pipe this function would run in a
+# subshell and the file would never be remembered for removal.
+policy_write() { # path content
   case " $POLICY_FILES " in *" ${1// /|} "*) ;; *) POLICY_FILES="${1// /|} $POLICY_FILES" ;; esac
-  as_root tee "$1" >/dev/null || die "could not write $1"
+  printf '%s' "$2" | as_root tee "$1" >/dev/null || die "could not write $1"
 }
 
 measure_managed_rename() {
@@ -221,7 +225,7 @@ measure_managed_rename() {
     const fs = require("fs"); const [file, id] = process.argv.slice(1)
     const json = JSON.parse(fs.readFileSync(file, "utf8")); delete json.enabledPlugins[id]
     fs.writeFileSync(file, JSON.stringify(json, null, 2))' "$CFG/settings.json" "$OLD_ID"
-  printf '{ "enabledPlugins": { "%s": true } }\n' "$OLD_ID" | policy_write "$POLICY/managed-settings.json"
+  policy_write "$POLICY/managed-settings.json" "$(printf '{ "enabledPlugins": { "%s": true } }' "$OLD_ID")"
   session "$proj" "before the rename, enabled only from managed settings"
   move_marketplace "$CFG/plugins/known_marketplaces.json" "$CFG/settings.json"
   for n in 1 2; do session "$proj" "session $n"; done
@@ -231,7 +235,7 @@ measure_managed_rename() {
   enabled "$CFG/settings.json" "user settings afterwards"
   must "$CLAUDE" plugin install "$NEW_ID"
   session "$proj" "session 4, after installing the new name"
-  release_policy_dir
+  release_policy_dir || die "the managed directory was not left as it was found"
 }
 
 style_text() { printf -- '---\nname: %s\ndescription: shadowing measurement\n---\n\nA style used only to measure shadowing.\n' "$1"; }
@@ -261,11 +265,11 @@ measure_shadowing() {
   fi
   claim_policy_dir || return 0
   policy_mkdir "$POLICY/.claude"; policy_mkdir "$POLICY/.claude/output-styles"
-  style_text "$style" | policy_write "$POLICY/.claude/output-styles/measure.md"
+  policy_write "$POLICY/.claude/output-styles/measure.md" "$(style_text "$style")"
   session "$proj" "policy file, name: $style"
-  style_text "$qualified" | policy_write "$POLICY/.claude/output-styles/measure.md"
+  policy_write "$POLICY/.claude/output-styles/measure.md" "$(style_text "$qualified")"
   session "$proj" "policy file, name: $qualified"
-  release_policy_dir
+  release_policy_dir || die "the managed directory was not left as it was found"
   session "$proj" "policy directory removed again"
 }
 
