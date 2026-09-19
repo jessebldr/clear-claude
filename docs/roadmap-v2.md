@@ -3,6 +3,21 @@
 Design: [ui-architecture.md](ui-architecture.md). Evidence:
 [mods-research-2.1.277.md](research/mods-research-2.1.277.md), [ui-research.md](research/ui-research.md).
 
+## Status at closure — 2026-09-20, marketplace 0.4.1
+
+Phases A–F are done and released; Clear Partner and Clear UI are finished layers. Everything
+below this section is the record of how they were built. What is *not* done is listed here
+once, with where it went, so that nothing further down reads as pending work:
+
+| Left over | Where it went |
+| --- | --- |
+| How the bar looks on a Mac's screen; the third row seen on screen there | [#18](https://github.com/jessebldr/clear-claude/issues/18) — needs a person, not code; non-blocking |
+| An Intel Mac timing | Documented limit: the macOS budget was measured on Apple Silicon only ([ui-architecture.md](ui-architecture.md), "Performance budget"). No hardware, no issue. |
+| "Two weeks of daily use" as the exit of Phase E | Dropped as a gate. It is elapsed time, not work; settings damage, if it ever happens, is a bug report. |
+| An agent `status` of `failed`, never observed | Documented limit: the row reads it and costs nothing if it never arrives. |
+| Official marketplace listing | [#19](https://github.com/jessebldr/clear-claude/issues/19) — depends on Anthropic's process |
+| Phase G, Clear Transcript | The next phase, and the only open one. Blocked on function hooks being documented and on by default. |
+
 ## Scope
 
 Clear Claude improves the experience **inside stock Claude Code, in the terminal**. Its
@@ -25,9 +40,10 @@ Each plugin carries its own version; the marketplace version tracks the newest c
 | 0.2.0 | `clear-ui` 0.1.0 appears as a second, optional marketplace plugin (Phases A–C). Because Phases D and F were built on the same branch, it also carries the activity line and `verification-state` on **documented** classic hooks — both opt-in, off by default. |
 | 0.2.1 | `clear-ui` 0.1.1. First green cross-platform CI run (Phase E) and the two fixes it led to; the opt-in features exercised end to end against real hook payloads on Windows; real recordings replace drawn images. |
 | 0.2.2 | `clear-claude` 0.1.1: explicit response-shape constraints outrank the style's defaults, and a short set of commands is a list, not a table — each change made only after an eval case failed. Demo set cut to 15–17 s and re-recorded. |
-| 0.2.x | macOS dogfooding on real hardware, which also settles the macOS timing budget — measured on Apple Silicon on 2026-09-20, the 40 / 60 ms budget stands (#2); the on-screen checks and two weeks of daily use are still to do. |
+| 0.2.x–0.4.x | macOS dogfooding on real hardware, which also settles the macOS timing budget — measured on Apple Silicon on 2026-09-20, the 40 / 60 ms budget stands (#2, closed); the on-screen checks and two weeks of daily use are still to do. |
 | 0.3.0 | `clear-ui` 0.2.0: the opt-in usage provider — the weekly limit scoped to one model, from Claude Code's own headless `/usage`, behind a cache; off by default, and the default bar unchanged. (The slot was once `verification-state`, Phase F, which shipped inside 0.2.0.) |
 | 0.4.0 | One name per layer: the plugin `clear-claude` becomes `clear-partner` 0.2.0, migrated for existing installs by `renames`; one install story across README, skills and docs; `AGENTS.md` and a repository check in CI ([ADR 0005](adr/0005-naming-and-install-paths.md)). `clear-ui` stays at 0.2.0. No change to the Clear Partner prompt. |
+| 0.4.1 | Closure. `clear-partner` 0.2.1: the diagnostic skills stop failing a harmless style file and read the policy level, after measuring what actually displaces a plugin's style. `clear-ui` 0.2.1: the `configure.mjs show` alignment fix and a bench that does not judge shared runners. Migration measured on three platforms and at every scope; #2 closed. |
 | exp | First function-hooks mod (Clear Transcript), outside the marketplace, `--plugin-dir` only (Phase G1); it carries no marketplace version — the slot once pencilled in as "0.4.0-exp" went to the release above. G2 is a research spike. |
 | 1.0 | Only after function hooks are documented, on by default, and the layer boundaries have survived real use. |
 
@@ -159,10 +175,10 @@ source of Codex CLI, Oh My Pi, OpenCode and T3 Code; `anything-to-html` could no
   of room on the cached row. Numbers and limits in
   [ui-architecture.md](ui-architecture.md), "Performance budget"; the run itself in
   [clear-ui-dogfood.md](clear-ui-dogfood.md).
-- **Not done:** an Intel Mac; the on-screen half of the Mac checklist; the two weeks of daily
-  use.
-- **Done when:** byte-identical goldens and budgets met on all three; two weeks of daily
-  use on Windows and macOS with no settings damage.
+- **Closed 2026-09-20.** Byte-identical goldens on all three platforms, and the budget met
+  on real hardware on Windows and macOS. The on-screen half of the Mac checklist moved to
+  #18; an Intel Mac is a documented limit; "two weeks of daily use" was dropped as a gate —
+  see [Status at closure](#status-at-closure--2026-09-20-marketplace-041).
 
 ### Phase F — verification-state on documented hooks  ✔ built, dogfooded on Windows
 

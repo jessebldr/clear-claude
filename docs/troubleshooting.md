@@ -20,7 +20,7 @@ below are the same checks written out.
 | What you see | Go to |
 | --- | --- |
 | Installed and enabled, but Claude does not talk like Clear Partner | [1](#1-installed-but-the-style-is-not-applying) |
-| It worked, then stopped after you added your own style | [3](#3-a-user-level-style-named-clear-partner-shadows-the-plugin) |
+| It worked, then stopped after a style file was added | [3](#3-a-style-file-with-the-plugins-qualified-name-replaces-the-plugins-style) |
 | Updated, but nothing changed | [5](#5-version-mismatch-after-an-update) |
 | `plugin validate` passes but the style still does nothing | [2](#2-a-typo-in-the-frontmatter-fails-silently), [6](#6-the-style-file-is-in-the-wrong-place) |
 | Warning at session start about multiple forced styles | [4](#4-two-plugins-both-force-a-style) |
@@ -91,19 +91,20 @@ Find `<installPath>` with `claude plugin list --json`. `clear-doctor` check 4 do
 comparison for you, and `clear-audit` part B additionally verifies the whole file by
 SHA-256.
 
-## 3. A user-level style named `Clear Partner` shadows the plugin
+## 3. A style file with the plugin's qualified name replaces the plugin's style
 
-**The most common cause of "it was working and now it isn't", and the one that looks
-healthiest from the outside.**
+**Rare, and the one failure that looks completely healthy from the outside.**
 
-Claude Code collects every output style into a **single table keyed by the frontmatter
-`name`**. Plugin styles are applied **first**, then user-level, then project-level. A
-later source with the same name **replaces** the earlier entry outright.
+Claude Code keeps every output style in one table. A plugin's style is keyed by its
+**qualified name** — `clear-partner:Clear Partner`, the plugin's name, a colon, the style's
+name. Every other style is keyed by the bare `name:` in its frontmatter. Plugin styles go
+in first, then user-level, project-level and policy-level files, and a later entry with the
+same key **replaces** the earlier one outright.
 
-So a file at `~/.claude/output-styles/anything.md` whose frontmatter says
-`name: Clear Partner` replaces the plugin's entry — **and takes `force-for-plugin: true`
-with it**, because that flag lives in the replaced entry. Auto-activation disappears,
-Claude Code falls back to the `outputStyle` setting, and:
+So a style file outside the plugin whose frontmatter says
+`name: clear-partner:Clear Partner` replaces the plugin's entry — **and the
+`force-for-plugin` flag goes with it**, because the flag only counts on a plugin's own
+style. Auto-activation disappears, Claude Code falls back to the `outputStyle` setting, and:
 
 - `claude plugin list` still reports the plugin as installed and enabled.
 - `claude plugin validate --strict` still passes.
@@ -111,31 +112,35 @@ Claude Code falls back to the `outputStyle` setting, and:
 
 The file name is irrelevant. Only the `name:` inside the frontmatter matters.
 
-**This is the migration case.** It happens to everyone who ran Clear Partner as a
-hand-installed user-level style *before* switching to the plugin — which includes this
-project's own author. The old file is still sitting there, quietly winning.
+**A file named plain `Clear Partner` is not this problem.** If you ran Clear Partner as a
+hand-installed style before the plugin existed, that file is probably still in
+`~/.claude/output-styles/`. It has a different key, so it replaces nothing: the plugin's
+style stays forced, and your file is simply a second style — the one an
+`outputStyle: Clear Partner` setting selects while the plugin is disabled. Until marketplace
+0.4.1 this page, and `clear-doctor`, said the opposite; that was measured and found wrong on
+Claude Code 2.1.273, 2.1.277 and 2.1.278
+([research/style-shadowing.md](research/style-shadowing.md)).
 
 ### Detect
 
-Look in both locations for a file whose frontmatter `name` is `Clear Partner`:
+Look for a file whose frontmatter `name` is exactly `clear-partner:Clear Partner`:
 
-- user level: `~/.claude/output-styles/*.md` — or `$CLAUDE_CONFIG_DIR/output-styles/*.md`
-  if you have set `CLAUDE_CONFIG_DIR`
-- project level: `.claude/output-styles/*.md` in the project root
+- user level: `~/.claude/output-styles/` — or `$CLAUDE_CONFIG_DIR/output-styles/` if you
+  have set `CLAUDE_CONFIG_DIR`
+- project level: `.claude/output-styles/` in the project root
+- policy level, set by an administrator: `C:\Program Files\ClaudeCode\.claude\output-styles\`
+  (Windows), `/Library/Application Support/ClaudeCode/.claude/output-styles/` (macOS),
+  `/etc/claude-code/.claude/output-styles/` (Linux)
 
 `clear-doctor` check 7b and `clear-audit` step A3 both do exactly this and report the
-offending path.
+offending path. All three levels were measured, the policy one on disposable CI machines
+([research/style-shadowing.md](research/style-shadowing.md#policy-level)); when the skills
+cannot read a policy directory they say UNKNOWN rather than guess.
 
 ### Fix
 
-Rename or delete the shadowing file, then restart the session. Renaming the *file* is
-not enough — change the `name:` in its frontmatter, or remove the file. If you want to
-keep your customised version, give it a distinct name such as `Clear Partner (mine)`;
-it will then coexist with the plugin's copy, though the plugin's forced style will still
-win while the plugin is enabled.
-
-Neither diagnostic skill will touch that file for you. An unexplained style file is
-information you need, and deleting it automatically would destroy the evidence.
+Change the `name:` in that file's frontmatter, or remove the file, then restart the session.
+Renaming the *file* is not enough. At policy level only an administrator can.
 
 ## 4. Two plugins both force a style
 

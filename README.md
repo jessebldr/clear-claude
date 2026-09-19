@@ -127,8 +127,7 @@ communicates the answer — never the shortest possible answer.
 
 *Real sessions, recorded, not mocked: same question, same model, minutes apart. The only
 difference is the plugin, loaded with `--plugin-dir`. It stops when the question is answered.
-The waiting is cut out; nothing inside a frame is touched — which is why the caption in the
-recording still carries the plugin's name from before it was renamed. A third pair,
+The waiting is cut out; nothing inside a frame is touched. A third pair,
 [disk space](assets/demo-disk-space.gif), is recorded the same way.*
 
 One recording is an anecdote, so the number comes from repeated runs instead: four runs
@@ -150,8 +149,8 @@ default when you ask for it — concision governs the telling, not the doing.
 ### #3: Nobody can tell if their setup actually works
 
 **The problem.** Claude Code doesn't validate output styles at all. A typo in a
-frontmatter field fails silently; a same-named user style shadows the plugin's copy
-without a word. `claude plugin validate --strict` passes green on a plugin that
+frontmatter field fails silently; a style file that takes the plugin's qualified name
+replaces its copy without a word. `claude plugin validate --strict` passes green on a plugin that
 installs, enables, and does nothing.
 
 **The fix** is two read-only diagnostic skills that answer with facts, not impressions:
@@ -238,23 +237,27 @@ results, and the honest limits are in [docs/evals.md](docs/evals.md).
 
 ## Roadmap
 
-- [ ] Submit to the official Claude Code marketplace so install is one command
-- [x] Re-run evals against a new Claude Code version: 6/6 again on 2.1.278. Repeat per
-  release; the suite is cheap (~$2)
-- [ ] `clear-doctor` auto-fix mode (currently read-only by design)
-- [x] Clear UI: a status bar as a second plugin (`clear-ui`)
-- [x] One name per layer: the plugin `clear-claude` became `clear-partner`, with automatic
-  migration for existing installs ([ADR 0005](docs/adr/0005-naming-and-install-paths.md))
-- [x] Clear UI: CI green on Linux, macOS and Windows; its opt-in features (verification
-  state, activity row) exercised end to end against real hook payloads on Windows
-  ([what that showed](docs/clear-ui-dogfood.md))
-- [ ] Clear UI: the same run on a real Mac, which also settles the macOS timing budget
-  ([checklist](docs/clear-ui-dogfood.md#checklist-for-a-mac))
-- [ ] Clear Transcript, the third layer: Anthropic is shipping function hooks ("Claude Mods",
-  [anthropics/claude-code#91870](https://github.com/anthropics/claude-code/issues/91870)).
-  When the API is documented and on by default, build the transcript renderer as a
-  real mod. `verification-state` no longer waits for it — it shipped inside Clear UI on
-  documented classic hooks. Clear Partner itself will never depend on mods.
+**Clear Partner and Clear UI are finished layers** as of marketplace 0.4.1. There is no
+unfinished feature in either; what they need from here is upkeep, and it is cheap:
+
+- Per Claude Code release that matters: re-run the evals (about $2,
+  [docs/evals.md](docs/evals.md)) and re-take the plugin-loading measurement (free, no
+  credential, `bash scripts/measure-plugin-loading.sh`).
+- Two tracked items that need a person or a third party, not code:
+  [#18](https://github.com/jessebldr/clear-claude/issues/18), looking at the bar on a Mac's
+  screen, and [#19](https://github.com/jessebldr/clear-claude/issues/19), submitting to the
+  official Claude Code marketplace so that install loses its first line.
+
+**Next: Clear Transcript**, the third layer. Anthropic is shipping function hooks ("Claude
+Mods", [anthropics/claude-code#91870](https://github.com/anthropics/claude-code/issues/91870)).
+When the API is documented and on by default, the transcript renderer gets built as a real
+mod; until then it stays a research spike under `experimental/`, outside the marketplace.
+Clear Partner will never depend on mods.
+
+**Not planned**, so that nobody waits for it: a `clear-doctor` that fixes things (both
+diagnostic skills are read-only by design, and stay so); a bundle plugin
+([ADR 0005](docs/adr/0005-naming-and-install-paths.md)); an Intel Mac timing (none available —
+the macOS budget is documented as measured on Apple Silicon).
 
 The phase-by-phase plan is [docs/roadmap-v2.md](docs/roadmap-v2.md).
 

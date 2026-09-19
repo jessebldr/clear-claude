@@ -1,0 +1,55 @@
+name: Measure plugin loading
+
+# Not a test: a measurement, taken on all three platforms, of how the current Claude Code loads
+# this marketplace's plugins — what `renames` does to an install made under a former plugin
+# name, and whether a style file outside the plugin can displace the plugin's forced style.
+# The numbers in docs/migration.md and docs/research/style-shadowing.md come from this script;
+# they are copied there by hand, with the Claude Code version, never asserted here.
+#
+# It needs no credential and sends nothing to a model: every session stops at "Not logged in",
+# after the plugins have loaded, and the debug log says what was loaded.
+#
+# Runs on demand, and when a pull request changes the script or this file, so that a change to
+# the measurement is itself shown to run everywhere before it is merged.
+
+on:
+  workflow_dispatch:
+    inputs:
+      old_ref:
+        description: A ref that still lists the former plugin name
+        default: v0.3.0
+      new_ref:
+        description: A ref that lists the current name and the renames map
+        default: main
+  pull_request:
+    paths:
+      - scripts/measure-plugin-loading.sh
+      - .github/workflows/measure.yml
+
+jobs:
+  measure:
+    name: measure (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Claude Code
+        run: npm i -g @anthropic-ai/claude-code
+
+      - name: Measure
+        shell: bash
+        run: bash scripts/measure-plugin-loading.sh all
+        env:
+          OLD_REF: ${{ inputs.old_ref || 'v0.3.0' }}
+          NEW_REF: ${{ inputs.new_ref || 'main' }}
+          # A runner is thrown away after the job, so the machine-wide managed directory can be
+          # written and removed here. Never set this on a machine someone uses.
+          MEASURE_POLICY: '1'

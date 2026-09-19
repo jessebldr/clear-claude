@@ -3,7 +3,7 @@
   "name": "clear-partner",
   "displayName": "Clear Partner",
   "description": "The communication layer of Clear Claude: make Claude Code easier to understand without making it less capable. Ships the Clear Partner output style — answer-first, plain English, concise by default, deep when asked — plus two read-only diagnostic skills, clear-doctor and clear-audit.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "skills": [
     "./skills/clear-doctor",
     "./skills/clear-audit"

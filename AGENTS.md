@@ -57,6 +57,12 @@ node bin/statusline.mjs < test/fixtures/idle.json   # render without installing;
 PowerShell has no `<` redirection: run the render through bash, or
 `Get-Content test/fixtures/idle.json | node bin/statusline.mjs`.
 
+`bash scripts/measure-plugin-loading.sh` is a measurement, not a test: how the installed
+Claude Code treats a renamed plugin and a style file that takes the plugin's key. It needs no
+credential and bills nothing. Run it after a Claude Code release that touches plugin loading,
+and before any rename; **never set `MEASURE_POLICY=1` outside a disposable machine** — it
+writes to the machine-wide managed directory.
+
 **Do not run the behavioural evals unless asked.** `claude plugin eval` bills real money
 against a real credential and is never in CI. The command, the suite and the recorded runs
 are in [docs/evals.md](docs/evals.md).

@@ -128,5 +128,9 @@ config, cache and state. The backups stay. Then `claude plugin uninstall clear-u
 
 ## Platform status
 
-Developed and used daily on native Windows 11. CI is set up to run the test suite and the
-benchmark on Windows, macOS and Linux; macOS and Linux have not yet had daily use.
+Developed and used daily on native Windows 11. The test suite, a render and the benchmark
+run on Windows, macOS and Linux for every change. On macOS it has also been installed from
+the marketplace and run against real hook payloads on an M4 Mac mini, where the timing budget
+was measured and met ([clear-ui-dogfood.md](clear-ui-dogfood.md)); how it looks in macOS
+terminals is the one thing still to be confirmed by eye
+([#18](https://github.com/jessebldr/clear-claude/issues/18)). Linux is covered by CI only.
