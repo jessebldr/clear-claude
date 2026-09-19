@@ -447,7 +447,9 @@ PowerShell, bash and zsh alike; paths are written with forward slashes (Git Bash
 backslashes); `git` is invoked by `execFile` with no shell; width comes from `COLUMNS`,
 which Claude Code sets on every OS; no `stty`, `tput`, `ps`, `chcp`, `fcntl`.
 
-Unverified: macOS and Linux runs (nothing here has been executed there); behaviour when
+Verified on macOS on 2026-09-20 (Apple Silicon: the whole suite, the install, the doctor and
+real hook payloads — [clear-ui-dogfood.md](clear-ui-dogfood.md)); Linux only on CI runners.
+Unverified: an Intel Mac; a developer's Linux machine; behaviour when
 Git Bash is absent and PowerShell runs the command; whether `node` is on the PATH of the
 shell Claude Code spawns for users who installed Claude Code natively and Node through a
 version manager (nvm, Volta — ccstatusline #420 is a hang with Volta shims).
@@ -495,6 +497,34 @@ code runs. Targets:
 | End to end, git cache miss | ≤ 130 ms | ≤ 60 ms |
 | Hard ceiling (then print without git) | 250 ms | 250 ms |
 
+**The macOS column, measured on a real Mac (2026-09-20, #2).** The 40 / 60 ms target was set
+before Clear UI had ever run on a Mac. On a Mac mini (Mac16,10, Apple M4, 16 GB, macOS 26.6.2,
+Node 26.7.0 arm64, Homebrew git 2.55.0, on mains power, load average about 4 on 10 cores from
+ordinary desktop use), `bench/bench.mjs` — 15 fresh processes per row — read:
+
+| Run | git cached, median / p95 | cache miss, median / p95 |
+| --- | --- | --- |
+| 1 | 38 / 40 ms | 46 / 47 ms |
+| 2 | 38 / 65 ms | 45 / 47 ms |
+| 3 | 38 / 39 ms | 46 / 58 ms |
+
+Three more runs later the same night read medians of 37–39 and 45–47 ms, so the medians hold to
+within 2 ms; the p95 does not (one of those runs read 77 and 139 ms), because with 15 samples
+the p95 is the slowest sample and one busy moment on the machine sets it. **The target stays at
+40 / 60, and it is met** — but the cached row has about 2 ms of room, not a margin: a bare
+`node -e 0` costs 21 ms of it on this machine (28 ms p95), so everything past a bare
+Node start — loading the modules, reading stdin, rendering, printing — is about 17 ms. The budget is judged on the
+median for that reason. What this does not cover: an Intel Mac has not been measured, and the
+`macos-latest` runner's 82–101 ms says nothing about either.
+
+`git status` on the same Mac (`bench/git-latency.mjs`, 40 fresh processes each): 6 ms median
+and 8 ms max in this repository; 56 ms median, 79 ms p95, 150 ms max in a 16,000-file working
+repository, none over the 150 ms budget; and 131 ms median, 162 ms p95, 3 of 40 over budget in
+a 3,800-file repository whose working tree holds 125,000 files in 4.2 GB — there
+`GIT_TRACE_PERFORMANCE` puts 126 ms of it in git's index refresh, so it is that tree's state
+and not its size or the platform. That is the case the doctor's `Git speed` line and
+`CLEAR_UI_GIT_TIMEOUT_MS` exist for.
+
 **The git budget, measured (2026-09-19, `bench/git-latency.mjs`, 40 fresh processes each).** On
 the development machine `git status` takes 24–29 ms median (max 36) in three working
 repositories of 400–1,300 files, and 89 ms median, 102 ms p95, 154 ms max in a 52,000-file
@@ -518,9 +548,13 @@ as if git had said "nothing here".
 No network and no transcript read on the render path; the opt-in usage provider adds one file
 read to it, and about 8 ms to the one tick in ten minutes that starts its worker. Git: one call, 150 ms timeout,
 5 s TTL, last-known value on timeout. Explicit `process.exit(0)` so no process can
-linger. Measurement: `test/bench.mjs` spawns the real entry with a fixture on stdin,
+linger. Measurement: `bench/bench.mjs` spawns the real entry with a fixture on stdin,
 fresh process per sample, median and p95 of 15, run in CI on `windows-latest`,
-`macos-latest` and `ubuntu-latest`; macOS/Linux targets are hypotheses until that runs.
+`macos-latest` and `ubuntu-latest`. There the numbers are printed and only the 250 ms ceiling
+is judged: the same shared runner swings by half between runs, so a looser "CI budget" would
+be one more guess, and `bench.mjs` marks the budget rows `not judged` when `CI` is set. The
+Windows and macOS targets are held by measurements on real machines; the Linux target has
+only been seen on runners (40–58 ms cached) and is still a hypothesis.
 
 ## Test strategy
 

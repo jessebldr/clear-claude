@@ -19,6 +19,17 @@ Marketplace 0.4.0 below does not release `clear-ui`.
   wide as the column was, and `verification` had been since 0.1.0 — found when the second one
   turned up in a recording. Display only; the settings were always read and written correctly.
 
+### Changed
+
+- The macOS timing budget is no longer a guess. On a real Mac (M4 Mac mini) the status line
+  takes 38 ms with git cached and 46 ms on a cache miss, median of three runs, so the 40 / 60 ms
+  budget stands — with about 2 ms to spare on the first number, and no Intel Mac measured yet.
+  The opt-in features were also run against real hook payloads on macOS
+  ([docs/clear-ui-dogfood.md](docs/clear-ui-dogfood.md)). No change to what the bar draws (#2).
+- `bench/bench.mjs` no longer says `over budget` in a CI log: on a shared runner the budgets are
+  printed as `not judged`, because the same runner swings by half between runs. The 250 ms
+  ceiling still fails a build, and `--strict` still judges the budgets anywhere.
+
 ### Added
 
 - A recording of the usage provider, `assets/clear-ui-scoped-usage.gif`, with its tape and a

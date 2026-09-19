@@ -99,7 +99,7 @@ jobs:
         env:
           COLUMNS: '120'
 
-      # Reports median and p95 against the per-platform budgets in docs/ui-architecture.md and
+      # Reports median and p95 beside the per-platform budgets in docs/ui-architecture.md and
       # fails only past the 250 ms hard ceiling: a shared runner is too noisy for the budgets
       # themselves to gate a merge, but the numbers are in the log for every run.
       - name: Bench
