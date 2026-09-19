@@ -1,0 +1,27 @@
+Use one of these:
+
+**`ss` (modern, preinstalled on most distros)**
+```bash
+ss -ltnp 'sport = :3000'
+```
+`-l` listening, `-t` TCP, `-n` numeric ports, `-p` show process. You need root (or ownership of the process) to see the PID/name.
+
+**`lsof`**
+```bash
+sudo lsof -i :3000
+# or just the listener:
+sudo lsof -iTCP:3000 -sTCP:LISTEN
+```
+
+**`fuser`**
+```bash
+sudo fuser -v 3000/tcp
+```
+
+**To kill it**, once you've confirmed what it is:
+```bash
+sudo kill $(sudo lsof -t -iTCP:3000 -sTCP:LISTEN)
+```
+Or `fuser -k 3000/tcp`. Check the process name first — `lsof -t` will return every matching PID, and a dev server's PID today can be something else's tomorrow.
+
+Note `netstat -tulpn | grep 3000` still shows up in older answers; it works if `net-tools` is installed, but it's deprecated in favor of `ss` and often absent on newer distros.

@@ -1,0 +1,33 @@
+`df` is the main tool:
+
+```bash
+df -h          # human-readable sizes for all mounted filesystems
+df -h /        # just the root filesystem
+df -hT         # also show filesystem type (ext4, xfs, tmpfs…)
+df -i          # inodes instead of bytes — useful when df says there's
+               # space but writes still fail
+```
+
+Sample output:
+
+```
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme0n1p2  456G  312G  121G  73% /
+/dev/nvme0n1p1  511M  6.1M  505M   2% /boot/efi
+```
+
+To find *what's* using the space, use `du`:
+
+```bash
+du -sh /var/*              # size of each item under /var
+du -h --max-depth=1 / | sort -h   # biggest dirs at the top level
+du -sh * .[!.]* 2>/dev/null | sort -h   # current dir, including dotfiles
+```
+
+Handy extras:
+
+- `ncdu /` — interactive browser for disk usage, much nicer than raw `du` (install via your package manager).
+- `lsblk` / `fdisk -l` — see the disks and partitions themselves, including unmounted ones.
+- `sudo du -x -sh /*` — `-x` stays on one filesystem so you don't walk into `/proc`, `/sys`, or network mounts.
+
+A common gotcha: if `df` shows free space but you get "No space left on device", check `df -i` for exhausted inodes, or look for a deleted-but-still-open file with `sudo lsof +L1`.

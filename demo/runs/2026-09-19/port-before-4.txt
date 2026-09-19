@@ -1,0 +1,33 @@
+A few options, in rough order of preference:
+
+**`ss` (modern, usually preinstalled)**
+```bash
+ss -ltnp 'sport = :3000'
+```
+`-l` listening, `-t` TCP, `-n` numeric ports, `-p` show process. You need root (or `sudo`) to see the PID/name of processes you don't own.
+
+**`lsof`**
+```bash
+sudo lsof -i :3000
+# or just the PID:
+sudo lsof -t -i:3000
+```
+
+**`fuser`**
+```bash
+sudo fuser 3000/tcp
+```
+
+**`netstat`** (deprecated, but still around)
+```bash
+sudo netstat -ltnp | grep :3000
+```
+
+To kill whatever it is:
+```bash
+kill $(sudo lsof -t -i:3000)      # or add -9 if it ignores SIGTERM
+```
+
+Two gotchas worth knowing:
+- Without `sudo`, `ss`/`lsof` will show the socket but blank out the process info if it belongs to another user.
+- If the port is held by a Docker container, the listener you find is `docker-proxy`, not the real app — use `docker ps` to find the container publishing `3000`.

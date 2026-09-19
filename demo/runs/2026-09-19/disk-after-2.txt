@@ -1,0 +1,27 @@
+`df -h` — human-readable free space per mounted filesystem.
+
+```bash
+df -h
+```
+
+Output looks like:
+
+```
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1       457G  312G  122G  72% /
+tmpfs           7.8G  1.2M  7.8G   1% /run
+```
+
+`Avail` is what you actually have left (root-reserved blocks are already excluded).
+
+**Common follow-ups:**
+
+| Need | Command |
+|---|---|
+| One filesystem | `df -h /var` |
+| Skip tmpfs/overlay noise | `df -h -x tmpfs -x devtmpfs` |
+| What's eating the space | `du -sh /var/* \| sort -h` |
+| Interactive browser | `ncdu /` |
+| Out of inodes, not bytes | `df -i` |
+
+That last one matters: if `df -h` shows free space but writes still fail with "No space left on device", you've run out of inodes — usually millions of tiny files in one directory.

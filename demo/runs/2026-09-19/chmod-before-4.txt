@@ -1,0 +1,17 @@
+`chmod 755` sets a file's permission bits to `rwxr-xr-x`:
+
+| Who | Digit | Bits | Meaning |
+|---|---|---|---|
+| Owner (user) | `7` | `rwx` | read, write, execute |
+| Group | `5` | `r-x` | read, execute (no write) |
+| Others | `5` | `r-x` | read, execute (no write) |
+
+Each digit is the sum of read (4), write (2), execute (1). So 7 = 4+2+1, and 5 = 4+1.
+
+**What it means in practice:**
+- **For a file:** anyone can read and run it; only the owner can modify it. This is the standard mode for executables and scripts.
+- **For a directory:** `x` means "can enter/traverse", `r` means "can list contents". So everyone can `cd` into it and list it, but only the owner can create, rename, or delete entries inside.
+
+Common neighbors: `644` (`rw-r--r--`) for regular non-executable files, `700` for private files, `600` for things like SSH keys.
+
+Worth noting on your setup — you're on Windows (`C:\Users\Jesse\demo\clear-claude`). NTFS uses ACLs rather than POSIX mode bits, so `chmod` only has a real effect inside WSL or on a Linux/macOS host. Git does track one bit of it: `git update-index --chmod=+x path` marks a file executable in the index, which matters for scripts that run in CI on Linux runners.

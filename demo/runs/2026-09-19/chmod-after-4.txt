@@ -1,0 +1,15 @@
+`chmod 755` sets Unix file permissions to **rwxr-xr-x**: the owner can read, write, and execute; everyone else can read and execute but not modify.
+
+Each digit is one octal number for one class of user — **owner, group, other** — built by adding:
+
+| Value | Permission |
+|---|---|
+| 4 | read (r) |
+| 2 | write (w) |
+| 1 | execute (x) |
+
+So `7` = 4+2+1 (rwx), `5` = 4+1 (r-x).
+
+**Typical uses:** executable scripts and binaries, and directories you want others to enter and list. On a directory, "execute" means the right to traverse into it, so 755 is the normal directory mode.
+
+For files that shouldn't be run, use `644` (rw-r--r--) instead. Avoid `777` — it lets any user on the system modify the file.

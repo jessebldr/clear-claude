@@ -1,0 +1,20 @@
+`df` is the main one:
+
+```bash
+df -h          # all mounted filesystems, human-readable sizes
+df -h /        # just the root filesystem
+df -hT         # same, plus filesystem type (ext4, xfs, tmpfs…)
+df -i          # inode usage — useful when df says space is free but writes fail
+```
+
+Read the `Use%` and `Avail` columns. Ignore `tmpfs`/`devtmpfs` lines; those are RAM-backed.
+
+To find *what's* using the space:
+
+```bash
+du -sh /var/*           # size of each item under /var
+du -h --max-depth=1 / | sort -h   # biggest top-level dirs, sorted
+ncdu /                  # interactive browser, if installed
+```
+
+`du` on large trees takes a while and needs `sudo` for directories you can't read. A common gotcha: if `df` shows a full disk but `du` doesn't account for it, a deleted file is still held open by a process — `sudo lsof +L1` will show it, and restarting that process frees the space.

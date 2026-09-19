@@ -8,6 +8,20 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Because the product is a prompt, any edit to `clear-partner.md` is a behaviour change
 and gets its own entry here and its own version bump.
 
+## [Unreleased]
+
+No change to either plugin.
+
+### Changed
+
+- Every demo image is now a recording of a real Claude Code session, made with VHS, in place
+  of the drawn cards and the status-bar mock-up. The tapes, the assembly scripts and the method
+  are in `demo/`. The before/after recordings run two stock sessions that differ only by
+  `--plugin-dir plugins/clear-claude`.
+- The README's word-count claim is re-measured and no longer rests on one run: four runs per
+  arm of three questions average 524 → 372 words (−29 %), replacing 612 → 408 (−33 %) from a
+  single run each. Raw outputs are in `demo/runs/2026-09-19/`.
+
 ## [0.2.0] - 2026-09-19
 
 Not yet published. Marketplace 0.2.0: `clear-ui` debuts at 0.1.0. `clear-claude` stays at

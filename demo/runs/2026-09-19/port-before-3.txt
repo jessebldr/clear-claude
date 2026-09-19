@@ -1,0 +1,34 @@
+`ss` is the modern tool for this:
+
+```bash
+ss -ltnp 'sport = :3000'
+```
+
+Or without the filter syntax:
+
+```bash
+ss -ltnp | grep :3000
+```
+
+Flags: `-l` listening, `-t` TCP, `-n` numeric ports (don't resolve to service names), `-p` show the process. You need root (or `sudo`) to see the PID/name for processes you don't own.
+
+**Other options:**
+
+```bash
+# lsof — often not installed by default on minimal images
+sudo lsof -i :3000
+
+# fuser — prints just the PID, handy for scripting
+sudo fuser 3000/tcp
+
+# netstat — deprecated, from net-tools
+sudo netstat -ltnp | grep :3000
+```
+
+**To kill it:**
+
+```bash
+sudo fuser -k 3000/tcp
+```
+
+A couple of gotchas: drop `-l` if you also want established connections *to* port 3000, not just the listener. And if the port is held inside a container or a different network namespace, the host tools will show the container runtime's process (or nothing) — you'd need `docker ps` / `nsenter` to find the real one.
