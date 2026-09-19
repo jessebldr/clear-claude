@@ -81,7 +81,7 @@ The same loader reads a third directory, with `source: "policySettings"`, applie
 
 The paths were read from the 2.1.278 code and then **measured**, on GitHub's Linux, macOS and
 Windows runners — disposable machines where the job is an administrator
-(`MEASURE_POLICY=1`, [run 35459152005](https://github.com/jessebldr/clear-claude/actions/runs/35459152005)). The same on all three:
+(`MEASURE_POLICY=1`, [run 35461128151](https://github.com/jessebldr/clear-claude/actions/runs/35461128151)). The same on all three:
 
 ```text
   policy file, name: Clear Partner:               Using forced plugin output style: clear-partner:Clear Partner
