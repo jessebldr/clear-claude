@@ -1,0 +1,41 @@
+{
+  "cwd": "/home/dev/work/clear-claude",
+  "session_id": "3f6c1a52-0000-4000-8000-000000000001",
+  "transcript_path": "/home/dev/.claude/projects/x/3f6c1a52.jsonl",
+  "model": {
+    "id": "claude-fable-5-1",
+    "display_name": "Fable 5.1"
+  },
+  "workspace": {
+    "current_dir": "/home/dev/work/clear-claude",
+    "project_dir": "/home/dev/work/clear-claude",
+    "added_dirs": []
+  },
+  "version": "2.1.277",
+  "output_style": {
+    "name": "Clear Partner"
+  },
+  "cost": {
+    "total_cost_usd": 0,
+    "total_duration_ms": 0,
+    "total_api_duration_ms": 0,
+    "total_lines_added": 0,
+    "total_lines_removed": 0
+  },
+  "context_window": {
+    "total_input_tokens": 0,
+    "total_output_tokens": 0,
+    "context_window_size": 200000,
+    "used_percentage": null,
+    "remaining_percentage": null,
+    "current_usage": null
+  },
+  "exceeds_200k_tokens": false,
+  "fast_mode": false,
+  "effort": {
+    "level": "high"
+  },
+  "thinking": {
+    "enabled": true
+  }
+}

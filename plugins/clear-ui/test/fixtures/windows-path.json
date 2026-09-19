@@ -1,0 +1,55 @@
+{
+  "cwd": "C:\\Users\\dev\\work\\api-server\\src",
+  "session_id": "3f6c1a52-0000-4000-8000-000000000001",
+  "transcript_path": "/home/dev/.claude/projects/x/3f6c1a52.jsonl",
+  "model": {
+    "id": "claude-fable-5-1",
+    "display_name": "Fable 5.1"
+  },
+  "workspace": {
+    "project_dir": "C:\\Users\\dev\\work\\api-server\\",
+    "current_dir": "C:\\Users\\dev\\work\\api-server\\src"
+  },
+  "version": "2.1.277",
+  "output_style": {
+    "name": "Clear Partner"
+  },
+  "cost": {
+    "total_cost_usd": 1.8421,
+    "total_duration_ms": 845000,
+    "total_api_duration_ms": 212000,
+    "total_lines_added": 156,
+    "total_lines_removed": 23
+  },
+  "context_window": {
+    "total_input_tokens": 62000,
+    "total_output_tokens": 1200,
+    "context_window_size": 200000,
+    "used_percentage": 31,
+    "remaining_percentage": 69,
+    "current_usage": {
+      "input_tokens": 8500,
+      "output_tokens": 1200,
+      "cache_creation_input_tokens": 5000,
+      "cache_read_input_tokens": 48500
+    }
+  },
+  "exceeds_200k_tokens": false,
+  "fast_mode": false,
+  "effort": {
+    "level": "high"
+  },
+  "thinking": {
+    "enabled": true
+  },
+  "rate_limits": {
+    "five_hour": {
+      "used_percentage": 9.2,
+      "resets_at": 1789798800
+    },
+    "seven_day": {
+      "used_percentage": 51.4,
+      "resets_at": 1790193600
+    }
+  }
+}

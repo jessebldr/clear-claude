@@ -1,0 +1,20 @@
+== wide (120 columns)
+Sonnet 5  medium  │  api-server                                                         ctx 31% ███───────  │  $0.42
+
+== medium (60 columns)
+Sonnet 5  medium  │  api-server
+ctx 31% ███───────  │  $0.42
+
+== narrow (40 columns)
+Sonnet 5  medium  │  api-server
+ctx 31% ███───────  │  $0.42
+
+== unknown width
+Sonnet 5  medium  │  api-server
+ctx 31% ███───────  │  $0.42
+
+== wide, ascii
+Sonnet 5  medium  |  api-server                                                         ctx 31% ###-------  |  $0.42
+
+== wide, color
+␛[1mSonnet 5␛[0m  medium␛[2m  │  ␛[0mapi-server                                                         ctx ␛[1m31%␛[0m ␛[32m▬▬▬␛[0m␛[2m▬▬▬▬▬▬▬␛[0m␛[2m  │  ␛[0m␛[1m$0.42␛[0m

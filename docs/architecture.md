@@ -1,7 +1,19 @@
 # Architecture
 
-Clear Claude is one output style delivered through the native Claude Code plugin
-system. This document records the decisions behind that, and what each one costs.
+Clear Claude is a marketplace of two independent plugins, one per layer
+([ADR 0004](adr/0004-one-plugin-per-layer.md)):
+
+- **`clear-claude`** — Clear Partner, one output style delivered through the native
+  Claude Code plugin system, plus two diagnostic skills. It writes nothing outside
+  itself and depends on nothing.
+- **`clear-ui`** — an optional status bar. It is code: a Node renderer, a setup script
+  that edits one key of the user's `settings.json`, and documented classic hooks. Its
+  architecture is recorded separately, in [ui-architecture.md](ui-architecture.md).
+
+Installing one never installs or changes the other, and they share no code and no
+prompt. This document records the decisions behind the `clear-claude` plugin and the
+repository they share, and what each one costs. Where a decision below says "the
+plugin", it means `clear-claude`.
 
 Every platform claim here traces back to [phase0-research.md](phase0-research.md),
 which was verified against Claude Code **2.1.274** and tags each fact with how it was
@@ -13,13 +25,23 @@ obtained. Where this document depends on a researched fact, it names the section
 clear-claude/                          ← the repository is also the marketplace
 ├── .claude-plugin/marketplace.json    ← marketplace manifest
 ├── plugins/
-│   └── clear-claude/                  ← the plugin
-│       ├── .claude-plugin/plugin.json ← plugin manifest
-│       ├── output-styles/
-│       │   └── clear-partner.md       ← the entire product
-│       └── skills/
-│           ├── clear-doctor/SKILL.md  ← install diagnostics
-│           └── clear-audit/SKILL.md   ← activation + conformance checks
+│   ├── clear-claude/                  ← the communication layer
+│   │   ├── .claude-plugin/plugin.json ← plugin manifest
+│   │   ├── output-styles/
+│   │   │   └── clear-partner.md       ← the entire product
+│   │   ├── skills/
+│   │   │   ├── clear-doctor/SKILL.md  ← install diagnostics
+│   │   │   └── clear-audit/SKILL.md   ← activation + conformance checks
+│   │   └── evals/                     ← behavioural eval cases (docs/evals.md)
+│   └── clear-ui/                      ← the optional status bar (ui-architecture.md)
+│       ├── .claude-plugin/plugin.json
+│       ├── bin/  src/                 ← entry points and the renderer
+│       ├── hooks/hooks.json           ← documented classic hooks
+│       ├── skills/                    ← setup, configure, doctor
+│       └── test/  bench/
+├── experimental/                      ← mods research and function-hook spikes;
+│                                        never listed in the marketplace
+├── source/clear-partner.md            ← the original style, before the port
 ├── docs/
 ├── README.md
 ├── LICENSE
@@ -27,18 +49,18 @@ clear-claude/                          ← the repository is also the marketplac
 └── .gitignore
 ```
 
-One repository serves as both marketplace and plugin host. The marketplace entry
-points at the plugin with a relative path (`"source": "./plugins/clear-claude"`), which
+One repository serves as both marketplace and plugin host. Each marketplace entry
+points at its plugin with a relative path (`"source": "./plugins/clear-claude"`), which
 is a verified `source` form — a bare URL string is rejected (research §2).
 
-The `plugins/` directory layer exists so a second plugin can be added later without
-restructuring. It is the one piece of structure here that anticipates the future rather
-than serving the present, and it costs one directory.
+The `plugins/` directory layer existed from the first commit so a second plugin could be
+added without restructuring. It was the one piece of structure that anticipated the
+future rather than serving the present; `clear-ui` is that second plugin, and adding it
+moved nothing.
 
-Directories the original plan called for but that do not exist yet — `evals/`, `tests/`,
-`experimental/` — are omitted on purpose. An empty directory with a placeholder README
-teaches a reader nothing and makes the repository look larger than it is. They will be
-created when they hold something. `skills/` now holds something.
+Directories are created when they hold something, never as placeholders: an empty
+directory with a README teaches a reader nothing and makes the repository look larger
+than it is. `evals/`, `experimental/` and `clear-ui`'s `test/` arrived that way.
 
 ## Decision: automatic activation via `force-for-plugin`
 
@@ -209,12 +231,27 @@ guess. Claude Code itself absorbs every platform difference, so Windows, macOS, 
 Linux share not just the same package but the same commands.
 
 A shell installer would be justified only if the native mechanism could not do
-something required. It can do everything required.
+something required. For `clear-claude` it can do everything required.
+
+`clear-ui` is the case where it cannot, and the rule was applied rather than bent. A
+plugin cannot register a status line — Claude Code honours only `agent` and
+`subagentStatusLine` from a plugin's own settings — so something has to name it in the
+user's `settings.json`. That something is one deterministic Node script
+(`bin/setup.mjs`: plan, back up, edit one key, restore on uninstall), still delivered
+through the plugin system and still one file for all three platforms; there is no
+`install.sh` and no `install.ps1` there either. The cost is confined to the plugin that
+needs it, which is one reason the layers are separate plugins: installing Clear Partner
+can never edit settings. See [ADR 0004](adr/0004-one-plugin-per-layer.md) and
+[ui-architecture.md](ui-architecture.md).
 
 ## Versioning
 
-Semantic versioning, starting at `0.1.0`, set identically in `plugin.json` and in the
-marketplace entry.
+Semantic versioning. Each plugin carries its own version, set identically in its
+`plugin.json` and in its marketplace entry; both plugins started at `0.1.0`. The
+marketplace's own `metadata.version` tracks the newest change to either plugin, so
+`clear-ui` 0.1.0 debuts in marketplace 0.2.0 while `clear-claude` stays at 0.1.0. The
+plan is in [roadmap-v2.md](roadmap-v2.md#versions); the mechanics are in
+[releasing.md](releasing.md).
 
 Research §1 records that Claude Code performs **no semver enforcement** — the string
 `"notsemver"` validates clean even under `--strict` — while `claude plugin tag` builds a

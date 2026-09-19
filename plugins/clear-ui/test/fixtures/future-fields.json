@@ -1,0 +1,65 @@
+{
+  "cwd": "/home/dev/work/clear-claude",
+  "session_id": "3f6c1a52-0000-4000-8000-000000000001",
+  "transcript_path": "/home/dev/.claude/projects/x/3f6c1a52.jsonl",
+  "model": {
+    "id": "m",
+    "display_name": "Opus 5",
+    "tier": "future"
+  },
+  "workspace": {
+    "current_dir": "/home/dev/work/clear-claude",
+    "project_dir": "/home/dev/work/clear-claude",
+    "added_dirs": []
+  },
+  "version": "2.1.277",
+  "output_style": {
+    "name": "Clear Partner"
+  },
+  "cost": {
+    "total_cost_usd": 1.8421,
+    "total_duration_ms": 845000,
+    "total_api_duration_ms": 212000,
+    "total_lines_added": 156,
+    "total_lines_removed": 23
+  },
+  "context_window": {
+    "context_window_size": 1000000,
+    "used_percentage": "12",
+    "current_usage": {
+      "input_tokens": 40000,
+      "cache_read_input_tokens": "oops",
+      "cache_creation_input_tokens": 60000
+    }
+  },
+  "exceeds_200k_tokens": false,
+  "fast_mode": false,
+  "effort": {
+    "level": "xhigh",
+    "budget": 9
+  },
+  "thinking": {
+    "enabled": true
+  },
+  "rate_limits": {
+    "five_hour": "soon",
+    "seven_day": {
+      "used_percentage": 51.4,
+      "resets_at": "never"
+    },
+    "spend_limit": {
+      "used_percentage": 162.8,
+      "resets_at": 1790193600
+    },
+    "model_scoped": [
+      {}
+    ]
+  },
+  "brand_new_top_level": {
+    "nested": [
+      1,
+      2,
+      3
+    ]
+  }
+}

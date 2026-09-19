@@ -1,7 +1,11 @@
 name: CI
 
-# What this workflow does, precisely: it runs Claude Code's own manifest and
-# component validator in strict mode. That is the whole of it.
+# What this workflow does, precisely. The marketplace holds two independent plugins:
+#   - `validate` runs Claude Code's own manifest and component validator in strict
+#     mode over the marketplace and both plugins, clear-claude and clear-ui.
+#   - `clear-ui` runs that plugin's test suite, a demo render and a timing bench on
+#     Linux, macOS and Windows. clear-claude is a prompt and two skills, so it has no
+#     tests to run here.
 #
 # What it does NOT do, and why:
 #   - It does not run the behavioural eval suite. `claude plugin eval` spawns real
@@ -40,8 +44,55 @@ jobs:
       - name: Validate marketplace manifest
         run: claude plugin validate .claude-plugin/marketplace.json --strict
 
-      - name: Validate plugin manifest
+      - name: Validate clear-claude manifest
         run: claude plugin validate plugins/clear-claude --strict
 
-      - name: Validate skills
+      - name: Validate clear-claude skills
         run: claude plugin validate plugins/clear-claude/skills --strict
+
+      - name: Validate clear-ui manifest and components
+        run: |
+          claude plugin validate plugins/clear-ui --strict
+          claude plugin validate plugins/clear-ui/skills --strict
+
+  # Clear UI is code, so it gets real tests — on all three platforms it claims to support,
+  # because its whole cross-platform story is "one Node file, no shell". Golden renders are
+  # byte-compared, so a platform-dependent difference fails here rather than in someone's
+  # terminal. Node 18 is the floor the plugin advertises; 22 is what CI above uses.
+  clear-ui:
+    name: clear-ui tests (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ['22']
+        include:
+          - os: ubuntu-latest
+            node: '18'
+    defaults:
+      run:
+        working-directory: plugins/clear-ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # No install step: zero production dependencies and no build, by design.
+      - name: Test
+        run: node --test
+
+      # bash on every runner: PowerShell, the Windows default, has no `<` redirection.
+      - name: Demo render
+        shell: bash
+        run: node bin/statusline.mjs < test/fixtures/idle.json
+        env:
+          COLUMNS: '120'
+
+      # Reports median and p95 against the per-platform budgets in docs/ui-architecture.md and
+      # fails only past the 250 ms hard ceiling: a shared runner is too noisy for the budgets
+      # themselves to gate a merge, but the numbers are in the log for every run.
+      - name: Bench
+        run: node bench/bench.mjs
