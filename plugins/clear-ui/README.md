@@ -6,7 +6,9 @@
 [docs/roadmap-v2.md](../../docs/roadmap-v2.md).
 
 A calm status bar for Claude Code, drawn from the JSON Claude Code already pipes to a statusline
-command plus one `git status`. One row when it fits, two when it does not:
+command plus one `git status` — by default nothing else, and no network. (One opt-in extra, the
+[usage provider](#usage-provider-opt-in), has Claude Code itself fetch one more number in the
+background.) One row when it fits, two when it does not:
 
 ```text
 Fable 5.1  high  │  clear-claude on main  ●             ctx 43%   5h 39% · 42m   7d 58% · 13h42m
@@ -135,6 +137,68 @@ longest-running agent, in whole minutes. Background commands come from the `Stop
 a snapshot of the last time Claude stopped, because nothing fires when a shell ends.
 Reasoning: [docs/research/ux-distillation.md](../../docs/research/ux-distillation.md).
 
+## Usage provider (opt-in)
+
+```text
+node bin/configure.mjs usage on          # and `usage off`
+```
+
+**Off by default, and by default nothing changes:** the status line draws only from what Claude
+Code pipes to it, and reaches no network.
+
+The status-line contract carries the session and the all-models weekly window. It does not carry
+the weekly limit scoped to one model, which the usage screen shows. This provider gets that row
+from a surface Anthropic ships: Claude Code's own headless `claude -p /usage`, whose stream-json
+output carries a structured `usage_report`. Clear UI reads no credential and calls no API; Claude
+Code does both, as it does for its own usage screen. That surface is **not documented** — it was
+measured on 2.1.278 ([docs/research/headless-usage.md](../../docs/research/headless-usage.md)) —
+so the provider is built to go quiet, not wrong, the day it changes.
+
+What it draws is one more quota chip after the weekly one, under the name Claude Code gave the
+row — `7d 68% · 4h07m  │  Fable 65%` — with the same warning and critical levels as the other
+quotas. It does not repeat the `7d` or the reset time of the chip beside it (it says both when
+that chip is switched off). It is the first thing dropped when the row is short, and while it is
+healthy it is never what turns a bar that fitted on one row into two; from the warning level on
+it is content like any other quota. `configure.mjs set weeklyScoped off` hides it and keeps the
+provider running. No model is named in the code: whatever label arrives is cleaned like a branch
+name, cut at 12 cells, and drawn.
+
+- **The status line only reads a cache file.** When the file is ten minutes old, one tick claims
+  the refresh and starts a detached worker; the tick does not wait (measured: about 8 ms, once per
+  interval). The claim is an exclusively created lock file named after the interval, so the
+  two-second ticks of every open session start one worker between them, and a failed refresh is
+  not retried until the next interval. Older lock files are cleared on every look: one remains.
+- **Ten minutes, and thirty.** A weekly window moves slowly and arrives as a whole percent: over
+  24 minutes of one busy session the scoped row went 64 → 65. Every refresh is a full Claude Code
+  start (~1.9 s, in the background) that rewrites `~/.claude.json` and makes Claude Code's usual
+  start-up requests, so it is not done more often than the number can change. The last good
+  answer is drawn for 30 minutes — three missed refreshes — and then not at all; a window that
+  has reset since the fetch is dropped at once.
+- **`claude` is started with an argument vector, never through a shell** — a shell is how
+  `/usage` becomes a path, and a path is a prompt that a model answers for money. Only a real
+  executable is started: `claude.exe` on Windows, an executable file named `claude` elsewhere,
+  found on `PATH` without `PATHEXT` or `where`. An npm install's `claude.cmd` on Windows cannot be
+  started without a shell, so there the provider stays silent and the doctor says why.
+- **The run is** `--safe-mode` (no plugins, hooks or MCP servers, this one included),
+  `--no-session-persistence`, `--tools ""`, `--model haiku` and `--max-budget-usd 0.0001`.
+  **The budget does not prevent a first accidental model call** — it is checked after a turn, so
+  it stops the second. Measured with a real prompt in the command's place: one turn, then
+  `error_max_budget_usd`. What limits the damage of that turn is the cheapest model with no tools
+  ($0.004, against $0.136 for the same accident on the session's own model), and what keeps its
+  answer off the bar is the next rule.
+- **A run is believed only when it proves it was the built-in command:** exit 0, `local_command:
+  "usage"`, no turn, no cost, no API time, no token, no model. Only `usage_report` is parsed, never
+  the rendered text. Needed fields are validated, unknown ones ignored, and anything else is a
+  silent failure.
+- **A failure never overwrites the last good answer.**
+- Rows are stored as they arrive — `weekly_scoped` with whatever model name it carries.
+
+Because it fails silently, `node bin/doctor.mjs` says what it is doing — off or on, whether a
+`claude` executable was found, how old the last good answer is, when the last attempt was — from
+what is on disk. The doctor never starts a refresh, its dry render included.
+`node bin/usage-refresh.mjs <cache directory> --report` runs one refresh by hand and says whether
+it was believed, and if not, why.
+
 ## Try it without installing
 
 ```text
@@ -163,11 +227,14 @@ groups fit side by side and as two when they do not.
 | `src/verify.mjs` | Pure: which commands count as verification, and what the records mean. |
 | `src/session-state.mjs` | Node: per-session records, one writer per file, atomic. |
 | `src/activity.mjs` | Pure: what is running, as counts, and when a record stops being believed. |
+| `src/usage.mjs` | Pure: the opt-in usage provider's arguments, what makes a run believable, the normalized record, and when it stops being believed. |
+| `src/usage-cache.mjs` | Node: the usage cache file, the single-flight claim, and the one `claude` run. Off unless opted in. |
 | `bin/statusline.mjs` | Entry. Always exits 0, never writes stderr, prints nothing when unsure. |
 | `bin/setup.mjs` | `plan` / `apply` / `uninstall`. The only thing here that writes to settings. |
 | `bin/doctor.mjs` | Read-only diagnosis. Reports which keys are set, never their contents. |
 | `bin/sync.mjs` | `SessionStart` maintenance. Silent, always exits 0. |
-| `bin/configure.mjs` | `show` / `preset` / `set` / `charset` / `reset`. Writes `config.json` only. |
+| `bin/configure.mjs` | `show` / `preset` / `set` / `charset` / `usage` / `reset`. Writes `config.json` only. |
+| `bin/usage-refresh.mjs` | The usage provider's detached worker. Prints nothing, always exits 0; `--report` says whether the run was believed. |
 | `bin/observe.mjs` | The hook behind verification state and the background count. Records, never renders, prints nothing. |
 | `bin/agents.mjs` | The `subagentStatusLine` data feed. Prints nothing; stores type, status and start time only. |
 | `bench/bench.mjs` | Fresh-process timing against the budgets; fails only past 250 ms. |

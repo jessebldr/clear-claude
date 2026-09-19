@@ -139,7 +139,8 @@ MCP servers, no CLAUDE.md, no personality injected through three layers at once.
 
 | Component | Type | What it does |
 | --- | --- | --- |
-| Status bar | Node script, zero dependencies | Draws only from the JSON Claude Code already pipes to a status line, plus one cached `git status`. No network, no credentials, no transcript parsing. |
+| Status bar | Node script, zero dependencies | Draws only from the JSON Claude Code already pipes to a status line, plus one cached `git status`. By default: no network, no credentials, no transcript parsing. |
+| Usage provider | Opt-in, off by default | Shows the weekly limit scoped to one model, which the status-line data does not carry. Runs Claude Code's own `claude -p /usage` in the background, at most every ten minutes, and reads its structured output. Claude Code reaches the network for that with its own sign-in; Clear UI reads no credential, calls no API, and the run makes no model call. |
 | `clear-ui-setup` | Skill over a deterministic script | Plans, backs up, edits one settings key, restores on uninstall. |
 | `clear-ui-configure` | Skill over a deterministic script | Presets, single segments, looks. |
 | `clear-ui-doctor` | Skill over a deterministic script | Read-only: why is it not showing? |
@@ -197,7 +198,7 @@ results, and the honest limits are in [docs/evals.md](docs/evals.md).
 - [x] Re-run evals against a new Claude Code version: 6/6 again on 2.1.278. Repeat per
   release; the suite is cheap (~$2)
 - [ ] `clear-doctor` auto-fix mode (currently read-only by design)
-- [x] Clear UI: an optional status bar as a second plugin (`clear-ui`, now 0.1.1)
+- [x] Clear UI: an optional status bar as a second plugin (`clear-ui`, now 0.2.0)
 - [x] Clear UI: CI green on Linux, macOS and Windows; its opt-in features (verification
   state, activity row) exercised end to end against real hook payloads on Windows
   ([what that showed](docs/clear-ui-dogfood.md))

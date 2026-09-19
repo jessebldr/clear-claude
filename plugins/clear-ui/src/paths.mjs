@@ -13,6 +13,9 @@ export const PLUGIN_DATA_ID = 'clear-ui-clear-claude'
 export const RUNTIME_FILES = [
   'bin/statusline.mjs',
   'bin/agents.mjs',
+  'bin/usage-refresh.mjs',
+  'src/usage.mjs',
+  'src/usage-cache.mjs',
   'src/stdin.mjs',
   'src/state.mjs',
   'src/render.mjs',

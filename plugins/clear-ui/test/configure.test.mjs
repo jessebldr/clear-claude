@@ -107,3 +107,19 @@ test("uninstall removes Clear UI's files even when the status line is no longer 
   assert.equal(existsSync(join(home, ...DATA, 'runtime')), false)
   cleanup(home)
 })
+
+test('usage is off until asked for, on is one key, and off removes it again', () => {
+  const home = makeHome()
+  assert.match(run(home, 'configure', ['show']).out, /usage\s+off/)
+  assert.equal(run(home, 'configure', ['preset', 'full']).code, 0)
+  assert.equal(run(home, 'configure', ['usage', 'on']).code, 0)
+  assert.deepEqual(readConfig(home), { preset: 'full', usage: true, version: 1 })
+  assert.match(run(home, 'configure', ['show']).out, /usage\s+on/)
+  // A preset is about what is drawn; it neither grants nor withdraws the opt-in.
+  assert.equal(run(home, 'configure', ['preset', 'minimal']).code, 0)
+  assert.equal(readConfig(home).usage, true)
+  assert.equal(run(home, 'configure', ['usage', 'off']).code, 0)
+  assert.deepEqual(readConfig(home), { preset: 'minimal', version: 1 })
+  assert.equal(run(home, 'configure', ['usage', 'maybe']).code, 1)
+  cleanup(home)
+})

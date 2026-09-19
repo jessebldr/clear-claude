@@ -34,6 +34,8 @@ const BAR_CELLS = 10
 const MODEL_MAX_WIDTH = 24
 const EFFORT_MAX_WIDTH = 8
 const NAME_MAX_WIDTH = { wide: 32, medium: 32, narrow: 20 }
+const SCOPED_LABEL_MAX_WIDTH = 12
+const SCOPED_ROWS_MAX = 2
 
 const GLYPHS = {
   unicode: {
@@ -172,6 +174,7 @@ const SHOW_DEFAULT = {
   context: true,
   fiveHour: true,
   sevenDay: true,
+  weeklyScoped: true,
   cost: 'auto',
   lines: false,
   outputStyle: false,
@@ -324,7 +327,12 @@ export function render(state, options = {}) {
   // rows. A terminal that gets wider must never show less or reflow backwards.
   const DETAILS = ['wide', 'medium', 'narrow']
 
-  const compose = detail => {
+  const scopedRows = show.weeklyScoped && Array.isArray(state.usage?.weeklyScoped) ? state.usage.weeklyScoped.slice(0, SCOPED_ROWS_MAX) : []
+  // While every scoped row is healthy the chip is an extra. Once one reaches the warning level it
+  // is content like any other quota.
+  const scopedIsExtra = scopedRows.length > 0 && scopedRows.every(row => !(showPercent(row?.percent) >= THRESHOLDS.quota.warn))
+
+  const compose = (detail, withScoped = true) => {
     const wide = detail === 'wide'
     const narrow = detail === 'narrow'
 
@@ -403,6 +411,19 @@ export function render(state, options = {}) {
     if (fiveHour) capacity.push(fiveHour)
     if (sevenDay) capacity.push(sevenDay)
 
+    // The weekly window scoped to one model, from the opt-in usage provider. The label is the
+    // name Claude Code gave the row -- outside text, cleaned like a branch name, and never one
+    // this file knows. It stands beside the weekly chip as part of the same week, so it repeats
+    // neither the "7d" nor the reset time unless that chip is not there to say them, and it is
+    // dropped before the chip it qualifies.
+    if (withScoped) {
+      for (const row of scopedRows) {
+        const name = clean(row?.label, SCOPED_LABEL_MAX_WIDTH)
+        const scoped = name ? usage(sevenDay ? name : `7d ${name}`, row, 3, wide && !sevenDay) : null
+        if (scoped) capacity.push(scoped)
+      }
+    }
+
     // Cost stands in for quota only where there is no quota (API key, Bedrock, Vertex). Zero
     // is hidden: a subscriber has no rate limits before the first response of a session either.
     // Asked for outright (`always`) it sits behind the quotas instead, and is the first to go.
@@ -428,21 +449,28 @@ export function render(state, options = {}) {
   //
   // Fewer rows wins only on an exact tie, so the single-row bar is a reward for content that
   // already fits, never a reason to drop content.
-  let best = null
-  DETAILS.forEach((detail, index) => {
-    const { identity, capacity } = compose(detail)
+  const candidate = (detail, index, withScoped) => {
+    const { identity, capacity } = compose(detail, withScoped)
     const left = composeLine(identity, joins.identity, maxWidth, glyphs.ellipsis)
     const right = composeLine(capacity, joins.capacity, maxWidth, glyphs.ellipsis)
     const bar = spreadLine(left, right, spreadWidth)
-    const rows = bar === null ? 2 : 1
     const score =
       (left.atoms + right.atoms) * 10 +
       (DETAILS.length - index) -
       (left.truncated ? 1000 : 0) -
       (right.truncated ? 1000 : 0)
-    if (best === null || score > best.score || (score === best.score && rows < best.rows)) {
-      best = { score, rows, lines: bar === null ? [left.styled, right.styled].filter(line => line !== '') : [bar] }
+    return { score, rows: bar === null ? 2 : 1, lines: bar === null ? [left.styled, right.styled].filter(line => line !== '') : [bar] }
+  }
+  let best = null
+  DETAILS.forEach((detail, index) => {
+    let found = candidate(detail, index, true)
+    // The one exception to "content before rows": a healthy scoped chip is never what turns the
+    // single bar into two rows. Switching the provider on must not reflow a bar that fitted.
+    if (scopedIsExtra && found.rows === 2) {
+      const bare = candidate(detail, index, false)
+      if (bare.rows === 1) found = bare
     }
+    if (best === null || found.score > best.score || (found.score === best.score && found.rows < best.rows)) best = found
   })
 
   // The activity row: present only while something runs, and counts only. The agent panel and

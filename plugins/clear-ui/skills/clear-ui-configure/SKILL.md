@@ -1,6 +1,6 @@
 ---
 name: clear-ui-configure
-description: Choose what the Clear UI status line shows — pick a preset (essential, minimal, full), switch a single segment on or off, or select the ASCII glyphs. Runs a deterministic script that writes one small config file in the plugin data directory; it never touches settings.json. Use when the user says "configure clear ui", "clear ui preset", "hide the branch in clear ui", "show cost in the status line", "clear ui ascii", or asks how to change what the status line displays.
+description: Choose what the Clear UI status line shows — pick a preset (essential, minimal, full), switch a single segment on or off, select the ASCII glyphs, or turn the opt-in usage provider on or off (the weekly limit scoped to one model, such as the per-model weekly usage shown by /usage). Runs a deterministic script that writes one small config file in the plugin data directory; it never touches settings.json. Use when the user says "configure clear ui", "clear ui preset", "hide the branch in clear ui", "show cost in the status line", "clear ui ascii", "clear ui usage on", "show my model's weekly limit in the status line", "show scoped usage", "turn off the usage provider", "hide the scoped usage chip", or asks how to change what the status line displays.
 ---
 
 # Clear UI configure
@@ -61,9 +61,38 @@ Choosing a preset drops any single-segment overrides made earlier; say so if `sh
 node "${CLAUDE_PLUGIN_ROOT}/bin/configure.mjs" set <segment> <on|off>
 ```
 
-Segments: `model`, `effort`, `project`, `git`, `context`, `fiveHour`, `sevenDay`, `cost`,
-`lines`, `outputStyle`. `cost` also takes `auto`, `always` and `never`. Switching `git` off
-also stops the `git status` call, which matters in a very large repository.
+Segments: `model`, `effort`, `project`, `git`, `context`, `fiveHour`, `sevenDay`,
+`weeklyScoped`, `cost`, `lines`, `outputStyle`, `verification`, `activity`. `cost` also takes
+`auto`, `always` and `never`. Switching `git` off also stops the `git status` call, which
+matters in a very large repository. `weeklyScoped` is the chip the usage provider feeds: it is
+on by default and draws nothing until the provider is on, and switching it off hides the chip
+while the provider keeps running — to stop the background runs, use `usage off` below.
+
+## Usage provider (opt-in)
+
+```text
+node "${CLAUDE_PLUGIN_ROOT}/bin/configure.mjs" usage <on|off>
+```
+
+Off by default, and no preset turns it on. It adds one chip after the weekly one — the weekly
+limit scoped to one model, under the name Claude Code gives it, for example `Fable 65%` — which
+the status-line data does not carry.
+
+**Before switching it on, tell the user what it does, and let them decide:** by default the
+status line reaches no network. With this on, a background worker runs Claude Code's own
+`claude -p /usage` at most every ten minutes and reads its structured output. Claude Code
+reaches the network for that with its own sign-in, as it does for its `/usage` screen; Clear UI
+reads no credential and calls no API, and the run makes no model call and costs nothing. Each
+run is a full Claude Code start in the background. The surface is not documented by Anthropic,
+so if it changes the chip disappears rather than showing a wrong number.
+
+Do not describe it as an API integration or a private endpoint: it is a command Claude Code
+ships, run the way a person would run it.
+
+The chip appears within a few seconds of the first refresh and is hidden when the last good
+answer is more than 30 minutes old. On Windows it needs the native `claude.exe`; with an npm
+install (`claude.cmd`) it stays silent. If the user switched it on and sees no chip, use
+`clear-ui-doctor`: its `Usage provider` row says why.
 
 ## Glyphs
 
