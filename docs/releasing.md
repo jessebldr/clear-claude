@@ -31,6 +31,11 @@ with it. The plan for the marketplace number is in
    Added / Changed / Fixed / Removed subsections. Say what a user will *notice*,
    not which files moved.
 
+   A change that reaches `main` without a version bump goes under `## Unreleased` at the
+   top, with a line saying which plugin's next release carries it. A release moves
+   everything there into its own section, so `Unreleased` is either absent or names work
+   that is genuinely waiting — never a second changelog.
+
 4. **Validate and test.** The same commands CI runs:
 
    ```sh

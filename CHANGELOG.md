@@ -8,32 +8,74 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Because the product is a prompt, any edit to `clear-partner.md` is a behaviour change
 and gets its own entry here and its own version bump.
 
-## Unreleased
+## [0.4.1] - 2026-09-20
 
-On `main`, not in a released `clear-ui` version yet; ships with the next `clear-ui` release.
-Marketplace 0.4.0 below does not release `clear-ui`.
+Marketplace 0.4.1: `clear-partner` 0.2.1 and `clear-ui` 0.2.1. A closing release for both
+layers: one real diagnostic defect fixed, the evidence gaps of 0.4.0 measured instead of
+assumed, and everything that had collected under "Unreleased" shipped. **No change to the
+Clear Partner prompt** — same bytes, same SHA-256 — and no change to what the status bar draws.
 
 ### Fixed
 
+- **`clear-doctor` and `clear-audit` no longer fail an install that is fine** (`clear-partner`
+  0.2.1). Both reported FAIL / NOT ACTIVE when a style file named `Clear Partner` sat in
+  `~/.claude/output-styles/` — the usual leftover of having used the style by hand before the
+  plugin existed — on the reasoning that it silently replaces the plugin's copy. It does not,
+  and never did on any version measured (2.1.273, 2.1.277, 2.1.278): a plugin's style is keyed
+  `clear-partner:Clear Partner`, so a file with the bare name replaces nothing and the
+  plugin's style stays forced. Only a file that takes that *qualified* name displaces it, and
+  that is what the skills look for now. A plain `Clear Partner` file is named in the report as
+  what it is: a separate style, harmless.
+  [docs/research/style-shadowing.md](docs/research/style-shadowing.md) has the measurement; the
+  README, `docs/troubleshooting.md` and `docs/architecture.md` said the same wrong thing and
+  are corrected.
+- **The skills now read the policy level too.** Their own description of style resolution
+  named an administrator-level style directory that neither of them looked at. Its location
+  was read from Claude Code and then measured on disposable Linux, macOS and Windows machines;
+  a policy directory that cannot be read is reported as UNKNOWN, not guessed.
 - `configure.mjs show` printed `weeklyScopedon` and `verificationon`: both names are exactly as
   wide as the column was, and `verification` had been since 0.1.0 — found when the second one
-  turned up in a recording. Display only; the settings were always read and written correctly.
+  turned up in a recording. Display only; the settings were always read and written correctly
+  (`clear-ui` 0.2.1).
 
 ### Changed
 
+- **The upgrade notes for the 0.4.0 rename said "a session or two"; that was wrong.** After a
+  marketplace-only update, sessions never bring Clear Partner back by themselves — three in a
+  row ran without it, on Windows, macOS and Linux. A `claude plugin` command does, which is
+  what had happened between the sessions of the earlier runs. The advice is unchanged and now
+  better founded: `claude plugin marketplace update clear-claude`, then
+  `claude plugin install clear-partner@clear-claude`. Also measured now rather than quoted:
+  project and local settings are rewritten like user settings; a plugin enabled from
+  **managed** settings is not rewritten and, contrary to Claude Code's documentation, stops
+  loading until the new name is installed or an administrator changes the key
+  ([docs/migration.md](docs/migration.md#what-was-measured)).
 - The macOS timing budget is no longer a guess. On a real Mac (M4 Mac mini) the status line
   takes 38 ms with git cached and 46 ms on a cache miss, median of three runs, so the 40 / 60 ms
-  budget stands — with about 2 ms to spare on the first number, and no Intel Mac measured yet.
-  The opt-in features were also run against real hook payloads on macOS
-  ([docs/clear-ui-dogfood.md](docs/clear-ui-dogfood.md)). No change to what the bar draws (#2).
+  budget stands — with about 2 ms to spare on the first number. An Intel Mac has not been
+  measured and is recorded as a limit, not as open work. The opt-in features were also run
+  against real hook payloads on macOS ([docs/clear-ui-dogfood.md](docs/clear-ui-dogfood.md)).
+  No change to what the bar draws (#2, closed).
 - `bench/bench.mjs` no longer says `over budget` in a CI log: on a shared runner the budgets are
   printed as `not judged`, because the same runner swings by half between runs. The 250 ms
   ceiling still fails a build, and `--strict` still judges the budgets anywhere.
+- The three side-by-side recordings say "+ Clear Partner plugin". The banner is drawn by the
+  edit step, not recorded, so they were cut again from the same stored frames: same frame
+  counts, same lengths, nothing inside a frame differs.
+- The README's roadmap says what is finished, what is tracked (#18, #19) and what is not
+  planned, instead of a list of unticked boxes; `docs/roadmap-v2.md` opens with the same
+  accounting. "Same commands work on macOS: not verified" is gone from `docs/install.md`.
 
 ### Added
 
+- `scripts/measure-plugin-loading.sh` and a manual `Measure plugin loading` workflow: how the
+  installed Claude Code treats a renamed plugin and a style file that takes the plugin's key,
+  in throwaway config directories, with no credential and nothing billed. It is how the two
+  corrections above were found, and how to take the numbers again after a Claude Code release.
+- `scripts/check-repo.mjs` also fails if the diagnostic skills stop naming the style's
+  qualified key — it is built from the plugin's name, so a rename would silently break them.
 - A recording of the usage provider, `assets/clear-ui-scoped-usage.gif`, with its tape and a
-  note on what in it is real ([demo/README.md](demo/README.md)). Docs and media only.
+  note on what in it is real ([demo/README.md](demo/README.md)).
 
 ## [0.4.0] - 2026-09-20
 
