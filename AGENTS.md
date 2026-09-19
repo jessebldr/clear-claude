@@ -21,8 +21,10 @@ one never touches another ([ADR 0004](docs/adr/0004-one-plugin-per-layer.md)).
 Use exactly these names. The plugin `clear-partner` was called `clear-claude` before
 marketplace 0.4.0; `renames` in `marketplace.json` migrates old installs and is append-only
 ([ADR 0005](docs/adr/0005-naming-and-install-paths.md), [docs/migration.md](docs/migration.md)).
-The old id may appear only in the CHANGELOG, `docs/migration.md`, ADRs, `docs/research/` and
-the doctor/audit skills' legacy check.
+The old id belongs only in records of the time (CHANGELOG, ADRs, `docs/research/`,
+`docs/clear-ui-dogfood.md`, `demo/runs/`), in `docs/migration.md`, and as one pointer to that
+page in README and `llms.txt`. The list CI enforces is `LEGACY_ALLOWED` in
+`scripts/check-repo.mjs`.
 
 Also here: `source/clear-partner.md` (the style before the port; differs from the shipped
 file by one frontmatter line), `demo/` (VHS tapes and scripts behind the GIFs in `assets/`,

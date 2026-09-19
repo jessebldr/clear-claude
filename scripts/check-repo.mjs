@@ -9,12 +9,14 @@
 //
 //   versions   plugin.json, the marketplace entry and (clear-ui) package.json must agree;
 //              Claude Code enforces none of it. The CHANGELOG must have the marketplace version.
-//   names      a plugin's directory, manifest name and marketplace entry are one slug, and
-//              `renames` stays resolvable.
+//   names      a plugin's directory, manifest name and marketplace entry are one slug; every
+//              `renames` chain ends at a listed plugin or null; no recorded rename is lost.
 //   prompt     the Clear Partner style's SHA-256 and size are recorded in two documents, and
 //              source/clear-partner.md carries the same body. Nothing else validates the style.
-//   vocabulary the former plugin id may appear only where history is recorded.
-//   links      relative links and their #anchors in Markdown resolve.
+//   vocabulary the former plugin id may appear only where history is recorded, plus one
+//              pointer to the migration page in README.md and llms.txt.
+//   links      relative inline and reference-style links in Markdown, and their #anchors,
+//              resolve.
 
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
@@ -33,7 +35,14 @@ const STYLE_SOURCE = 'source/clear-partner.md'
 const HASH_RECORDS = ['plugins/clear-partner/skills/clear-audit/SKILL.md', 'docs/clear-partner-port.md']
 const STYLE_KEYS = ['name', 'description', 'keep-coding-instructions', 'force-for-plugin']
 
-// Where the former id `clear-claude@clear-claude` and its relatives are history, not drift.
+// Renames this marketplace has published. Append-only, like the map itself: users who skipped
+// a release still resolve through every entry, so one that disappears strands their install.
+const RECORDED_RENAMES = { 'clear-claude': 'clear-partner' }
+
+// Where the former id `clear-claude@clear-claude` and its relatives are history, not drift:
+// records of what was typed or decided at the time, and this file's own patterns. Everything
+// a user or an agent acts on — README, AGENTS.md, llms.txt, the skills, the lifecycle docs —
+// is checked.
 const LEGACY_ALLOWED = [
   /^CHANGELOG\.md$/,
   /^docs\/migration\.md$/,
@@ -41,12 +50,11 @@ const LEGACY_ALLOWED = [
   /^docs\/research\//,
   /^docs\/clear-ui-dogfood\.md$/,
   /^demo\/runs\//,
-  /^plugins\/clear-partner\/skills\/clear-(doctor|audit)\/SKILL\.md$/,
   /^scripts\/check-repo\.mjs$/,
-  /^README\.md$/, // one pointer to docs/migration.md; checked separately below
-  /^AGENTS\.md$/,
-  /^llms\.txt$/,
 ]
+// These may name the former id exactly once, to send its owners to the migration page, and
+// may use none of the other legacy forms.
+const MIGRATION_POINTERS = ['README.md', 'llms.txt']
 const LEGACY_PATTERNS = [
   [/clear-claude@clear-claude/, 'the former plugin id'],
   [/\/clear-claude:clear-/, 'the former skill namespace'],
@@ -93,10 +101,20 @@ function checkVersionsAndNames() {
     if (!dirs.includes(name)) fail('names', `marketplace.json lists "${name}" but plugins/${name} does not exist`)
   }
 
-  for (const [from, to] of Object.entries(marketplace.renames ?? {})) {
+  const renames = marketplace.renames ?? {}
+  for (const [from, to] of Object.entries(RECORDED_RENAMES)) {
+    if (renames[from] !== to) fail('names', `renames: the published entry "${from}" → "${to}" is missing or was edited; the map is append-only`)
+  }
+  for (const from of Object.keys(renames)) {
     if (listed.has(from)) fail('names', `renames: "${from}" is still listed in plugins[], so it would never migrate`)
-    if (to !== null && !listed.has(to) && !(to in marketplace.renames)) {
-      fail('names', `renames: "${from}" points at "${to}", which is neither listed nor renamed`)
+    // Follow the chain the way the loader does: to a listed plugin, to null (removed), or fail.
+    const seen = new Set()
+    let name = from
+    while (name !== null && !listed.has(name)) {
+      if (seen.has(name)) { fail('names', `renames: the chain from "${from}" loops at "${name}"`); break }
+      seen.add(name)
+      if (!(name in renames)) { fail('names', `renames: the chain from "${from}" ends at "${name}", which is neither listed nor renamed`); break }
+      name = renames[name]
     }
   }
 
@@ -126,8 +144,12 @@ function checkPrompt() {
   const keys = frontmatter[1].split('\n').filter((line) => /^\S/.test(line)).map((line) => line.split(':')[0])
   if (keys.join() !== STYLE_KEYS.join()) fail('prompt', `${STYLE} frontmatter keys are [${keys.join(', ')}]; expected [${STYLE_KEYS.join(', ')}]`)
 
+  // Only inside the frontmatter, and exactly once: the body must match line for line.
+  const flagLines = frontmatter[1].split('\n').filter((line) => line === 'force-for-plugin: true')
+  if (flagLines.length !== 1) fail('prompt', `${STYLE} frontmatter has ${flagLines.length} "force-for-plugin: true" lines; expected 1`)
+  const sourceFrontmatter = frontmatter[1].split('\n').filter((line) => line !== 'force-for-plugin: true').join('\n')
+  const shippedWithoutFlag = `---\n${sourceFrontmatter}\n---\n${text.slice(frontmatter[0].length)}`
   const source = read(STYLE_SOURCE).replace(/\r\n/g, '\n')
-  const shippedWithoutFlag = text.split('\n').filter((line) => line !== 'force-for-plugin: true').join('\n')
   if (source !== shippedWithoutFlag) fail('prompt', `${STYLE_SOURCE} no longer differs from the shipped style by exactly the force-for-plugin line`)
 }
 
@@ -135,35 +157,46 @@ function checkVocabulary(files) {
   for (const path of files) {
     if (!/\.(md|mjs|json|ya?ml|sh|tape|txt)$/.test(path)) continue
     if (LEGACY_ALLOWED.some((allowed) => allowed.test(path))) continue
-    const lines = read(path).split('\n')
-    lines.forEach((line, index) => {
+    const pointer = MIGRATION_POINTERS.includes(path)
+    let pointers = 0
+    read(path).split('\n').forEach((line, index) => {
       for (const [pattern, what] of LEGACY_PATTERNS) {
-        if (pattern.test(line)) fail('vocabulary', `${path}:${index + 1} uses ${what}`)
+        const hits = line.match(new RegExp(pattern.source, 'g'))?.length ?? 0
+        if (hits === 0) continue
+        if (pointer && pattern === LEGACY_PATTERNS[0][0]) pointers += hits
+        else fail('vocabulary', `${path}:${index + 1} uses ${what}`)
       }
     })
+    if (pointers > 1) fail('vocabulary', `${path} names the former plugin id ${pointers} times; only one pointer to docs/migration.md may`)
+    if (pointers === 1 && !read(path).includes('docs/migration.md')) fail('vocabulary', `${path} names the former plugin id without linking docs/migration.md`)
   }
-  // The README may name the former id once, to send its owners to the migration page.
-  const readme = read('README.md')
-  const legacy = readme.split('\n').filter((line) => LEGACY_PATTERNS.some(([pattern]) => pattern.test(line)))
-  if (legacy.length > 1) fail('vocabulary', `README.md names the former plugin ${legacy.length} times; only the pointer to docs/migration.md may`)
 }
 
 // GitHub's heading anchors: lower-case, drop everything but word characters, spaces and
 // hyphens, then spaces to hyphens. Inline code and links contribute their text.
+// A repeated heading gets -1, -2, … and skips any slug already taken, as GitHub's slugger does.
 function anchorsOf(markdown) {
-  const seen = new Map()
+  const counts = new Map()
   const anchors = new Set()
+  const lines = markdown.split('\n')
   let fenced = false
-  for (const line of markdown.split('\n')) {
+  lines.forEach((line, index) => {
     if (/^\s*(```|~~~)/.test(line)) fenced = !fenced
-    const heading = fenced ? null : /^#{1,6}\s+(.*?)\s*#*\s*$/.exec(line)
-    if (!heading) continue
-    const text = heading[1].replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[`*_]/g, '')
+    if (fenced) return
+    let heading = /^#{1,6}\s+(.*?)\s*#*\s*$/.exec(line)?.[1]
+    // Setext: a text line underlined with === or ---.
+    if (heading === undefined && /^(=+|-+)\s*$/.test(lines[index + 1] ?? '') && /\S/.test(line) && !/^\s*([-*+>|#]|\d+\.)/.test(line)) heading = line.trim()
+    if (heading === undefined) return
+    const text = heading.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[`*_]/g, '')
     const base = text.toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, '').replace(/\s/g, '-')
-    const count = seen.get(base) ?? 0
-    seen.set(base, count + 1)
-    anchors.add(count === 0 ? base : `${base}-${count}`)
-  }
+    let slug = base
+    while (anchors.has(slug)) {
+      const next = (counts.get(base) ?? 0) + 1
+      counts.set(base, next)
+      slug = `${base}-${next}`
+    }
+    anchors.add(slug)
+  })
   return anchors
 }
 
@@ -176,8 +209,11 @@ function checkLinks(files) {
     read(path).split('\n').forEach((line, index) => {
       if (/^\s*(```|~~~)/.test(line)) fenced = !fenced
       if (fenced) return
-      for (const match of line.replace(/`[^`]*`/g, '').matchAll(/\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)) {
-        const target = match[1]
+      const bare = line.replace(/`[^`]*`/g, '')
+      const targets = [...bare.matchAll(/\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)].map((match) => match[1])
+      const definition = /^\s{0,3}\[[^\]]+\]:\s+<?([^\s>]+)>?/.exec(bare) // [label]: target
+      if (definition) targets.push(definition[1])
+      for (const target of targets) {
         if (/^(https?:|mailto:)/.test(target)) continue
         const [file, anchor] = target.split('#')
         const resolved = file ? posix.normalize(posix.join(posix.dirname(path), decodeURIComponent(file))) : path

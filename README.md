@@ -37,7 +37,8 @@ neither installs, needs or changes the other.
   register a status line, so a script does it, on request.
 
 Inside a session the same commands work as `/plugin marketplace add …` and
-`/plugin install …`.
+`/plugin install …`; run `/reload-plugins` afterwards, before `set up clear ui`, because a
+plugin installed mid-session is not loaded yet.
 
 ### What changes on your machine
 

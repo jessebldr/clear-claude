@@ -25,13 +25,12 @@ Run checks 1–8, then print one PASS/WARN/FAIL table plus remediation for every
 
 ## Check 1 — plugin installed and enabled
 
-Run `claude plugin list --json`. Each entry is `{id, version, scope, enabled, installPath}` where `id` is `<name>@<marketplace>`. Find the entry whose id starts with `clear-partner@`.
+Run `claude plugin list --json`. Each entry is `{id, version, scope, enabled, installPath}` where `id` is `<name>@<marketplace>`. Find the entry whose id starts with `clear-partner@`. If there is none, use the entry whose id starts with `clear-claude@` instead: that is the same plugin under its former name, from before 0.2.0. Then judge whichever entry you found:
 
 - Not found → **FAIL**. The plugin is not installed in any scope.
 - Found with `"enabled": false` → **FAIL**. Installed but switched off, so the style cannot apply.
-- Found and enabled → **PASS**. Report `id`, `version`, `scope`.
-
-- No `clear-partner@…` entry, but one whose id starts with `clear-claude@` → **WARN**, and carry on with that entry. It is the same plugin under its former name, from before 0.2.0. If the entry carries a note that it was renamed, Claude Code has already moved the settings key and only the install under the new name is missing.
+- Found under `clear-partner@…` and enabled → **PASS**. Report `id`, `version`, `scope`.
+- Found only under the former id `clear-claude@…` and enabled → **WARN**, and carry on with that entry. If it carries a note that it was renamed, Claude Code has already moved the settings key and only the install under the new name is missing. (Disabled under the former id is the **FAIL** above, like any disabled install — and a disabled entry is never migrated by Claude Code, so it stays under the old name until reinstalled.)
 
 Record `installPath`; checks 2–4 and 7 depend on it. If there is more than one `clear-partner@…` entry, report all of them and **WARN**: two installs in different scopes means the one you are inspecting may not be the one that loads.
 
@@ -51,7 +50,7 @@ claude plugin marketplace update clear-claude
 claude plugin install clear-partner@clear-claude
 ```
 
-Then restart. `claude plugin update clear-claude` answering "not found" is expected after the rename, not a second fault.
+Then restart. An `update` command that still names the plugin by its former name answers "not found" after the rename; that is expected, not a second fault.
 
 ## Check 2 — manifest present and valid
 

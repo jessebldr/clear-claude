@@ -28,8 +28,9 @@ Claude Code shows this once —
 Renamed to "clear-partner" in the "clear-claude" marketplace
 ```
 
-— and rewrites `clear-claude@clear-claude` to `clear-partner@clear-claude` in the
-`enabledPlugins` (and `pluginConfigs`) of your user, project and local settings. What it does
+— and rewrites `clear-claude@clear-claude` to `clear-partner@clear-claude` in
+`enabledPlugins`. That was measured in user settings; Claude Code's documentation says the
+same happens in project and local settings, and for `pluginConfigs`. What it does
 not have yet is the plugin's files under the new name, so **the next session runs without
 Clear Partner** (`plugin-cache-miss` in the debug log) until Claude Code has fetched them by
 itself. In two measured runs that took one session and two. The `install` line above is what
@@ -59,9 +60,10 @@ skips that gap, which is why it is the recommended path and not a fallback.
   source. Claude Code cannot rewrite those: per its documentation the plugin still loads,
   but the notice comes back every session until an administrator changes the key to
   `clear-partner@clear-claude`. (Not measured here.)
-- **A team's checked-in `.claude/settings.json` names the old id.** It is rewritten on the
-  first machine that opens the project with a current Claude Code; commit that change so
-  everyone else gets it.
+- **A team's checked-in `.claude/settings.json` names the old id.** Per the documentation it
+  is rewritten on the first machine that opens the project with a current Claude Code;
+  commit that change so everyone else gets it. (Project scope was not measured here — or
+  change the key by hand, which is the same edit.)
 
 ## What changes for you
 

@@ -25,7 +25,9 @@ What the platform offers, verified on Claude Code 2.1.278 rather than assumed:
   documented for Claude Code 2.1.193 and later. At session start the loader follows it,
   loads the plugin under the new name, shows `Renamed to "…" in the "…" marketplace` once,
   and rewrites the key in `enabledPlugins` and `pluginConfigs` in the user, project and
-  local settings. Measured: [docs/migration.md](../migration.md#what-was-measured).
+  local settings. The notice and the `enabledPlugins` rewrite were measured, at user scope
+  only; the rest is the documentation's word:
+  [docs/migration.md](../migration.md#what-was-measured).
 - The map is only consulted for a name that is *not* in `plugins[]` — the documentation
   calls it the path taken "instead of seeing a `plugin-not-found` error", and the 2.1.278
   loader returns early when the old name is still listed (read from the shipped code, not
